@@ -159,7 +159,6 @@ Project <- function(model, fish_on){
       #   model$N[isav,c(1,2),c(60,61)] <- 0
       # }
       # 
-    
       ## Save Abbundance
       model$Abundance[isav,] <- rowSums(model$N[isav,,])
       
