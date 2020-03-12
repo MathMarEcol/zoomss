@@ -33,8 +33,6 @@ Setup <- function(param){
  dvm[which(w < 10^-5.4)] <- 0 # Microzoo don't migrate (ESD < 0.02cm)
  dvm[which(w > 10^-0.3)] <- dvm_max # Macrozoo migrate max time (ESD > 10cm)
  
- #plot(log10(w), dvm, ylab = "Proportion of time spent DVMing (away)") # If you want to have a look at how dvm is parameterised across body size
- 
  dvm_mat <- matrix(dvm, nrow = ngrid, ncol = ngrid, byrow = TRUE) # Matrix of dvm, nrow = number of pred size classes
  # ncol = number of pre size classes
  
@@ -89,6 +87,14 @@ Setup <- function(param){
   M_sb = matrix(0, nrow = ngrps, ncol = ngrid), # senescence mortality
   fish_mort = matrix(0, nrow = ngrps, ncol = ngrid), # fishing mortality
   
+  # Assimilation efficiency and temperature effect storage, by group and size class
+  assim_eff = matrix(NA, nrow = ngrps, ncol = ngrid),
+  temp_eff = matrix(NA, nrow = ngrps, ncol = ngrid),
+  
+  #### STORAGE FOR DIET KERNELS
+  phyto_dietkernel = array(NA, dim = c(ngrps, ngrid, ngridPP)),
+  dynam_dietkernel = array(NA, dim = c(ngrps, ngrid, ngrid)),
+  
   # Output storage
   N = array(0, dim = c(nsave, ngrps, ngrid)), # dynamic abundance spectrum
   Z = array(0, dim = c(nsave, ngrps, ngrid)), # total mortality
@@ -100,7 +106,8 @@ Setup <- function(param){
  
  # GGE for different groups
  assim_phyto <- (param$groups$alpha)*cc_phyto # Phytoplankton
- assim_dynam <- matrix(param$groups$alpha*param$nutrition, nrow = ngrps, ncol = ngrps, byrow = TRUE) # rows are predators, columns are prey
+ # assim_dynam <- matrix(param$groups$alpha*param$nutrition, nrow = ngrps, ncol = ngrps, byrow = TRUE) # rows are predators, columns are prey
+ model$assim_eff = matrix(param$groups$alpha*param$nutrition, nrow = ngrps, ncol = length(model$w))
  
  #### INITIAL DYNAMIC POPULATION ABUNDANCES
  a_dynam <- 10^(environ$a)*(w[1]^(environ$b+1)) # calculate coefficient for initial dynamic spectrum, so that N(w_phyto) equals
@@ -172,7 +179,7 @@ Setup <- function(param){
  ### Q10 OF 2 FOR ALL ZOO AND FISH
  temp_zoo <- rep(2.^((environ$sst - 30)/10), num_zoo) # exp(23.93 - 0.59/(8.62e-05*(273+environ$sst)))
  temp_fish <- rep(2.^((environ$sst - 30)/10), num_fish)
- temp_effect <- matrix(c(temp_zoo, temp_fish), nrow = ngrps, ncol = ngrid)
+ model$temp_eff <- matrix(c(temp_zoo, temp_fish), nrow = ngrps, ncol = ngrid)
  
  #### CALCULATES CONSTANT BITS OF THE MODEL FUNCTIONS FOR EACH GROUP
  for(i in 1:ngrps){
@@ -263,35 +270,39 @@ Setup <- function(param){
    t(sp_dynam_predkernel)*sm_dynam
  }
  
- model$M_sb = temp_effect*model$M_sb # Incorporate temp effect on senscence mortality
+ no_sen = which(grp$species == c("Flagellates", "Ciliates")) # no senescence mortality for flagellates and ciliates
+ #model$M_sb[c(ngrps)] = 0 
+ model$M_sb = model$temp_eff*model$M_sb # Incorporate temp effect on senscence mortality
  
- ## Incorporate dvm, temperature effects and gross growth efficiency (assim)
+ ## Incorporate carnivory (groups that can't eat phyto), temperature effects and gross growth efficiency (assim)
  model$phyto_growthkernel = sweep(sweep(model$phyto_growthkernel, c(1,2), phyto_theta, "*"), 1, assim_phyto, "*")
  model$phyto_diffkernel = sweep(sweep(model$phyto_diffkernel, c(1,2), phyto_theta, "*"), 1, assim_phyto^2, "*")
- model$phyto_dietkernel = sweep(sweep(model$phyto_dietkernel, c(1,2), phyto_theta, "*"), 1, 1, "*")
+ model$phyto_dietkernel =  sweep(sweep(model$phyto_dietkernel, c(1,2), phyto_theta, "*"), 1, 1, "*")
  
- # Dim 1 = pred group, dim2 = pred sizes, dim 3 = prey group, dim 4 = prey sizes
- model$dynam_growthkernel = sweep(sweep(sweep(dynam_theta, c(1,2,4), model$dynam_growthkernel, "*"),
-                     c(1,3), assim_dynam, "*"), c(1,2), temp_effect, "*")
- model$dynam_diffkernel = sweep(sweep(sweep(dynam_theta, c(1,2,4), model$dynam_diffkernel, "*"), c(1,3), assim_dynam^2, "*"),
-                 c(1,2), temp_effect^2, "*")
- model$dynam_dietkernel = sweep(sweep(sweep(dynam_theta, c(1,2,4), model$dynam_dietkernel, "*"),
-                    c(1,3), 1, "*"), c(1,2), temp_effect, "*")
+ # Dim 1 = pred group, dim2 = pred sizes, dim 3 = prey sizes
+ model$dynam_growthkernel = sweep(model$dynam_growthkernel, c(1,2), model$temp_eff, '*')
+ model$dynam_diffkernel = sweep(model$dynam_diffkernel, c(1,2), model$temp_eff^2, '*')
  
- # Dim 1 = prey group, dime 2 = prey sizes, dim 3 = pred group, dim 4 = pred sizes
- model$dynam_mortkernel = sweep(aperm(sweep(aperm(dynam_theta, c(3,1,4,2)),
-                       c(2,3,4), model$dynam_mortkernel, "*"), c(1,3,2,4)),
-                 c(3,4), temp_effect, "*")
+ # We still need four dimensions for diet matrix
+ model$dynam_dietkernel = sweep(sweep(sweep(dynam_theta, c(1,2,4), model$dynam_dietkernel, "*"), 
+                                      c(1,3), 1, "*"), c(1,2), model$temp_eff, "*")
+ 
+ # We won't sweep through temp_effect here, but do it in Project function. This is to make sure
+ # it can still work in the future if we have different temperature effects for different groups,
+ # so then dynam_mortkernel is dim1 = prey sizes, dim 2 = pred groups, dim 3 = pred size
+ model$dynam_mortkernel = aperm(model$dynam_mortkernel, c(2,1,3))
  
  #### Because phyto spectrum is constant, we can solve the phyto component of growth, and diffusion before time loop
- model$ingested_phyto = temp_effect*(rowSums(sweep(model$phyto_growthkernel, 3, model$nPP, "*"), dims = 2)) # Ingested phyto
- model$diff_phyto = temp_effect^2*(rowSums(sweep(model$phyto_diffkernel, 3, model$nPP, "*"), dims = 2)) # Diffusion from phyto
- model$diet_phyto = temp_effect*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP, "*"), dims = 2)) # Diet of total phyto
+ model$ingested_phyto = model$temp_eff*(rowSums(sweep(model$phyto_growthkernel, 3, model$nPP, "*"), dims = 2)) # Ingested phyto
+ model$diff_phyto = model$temp_eff^2*(rowSums(sweep(model$phyto_diffkernel, 3, model$nPP, "*"), dims = 2)) # Diffusion from phyto
+ model$diet_phyto = model$temp_eff*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP, "*"), dims = 2)) # Diet of total phyto
+ 
+ model$diet_phyto_all_sizes = sweep(sweep(model$phyto_dietkernel, 3, model$nPP, "*"),  c(1,2), model$temp_eff, "*") # Diet of total phyto, with all size classes of phyto maintained
  
  ## Diet of phyto from pico, nano and micro size classes
- model$diet_pico_phyto = temp_effect*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP*c(log10(model$w_phyto) < -11.5), "*"), dims = 2))
- model$diet_nano_phyto = temp_effect*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP*c(log10(model$w_phyto) >= -11.5 & log10(model$w_phyto) < -8.5), "*"), dims = 2))
- model$diet_micro_phyto = temp_effect*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP*c(log10(model$w_phyto) >= -8.5), "*"), dims = 2))
+ model$diet_pico_phyto = model$temp_eff*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP*c(log10(model$w_phyto) < -11.5), "*"), dims = 2))
+ model$diet_nano_phyto = model$temp_eff*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP*c(log10(model$w_phyto) >= -11.5 & log10(model$w_phyto) < -8.5), "*"), dims = 2))
+ model$diet_micro_phyto = model$temp_eff*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP*c(log10(model$w_phyto) >= -8.5), "*"), dims = 2))
  
  return(model)
 } # End of Setup function

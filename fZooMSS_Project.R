@@ -42,31 +42,33 @@ Project <- function(model, fish_on){
 
   pb <- txtProgressBar(min = 0, max = itimemax, initial = 1, style = 3) # Initial progress bar
 
-  # N_array <- array(0,c(12,178,12,178)) # preallocate
-  idx_array <- sort(array(matrix(1:2136),4562496))
-
   # BIG TIME LOOP
   for (itime in 1:itimemax){
 
     setTxtProgressBar(pb, itime) # Update progress bar
-    # browser()
-
-    ### Create an ngrps*ngrid*ngrps*ngrid array of abundances, to save time without sweeps
-    # dim1 = pred groups, dim 2 = pred sizes, dim 3 = prey groups, dim 4 = prey sizes
-
-    # temp_array <- array(N,4562496) # Convert N to vector and replicate at the same time
-    N_array <- array(array(N,4562496)[idx_array], c(12, 178, 12, 178)) # Then rearrange the vector to the order it should be
-
-    gg <- rowSums(rowSums(model$dynam_growthkernel*N_array, dims = 3), dims = 2) ### GROWTH
-    M2 <- rowSums(rowSums(model$dynam_mortkernel*N_array, dims = 3), dims = 2) ### MORTALITY: Predation mortality
-    diff <- rowSums(rowSums(model$dynam_diffkernel*N_array, dims = 3), dims = 2) ### DIFFUSION
-
-    gg <- gg + model$ingested_phyto
-    diff <- diff + model$diff_phyto
-    Z <- M2 + model$M_sb  + model$fish_mort ### MORTALITY: Total dynamic spectrum mortality
-
+    
+    growth_multiplier <- colSums(N*model$assim_eff)
+    predation_multiplier <- N*model$temp_eff
+    diffusion_multiplier <- colSums(N*(model$assim_eff^2))
+    
+    ### RFH - Apply is slow as it implements a loop. Turns out colSums and aperm is 50 % faster in these cases
+    sw <- sweep(model$dynam_growthkernel, 3, growth_multiplier, '*')
+    ap <- colSums(aperm(sw, c(3,1,2)))
+    gg <- model$ingested_phyto + ap
+    
+    sw2 <- sweep(model$dynam_mortkernel, c(2,3), predation_multiplier, '*')
+    M2 <- colSums(colSums(aperm(sw2, c(2,3,1))))
+    rm(sw, sw2, ap)
+    
+    # Total dynamic spectrum mortality
+    ### RFH - Can't M_sb + fish_mort be done in the model setup?
+    Z <- sweep(model$M_sb + model$fish_mort, 2, M2, '+')
+    
+    sw <- sweep(model$dynam_diffkernel, 3, diffusion_multiplier, '*')
+    ap <- colSums(aperm(sw, c(3,1,2)))
+    diff <- model$diff_phyto + ap
+    
     ### MvF WITH DIFFUSION ALGORITHM
-
     # Numerical implementation matrices (for MvF without diffusion)
     A.iter[,idx.iter] <- dt/dx * gg[,idx.iter-1] # Growth stuff
     C.iter[,idx.iter] <- 1 + dt * Z[,idx.iter] + dt/dx * gg[,idx.iter] # Mortality
@@ -79,13 +81,16 @@ Project <- function(model, fish_on){
     C[,idx] <- 1 + dt * Z[,idx] + dt/dx*(gg[,idx] + diff[,idx] * (log(10)/2+1/dx))
     S[,idx] <- N[,idx]
 
+    ### RFH - I have a C++ implementation for this but it won't help with speed at this point I don't think.
     for(i in 1:ngrps){
+      
+      ### RFH - Can't these next few rows be done in fZooMSS_Setup and stored as a vector?
       ## Set size range index for current group
-      curr_min_size = which(round(log10(w), digits = 2) == param$groups$W0[i])
-      curr_max_size = which(round(log10(w), digits = 2) == param$groups$Wmax[i])
-      idx_curr = (curr_min_size+1):curr_max_size
+      curr_min_size <- which(round(log10(w), digits = 2) == param$groups$W0[i])
+      curr_max_size <- which(round(log10(w), digits = 2) == param$groups$Wmax[i])
+      idx_curr <- (curr_min_size+1):curr_max_size
 
-      for(j in idx_curr){## Find the abundance at the next size class with standard MvF
+      for(j in idx_curr){ ## Find the abundance at the next size class with standard MvF
         N.iter[i,j] <- (S.iter[i,j] + A.iter[i,j]*N[i,j-1])/(C.iter[i,j])
         if(j >= (idx_curr[1]+1)){ ## Find abundance with MvF with diffusion
           k <- j - 1
@@ -106,9 +111,9 @@ Project <- function(model, fish_on){
 
     if(length(zoo_grps) > 1){ # If you only have one zoo group, it will be locked to phyto spectrum so you do not need to do this
       for(i in 1:length(w0idx)){
-        w_min_curr = w0mins[i]
-        exclude_mins = w0idx[which(w0mins == w_min_curr)]
-        N[w0idx[i], w_min_curr] = props_z[i] * sum(N[-exclude_mins, w_min_curr])
+        w_min_curr <- w0mins[i]
+        exclude_mins <- w0idx[which(w0mins == w_min_curr)]
+        N[w0idx[i], w_min_curr] <- props_z[i] * sum(N[-exclude_mins, w_min_curr])
       }
     }
 
@@ -137,31 +142,38 @@ Project <- function(model, fish_on){
       phyto_diet <- cbind(pico_phyto_diet, nano_phyto_diet, micro_phyto_diet)
 
       ## Functional group diet
-      dynam_diet <- 0 # dynam_diet <- rowSums(aperm(rowSums(sweep(model$dynam_dietkernel*N_array, c(1,2), N, "*"), dims = 3), c(1,3,2)), dims = 2)
-
-      model$diet[isav,,1:3] <- phyto_diet
-      model$diet[isav,,c(4:(dim(grp)[1]+3))] <- dynam_diet
-
+      ### Create an ngrps*ngrid*ngrps*ngrid array of abundances, to save time without sweeps
+      # dim1 = pred groups, dim 2 = pred sizes, dim 3 = prey groups, dim 4 = prey sizes
+      N_array <- aperm(replicate(ngrid, N), c(3,1,2))
+      N_array <- aperm(replicate(ngrps, N_array), c(4,1,2,3))
+      
+      dynam_diet =  rowSums(aperm(rowSums(sweep(model$dynam_dietkernel*N_array, c(1,2), N, "*"), dims = 3), c(1,3,2)), dims = 2)
+      
+      model$diet[isav,,1:3] = phyto_diet
+      model$diet[isav,,c(4:(dim(grp)[1]+3))] = dynam_diet
+      
       model$N[isav,,] <- N # Save abundance
-
-      ## NEED TO CHECK WHAT THIS IF STATEMENT IS FOR, IT DOESN'T APPEAR TO DO ANYTHING
-      if(length(zoo_grps) > 1){
-        model$N[isav,c(1,2),c(60,61)] <- 0
-      }
-
-      ## Save biomass
-      #  model$Biomass[isav,] <- rowSums(model$N[isav,,] # Save biomass
-      #                                  *matrix(model$w, nrow = ngrps, ncol = ngrid, byrow = TRUE))
+      
+      # ## NEED TO CHECK WHAT THIS IF STATEMENT IS FOR, IT DOESN'T APPEAR TO DO ANYTHING
+      # if(length(zoo_grps) > 1){
+      #   model$N[isav,c(1,2),c(60,61)] <- 0
+      # }
+      # 
+    
+      ## Save Abbundance
+      model$Abundance[isav,] <- rowSums(model$N[isav,,])
+      
+        ## Save biomass
+      model$Biomass[isav,] <- rowSums(model$N[isav,,] # Save biomass
+                                       *matrix(model$w, nrow = ngrps, ncol = ngrid, byrow = TRUE))
 
       ## Save mortality rates
-      #	model$Z[isav,,] <- M2 # Save total predation mortality rates
+      model$M2[isav,,] <- M2 # Save predation mortality rates
 
       ## Save growth
-      model$gg[isav,,] <- (model$diet_phyto +
-                             rowSums(rowSums(model$dynam_dietkernel*N_array, dims = 3), dims = 2))
+      model$gg[isav,,] <-  model$ingested_phyto + apply(sweep(model$dynam_growthkernel, 3, growth_multiplier, '*'), c(1,2), sum)
     }
 
-    # rm(N_array)
   } # End of time loop
 
   return(model)

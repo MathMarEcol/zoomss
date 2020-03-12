@@ -13,11 +13,13 @@ ZooMSS <- function(sst, chlo, a, b, phyto_max, dt, tmaxx, fixed_filterPPMR){
   modelss <- Project(model, fish_on = TRUE) # Run the model
       
   saveRDS(model, "Output/ModelParameters.RDS")
+  
   ################### OUTPUT ABUNDANCES ##############################################
   ave_abundances = colMeans(modelss$N[(ceiling(0.5*dim(modelss$N)[1])):(dim(modelss$N)[1]),,], dim = 1)
   ave_diets = colMeans(modelss$diet[(ceiling(0.5*dim(modelss$diet)[1])):(dim(modelss$diet)[1]),,], dim = 1)
   ave_growth = colMeans(modelss$gg[(ceiling(0.5*dim(modelss$gg)[1])):(dim(modelss$gg)[1]),,], dim = 1)
   ave_pred = colMeans(modelss$Z[(ceiling(0.5*dim(modelss$Z)[1])):(dim(modelss$Z)[1]),,], dim = 1)
+  
   results = list("abundances" = ave_abundances, # Save mean abundance
                  "diets" = ave_diets,  # Save mean diets
                  "growth" = ave_growth,  # Save mean growth

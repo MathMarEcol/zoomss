@@ -4,7 +4,6 @@ res <- readRDS("Output/res_Control_20200131.RDS")
 Groups <- read_csv("TestGroups.csv")
 
 enviro_data <- readRDS("enviro200.RDS")
-
 ### ACTUAL BIOMASS
 biom_act <- function(N, groups, cut_point1, cut_point2, enviro_data, en){
 
