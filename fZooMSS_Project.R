@@ -1,4 +1,8 @@
-## Run model forward in time
+## Run model forward in time using previosly defined setup and model lists
+
+## Last Updated Tuesday 17th March 2020
+##
+
 fZooMSS_Project <- function(model, fish_on){
 
   # Pull out some useful parameters - just a shortcut
@@ -154,12 +158,6 @@ fZooMSS_Project <- function(model, fish_on){
       
       model$N[isav,,] <- N # Save abundance
       
-      # ## NEED TO CHECK WHAT THIS IF STATEMENT IS FOR, IT DOESN'T APPEAR TO DO ANYTHING
-      # if(length(zoo_grps) > 1){
-      #   model$N[isav,c(1,2),c(60,61)] <- 0
-      # }
-      # 
-    
       ## Save Abbundance
       model$Abundance[isav,] <- rowSums(model$N[isav,,])
       

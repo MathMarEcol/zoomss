@@ -1,5 +1,9 @@
 ## Set up Model Parameter List, this imports "Groups", but also sets parameters that are
 ## fixed across all groups, or required to run the model
+
+## Last Updated Tuesday 17th March 2020
+##
+
 fZooMSS_Params <- function(fileGroups, enviroo, tmax, f_mort){
   
   groups <- fileGroups  # Read in functional group specific parameters from file
