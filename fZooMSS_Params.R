@@ -1,6 +1,6 @@
 ## Set up Model Parameter List, this imports "Groups", but also sets parameters that are
 ## fixed across all groups, or required to run the model
-Params <- function(fileGroups, enviroo, tmax, f_mort){
+fZooMSS_Params <- function(fileGroups, enviroo, tmax, f_mort){
   
   groups <- fileGroups  # Read in functional group specific parameters from file
   nutrition <- groups$carbon # Extract carbon content (nutr. quality) of each group

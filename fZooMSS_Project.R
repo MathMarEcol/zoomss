@@ -1,5 +1,5 @@
 ## Run model forward in time
-Project <- function(model, fish_on){
+fZooMSS_Project <- function(model, fish_on){
 
   # Pull out some useful parameters - just a shortcut
   param <- model$param
@@ -159,6 +159,7 @@ Project <- function(model, fish_on){
       #   model$N[isav,c(1,2),c(60,61)] <- 0
       # }
       # 
+    
       ## Save Abbundance
       model$Abundance[isav,] <- rowSums(model$N[isav,,])
       
