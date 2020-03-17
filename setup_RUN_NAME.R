@@ -2,7 +2,6 @@
 ## Models multiple zooplankton functional groups, and three fish groups
 ## This code is to run the model across multiple cores
 ##
-## Hello
 ## Updated Friday 31st January 2020
 ## Updated Friday 13th March 2020
 ## Updated Tuesday 17th March 2020
