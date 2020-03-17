@@ -15,9 +15,9 @@ fZooMSS_Project <- function(model){
   itimemax  <- param$tmax / param$dt  #max index of time array
 
   if(length(param$zoo_grps) > 1){ # If there's only one zoo group, then you do not need w0idx. All this stuff gives you info about all zoo groups except the smallest zoo group.
-    w0idx <- which(param$Groups$W0 > min(param$Groups$W0) & is.na(param$Groups$prop) == FALSE)
+    w0idx <- which(param$Groups$W0 > min(param$Groups$W0) & is.na(param$Groups$Prop) == FALSE)
     w0mins <- rep(0, length(w0idx))
-    props_z <- param$Groups$prop[w0idx] # Zooplankton proportions
+    props_z <- param$Groups$Prop[w0idx] # Zooplankton proportions
 
     for(i in 1:length(w0idx)){ # Which size class is the smallest size class for each functional group
       w0mins[i] <- which(round(log10(model$w), digits = 2) == param$Groups$W0[w0idx[i]])
@@ -43,28 +43,28 @@ fZooMSS_Project <- function(model){
   for (itime in 1:itimemax){
 
     setTxtProgressBar(pb, itime) # Update progress bar
-    
+
     growth_multiplier <- colSums(N*model$assim_eff)
     predation_multiplier <- N*model$temp_eff
     diffusion_multiplier <- colSums(N*(model$assim_eff^2))
-    
+
     ### RFH - Apply is slow as it implements a loop. Turns out colSums and aperm is 50 % faster in these cases
     sw <- sweep(model$dynam_growthkernel, 3, growth_multiplier, '*')
     ap <- colSums(aperm(sw, c(3,1,2)))
     gg <- model$ingested_phyto + ap
-    
+
     sw2 <- sweep(model$dynam_mortkernel, c(2,3), predation_multiplier, '*')
     M2 <- colSums(colSums(aperm(sw2, c(2,3,1))))
     rm(sw, sw2, ap)
-    
+
     # Total dynamic spectrum mortality
     ### RFH - Can't M_sb + fish_mort be done in the model setup?
     Z <- sweep(model$M_sb + model$fish_mort, 2, M2, '+')
-    
+
     sw <- sweep(model$dynam_diffkernel, 3, diffusion_multiplier, '*')
     ap <- colSums(aperm(sw, c(3,1,2)))
     diff <- model$diff_phyto + ap
-    
+
     ### MvF WITH DIFFUSION ALGORITHM
     # Numerical implementation matrices (for MvF without diffusion)
     A.iter[,idx.iter] <- dt/dx * gg[,idx.iter-1] # Growth stuff
@@ -80,7 +80,7 @@ fZooMSS_Project <- function(model){
 
     ### RFH - I have a C++ implementation for this but it won't help with speed at this point I don't think.
     for(i in 1:model$param$ngrps){
-      
+
       ### RFH - Can't these next few rows be done in fZooMSS_Setup and stored as a vector?
       ## Set size range index for current group
       curr_min_size <- which(round(log10(model$w), digits = 2) == param$Groups$W0[i])
@@ -143,17 +143,17 @@ fZooMSS_Project <- function(model){
       # dim1 = pred groups, dim 2 = pred sizes, dim 3 = prey groups, dim 4 = prey sizes
       N_array <- aperm(replicate(model$ngrid, N), c(3,1,2))
       N_array <- aperm(replicate(model$param$ngrps, N_array), c(4,1,2,3))
-      
+
       dynam_diet =  rowSums(aperm(rowSums(sweep(model$dynam_dietkernel*N_array, c(1,2), N, "*"), dims = 3), c(1,3,2)), dims = 2)
-      
+
       model$diet[isav,,1:3] = phyto_diet
       model$diet[isav,,c(4:(dim(param$Groups)[1]+3))] = dynam_diet
-      
+
       model$N[isav,,] <- N # Save abundance
-      
+
       ## Save Abbundance
       model$Abundance[isav,] <- rowSums(model$N[isav,,])
-      
+
         ## Save biomass
       model$Biomass[isav,] <- rowSums(model$N[isav,,] # Save biomass
                                        *matrix(model$w, nrow = model$param$ngrps, ncol = model$ngrid, byrow = TRUE))
