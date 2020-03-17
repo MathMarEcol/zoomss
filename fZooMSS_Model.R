@@ -15,7 +15,7 @@ fZooMSS_Model <- function(input_params, save_all){
   ave_growth = colMeans(model_output$gg[(ceiling(0.5*dim(model_output$gg)[1])):(dim(model_output$gg)[1]),,], dim = 1)
   ave_pred = colMeans(model_output$M2[(ceiling(0.5*dim(model_output$M2)[1])):(dim(model_output$M2)[1]),,], dim = 1)
   
-  if (save_all == 1){
+  if (SaveTimeSteps == TRUE){
   results = list("abundances" = ave_abundances, # Save mean abundance
                  "diets" = ave_diets,  # Save mean diets
                  "growth" = ave_growth,  # Save mean growth
@@ -23,7 +23,7 @@ fZooMSS_Model <- function(input_params, save_all){
                  "param" = param, # Save parameters
                  "model" = model_output) # Save whole model
   }
-  if (save_all == 0){
+  if (SaveTimeSteps == FALSE){
     results = list("abundances" = ave_abundances, # Save mean abundance
                    "diets" = ave_diets,  # Save mean diets
                    "growth" = ave_growth,  # Save mean growth
