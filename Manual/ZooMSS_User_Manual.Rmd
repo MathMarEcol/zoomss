@@ -1,0 +1,34 @@
+---
+title: "ZooMSS User Manual"
+author: "The UQ ZooMSS Team"
+date: "18/03/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview of ZooMSS
+
+The Zooplankton Model of Size Spectra (ZooMSS) is a 
+
+## How to run ZooMSS using `R`
+
+
+### Input files
+
+
+### Parameter Values
+
+
+### Output
+
+
+### Plotting
+
+
+## Publications
+
+
+## Getting Help
