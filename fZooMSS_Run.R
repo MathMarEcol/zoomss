@@ -122,10 +122,6 @@ fZooMSS_Project <- function(model){
       N[param$fish_grps, fish_mins] = (1/length(param$fish_grps))*sum(N[-param$fish_grps, fish_mins])
     }
 
-    if(param$fish_on == FALSE){
-      N[param$fish_grps,] <- 0 # switch off fish_groups
-    }
-
     # Save results:
     if((itime %% param$isave) == 0){
       isav <- itime/param$isave
