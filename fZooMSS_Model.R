@@ -20,15 +20,17 @@ fZooMSS_Model <- function(input_params, save_all){
                  "diets" = ave_diets,  # Save mean diets
                  "growth" = ave_growth,  # Save mean growth
                  "predation" = ave_pred, # Save mean predation
-                 "param" = param, # Save parameters
                  "model" = model_output) # Save whole model
   }
   if (SaveTimeSteps == FALSE){
+    
+    reduce_output <- list[[]] # Create a new list so we can have identical structure of model$param
+    reduce_output$param <- model_output$param
     results = list("abundances" = ave_abundances, # Save mean abundance
                    "diets" = ave_diets,  # Save mean diets
                    "growth" = ave_growth,  # Save mean growth
-                   "predation" = ave_pred, # Save parameters
-                   "param" = param) # Save mean predation
+                   "predation" = ave_pred, # Save mean predation
+                   "model" = reduce_output) # Save parameters only
   }
 
   return(results)

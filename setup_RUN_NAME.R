@@ -13,15 +13,14 @@ enviro_data <- read_rds("envirofull_20200317.RDS") # Load environmental data
 enviro_data$tmax <- 10 # Set length of simulation (years)
 Groups <- read_csv("TestGroups.csv") # Load in functional group information
 jobname <- 'DATE_JOBNAME' #job name used on queue: Recommend: YYYYMMDD_AbbrevExperimentName.
-enviro_row <- 1 # Which row of the environmental data do you want to run if HPC=FALSE
+enviro_row <- 10 # Which row of the environmental data do you want to run if HPC=FALSE
 SaveTimeSteps <- TRUE # Should we save all time steps
-HPC <- 0 # Is this being run on a HPC or will we choose the cell
-
+HPC <- FALSE # Is this being run on a HPC or will we choose the cell
 
 ### No need to change anything below here.
-
-if (HPC == 1){
-  ID <- as.integer(Sys.getenv('PBS_ARRAY_INDEX'))} else { # Get the array run number on HPC
+if (HPC == TRUE){
+  ID <- as.integer(Sys.getenv('PBS_ARRAY_INDEX')) # Get the array run number on HPC
+  } else { 
     ID <- enviro_row
   } 
 ID_char <- sprintf("%04d",ID) # Set the ID as a 4 digit character so it will sort properly
