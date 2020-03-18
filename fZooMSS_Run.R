@@ -135,28 +135,26 @@ fZooMSS_Project <- function(model){
       nano_phyto_diet <- rowSums(model$diet_nano_phyto*N) # Nano-phytoplankton
       micro_phyto_diet <- rowSums(model$diet_micro_phyto*N) # Micro-phytoplankton
 
-      phyto_diet <- cbind(pico_phyto_diet, nano_phyto_diet, micro_phyto_diet)
-
       ## Functional group diet
       ### Create an ngrps*ngrid*ngrps*ngrid array of abundances, to save time without sweeps
       # dim1 = pred groups, dim 2 = pred sizes, dim 3 = prey groups, dim 4 = prey sizes
       N_array <- aperm(replicate(model$ngrid, N), c(3,1,2))
       N_array <- aperm(replicate(model$param$ngrps, N_array), c(4,1,2,3))
-
       dynam_diet =  rowSums(aperm(rowSums(sweep(model$dynam_dietkernel*N_array, c(1,2), N, "*"), dims = 3), c(1,3,2)), dims = 2)
 
-      model$diet[isav,,1:3] = phyto_diet
-      model$diet[isav,,c(4:(dim(param$Groups)[1]+3))] = dynam_diet
+      model$diet[isav,,1:3] <- cbind(pico_phyto_diet, nano_phyto_diet, micro_phyto_diet)
+      model$diet[isav,,c(4:(dim(param$Groups)[1]+3))] <- dynam_diet
 
-      model$N[isav,,] <- N # Save abundance
+      # Save N by taxa and size
+      model$N[isav,,] <- N 
 
-      ## Save Abbundance
+      ## Save Total Abundance
       model$Abundance[isav,] <- rowSums(model$N[isav,,])
 
       ## Save biomass
       model$Biomass[isav,] <- rowSums(model$N[isav,,]*matrix(model$w, nrow = model$param$ngrps, ncol = model$ngrid, byrow = TRUE))
 
-      ## Save mortality rates
+      ## Save predation mortality rates
       model$M2[isav,,] <- M2 # Save predation mortality rates
 
       ## Save growth
