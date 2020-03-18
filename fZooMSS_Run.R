@@ -58,7 +58,6 @@ fZooMSS_Project <- function(model){
     rm(sw, sw2, ap)
 
     # Total dynamic spectrum mortality
-    ### RFH - Can't M_sb + fish_mort be done in the model setup?
     Z <- sweep(model$M_sb + model$fish_mort, 2, M2, '+')
 
     sw <- sweep(model$dynam_diffkernel, 3, diffusion_multiplier, '*')
@@ -154,9 +153,8 @@ fZooMSS_Project <- function(model){
       ## Save Abbundance
       model$Abundance[isav,] <- rowSums(model$N[isav,,])
 
-        ## Save biomass
-      model$Biomass[isav,] <- rowSums(model$N[isav,,] # Save biomass
-                                       *matrix(model$w, nrow = model$param$ngrps, ncol = model$ngrid, byrow = TRUE))
+      ## Save biomass
+      model$Biomass[isav,] <- rowSums(model$N[isav,,]*matrix(model$w, nrow = model$param$ngrps, ncol = model$ngrid, byrow = TRUE))
 
       ## Save mortality rates
       model$M2[isav,,] <- M2 # Save predation mortality rates
