@@ -7,7 +7,7 @@ fZooMSS_Model <- function(input_params, save_all){
   ##################### RUN THE MODEL ################################################
   param <- fZooMSS_Params(Groups, input_params) # Set up parameter list
   model <- fZooMSS_Setup(param) # Set up model equation stuff
-  model_output <- fZooMSS_Project(model) # Run the model
+  model_output <- fZooMSS_Run(model) # Run the model
 
   ################### OUTPUT ABUNDANCES ##############################################
   ave_abundances = colMeans(model_output$N[(ceiling(0.5*dim(model_output$N)[1])):(dim(model_output$N)[1]),,], dim = 1)

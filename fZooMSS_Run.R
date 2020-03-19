@@ -3,7 +3,7 @@
 ## Last Updated Tuesday 17th March 2020
 ##
 
-fZooMSS_Project <- function(model){
+fZooMSS_Run <- function(model){
 
   # Pull out some useful parameters - just a shortcut
   param <- model$param
