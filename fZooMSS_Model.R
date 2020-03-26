@@ -10,23 +10,23 @@ fZooMSS_Model <- function(input_params, save_all){
   model_output <- fZooMSS_Run(model) # Run the model
 
   ################### OUTPUT ABUNDANCES ##############################################
-  ave_abundances = colMeans(model_output$N[(ceiling(0.5*dim(model_output$N)[1])):(dim(model_output$N)[1]),,], dim = 1)
-  ave_diets = colMeans(model_output$diet[(ceiling(0.5*dim(model_output$diet)[1])):(dim(model_output$diet)[1]),,], dim = 1)
-  ave_growth = colMeans(model_output$gg[(ceiling(0.5*dim(model_output$gg)[1])):(dim(model_output$gg)[1]),,], dim = 1)
-  ave_pred = colMeans(model_output$M2[(ceiling(0.5*dim(model_output$M2)[1])):(dim(model_output$M2)[1]),,], dim = 1)
+  ave_abundances <- colMeans(model_output$N[(ceiling(0.5*dim(model_output$N)[1])):(dim(model_output$N)[1]),,], dim = 1)
+  ave_diets <- colMeans(model_output$diet[(ceiling(0.5*dim(model_output$diet)[1])):(dim(model_output$diet)[1]),,], dim = 1)
+  ave_growth <- colMeans(model_output$gg[(ceiling(0.5*dim(model_output$gg)[1])):(dim(model_output$gg)[1]),,], dim = 1)
+  ave_pred <- colMeans(model_output$M2[(ceiling(0.5*dim(model_output$M2)[1])):(dim(model_output$M2)[1]),,], dim = 1)
 
   if (SaveTimeSteps == TRUE){
-  results = list("abundances" = ave_abundances, # Save mean abundance
+  results <- list("abundances" = ave_abundances, # Save mean abundance
                  "diets" = ave_diets,  # Save mean diets
                  "growth" = ave_growth,  # Save mean growth
                  "predation" = ave_pred, # Save mean predation
                  "model" = model_output) # Save whole model
   }
   if (SaveTimeSteps == FALSE){
-    
+
     reduce_output <- list[[]] # Create a new list so we can have identical structure of model$param
     reduce_output$param <- model_output$param
-    results = list("abundances" = ave_abundances, # Save mean abundance
+    results <- list("abundances" = ave_abundances, # Save mean abundance
                    "diets" = ave_diets,  # Save mean diets
                    "growth" = ave_growth,  # Save mean growth
                    "predation" = ave_pred, # Save mean predation

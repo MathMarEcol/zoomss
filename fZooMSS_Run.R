@@ -19,7 +19,8 @@ fZooMSS_Run <- function(model){
     w0mins <- rep(0, length(w0idx))
     props_z <- param$Groups$Prop[w0idx] # Zooplankton proportions
 
-    for(i in 1:length(w0idx)){ # Which size class is the smallest size class for each functional group
+    for(i in 1:length(w0idx)){
+      # Which size class is the smallest size class for each functional group
       w0mins[i] <- which(round(log10(model$w), digits = 2) == param$Groups$W0[w0idx[i]])
     }
   }
@@ -117,9 +118,9 @@ fZooMSS_Run <- function(model){
                               function(x){which(round(log10(model$w), digits = 2) == x)}))
 
     if(length(param$fish_grps) > 1 & length(param$zoo_grps) > 1){
-      N[param$fish_grps,fish_mins] = (1/length(param$fish_grps))*(colSums(N[-param$fish_grps,fish_mins]))
+      N[param$fish_grps,fish_mins] <- (1/length(param$fish_grps))*(colSums(N[-param$fish_grps,fish_mins]))
     }else{
-      N[param$fish_grps, fish_mins] = (1/length(param$fish_grps))*sum(N[-param$fish_grps, fish_mins])
+      N[param$fish_grps, fish_mins] <- (1/length(param$fish_grps))*sum(N[-param$fish_grps, fish_mins])
     }
 
     # Save results:
@@ -136,13 +137,13 @@ fZooMSS_Run <- function(model){
       # dim1 = pred groups, dim 2 = pred sizes, dim 3 = prey groups, dim 4 = prey sizes
       N_array <- aperm(replicate(model$ngrid, N), c(3,1,2))
       N_array <- aperm(replicate(model$param$ngrps, N_array), c(4,1,2,3))
-      dynam_diet =  rowSums(aperm(rowSums(sweep(model$dynam_dietkernel*N_array, c(1,2), N, "*"), dims = 3), c(1,3,2)), dims = 2)
+      dynam_diet <- rowSums(aperm(rowSums(sweep(model$dynam_dietkernel*N_array, c(1,2), N, "*"), dims = 3), c(1,3,2)), dims = 2)
 
       model$diet[isav,,1:3] <- cbind(pico_phyto_diet, nano_phyto_diet, micro_phyto_diet)
       model$diet[isav,,c(4:(dim(param$Groups)[1]+3))] <- dynam_diet
 
       # Save N by taxa and size
-      model$N[isav,,] <- N 
+      model$N[isav,,] <- N
 
       ## Save Total Abundance
       model$Abundance[isav,] <- rowSums(model$N[isav,,])
