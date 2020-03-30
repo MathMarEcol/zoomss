@@ -49,7 +49,7 @@ fZooMSS_Run <- function(model){
     predation_multiplier <- N*model$temp_eff
     diffusion_multiplier <- colSums(N*(model$assim_eff^2))
 
-    ### RFH - Apply is slow as it implements a loop. Turns out colSums and aperm is 50 % faster in these cases
+    ### Apply is slow as it implements a loop. Turns out colSums and aperm is 50 % faster in these cases
     sw <- sweep(model$dynam_growthkernel, 3, growth_multiplier, '*')
     ap <- colSums(aperm(sw, c(3,1,2)))
     gg <- model$ingested_phyto + ap
