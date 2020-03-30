@@ -5,6 +5,7 @@
 ## Updated Friday 31st January 2020
 ## Updated Friday 13th March 2020
 ## Updated Tuesday 17th March 2020
+## Updated Tuesday 31st March 2020
 
 source("fZooMSS_Model.R") #source the model code
 
@@ -28,6 +29,8 @@ ID_char <- sprintf("%04d",ID) # Set the ID as a 4 digit character so it will sor
 
 input_params <- enviro_data[ID,]
 
-out <- fZooMSS_Model(input_params, SaveTimeSteps)
+out$model$model_runtime <- system.time(
+  out <- fZooMSS_Model(input_params, SaveTimeSteps)
+)
 
 saveRDS(out, file = paste0("RawOutput/", jobname, "_", ID_char,".RDS"))
