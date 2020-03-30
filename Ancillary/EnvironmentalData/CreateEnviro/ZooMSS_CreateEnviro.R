@@ -40,7 +40,7 @@ Bathy <- resample(rasBathy, grd_lonlat, method='bilinear')
 Bathy <- reclassify(Bathy, c(0,Inf,NA))
 Bathy <- abs(Bathy)
 names(Bathy) <- "Bathy"
-saveRDS(Bathy, file = paste0("Data",.Platform$file.sep,"Bathy_raster_",res,"Deg.rds"))
+saveRDS(Bathy, file = paste0("Output",.Platform$file.sep,"Bathy_raster_",res,"Deg.rds"))
 
 ##### SST #####
 SST_files <- list.files(path = "Data", pattern = "_sst4_", recursive = FALSE, full.names = TRUE)
@@ -57,7 +57,7 @@ for(i in 1:12){
 
 SST_mn  <- calc(SSTbrick, fun = mean, na.rm = TRUE)
 names(SST_mn) <- "SST"
-saveRDS(SSTbrick_mn, file = paste0("SST_raster_00Mean_",res,"Deg.rds"))
+saveRDS(SSTbrick_mn, file = paste0("Output",.Platform$file.sep,"SST_raster_00Mean_",res,"Deg.rds"))
 
 #### Chlorophyll ####
 
@@ -65,7 +65,7 @@ Chl_files <- paste0("Data",.Platform$file.sep,"A20021852019334.L3m_CU_CHL_chl_oc
 rasChl <- raster(Chl_files, varname = "chl_ocx", nrows=180, ncols=360, xmn=-180, xmx=180, ymn=-90, ymx=90)
 Chl_mn <- resample(rasChl, grd_lonlat, method='bilinear')
 names(Chl_mn) <- "Chl"
-saveRDS(Chl_mn, file = paste0("Chl_raster_00Mean_",res,"Deg.rds"))
+saveRDS(Chl_mn, file = paste0("Output",.Platform$file.sep,"Chl_raster_00Mean_",res,"Deg.rds"))
 
 
 # Now convert to data-frame and save as .RDS
@@ -78,5 +78,5 @@ enviro_data <- enviro_data %>%
   drop_na
 
 # Save as RDS
-saveRDS(enviro_data, file = paste0("EnviroData_",res,"Deg.rds"))
+saveRDS(enviro_data, file = paste0("Output",.Platform$file.sep,"EnviroData_",res,"Deg.rds"))
 
