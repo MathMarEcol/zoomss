@@ -1,3 +1,13 @@
+# This script creates the environmental data for ZooMSS for all publications from mid 2020 onwards.
+# (Heneghan et al. 2020 and Everett et al. 2020 will use the old data.)
+# 
+# There are slight differences in some regions between this data and the original data, 
+# which need to be explored further, but I believe these differences are to do with different 
+# averaging schemes and updated satellite data.
+
+# Written by Jason D Everett and Ryan F. Heneghan 
+# Last updated 31st March 2020
+
 library(tidyverse)
 library(ncdf4)
 library(raster)
@@ -62,10 +72,11 @@ saveRDS(Chl_mn, file = paste0("Chl_raster_00Mean_",res,"Deg.rds"))
 brick <- brick(Bathy)
 brick <- addLayer(brick, SST_mn, Chl_mn)
 
-df <- as.data.frame(brick, xy=TRUE)
+enviro_data <- as.data.frame(brick, xy=TRUE)
 
-df <- df %>% 
+enviro_data <- enviro_data %>% 
   drop_na
 
-
+# Save as RDS
+saveRDS(enviro_data, file = paste0("EnviroData_",res,"Deg.rds"))
 

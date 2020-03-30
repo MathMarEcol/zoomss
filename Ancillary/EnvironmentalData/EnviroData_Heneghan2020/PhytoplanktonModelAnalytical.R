@@ -40,24 +40,3 @@ phyto_info = function(chlo){ # chlo is chlorophyll concentration in mg m^-3
   return(out)
 }
 
-
-
-### CALCULATE SLOPES, INTERCEPT AND MAX SIZE FOR ENVIRO DATA
-#ee = enviro_data
-#for(i in 1:dim(ee)[1]){
-#  print(i)
-#  chlo_curr = ee$chlo[i]
-#  tt = phyto_info_2(chlo_curr)
-#  ee[i,"a"] = (tt[[1]])
-#  ee[i,"b"] = tt[[2]]
-#  ee[i,"phyto_max"] = tt[[4]]
-#}
-
-#par(mfrow = c(2,2), mar = c(4,4.5,0.5,1))
-#plot(log10(ee$chlo), log10(ee$a), ylab = expression(paste("log"[10], "(Intercept)")), xlab = expression(paste('log'[10], "(Chlorophyll, mg m"^-3, ')')), cex.lab = 1.2)
-#plot(log10(ee$chlo), ee$b, ylab = "Slope", xlab = expression(paste('log'[10], "(Chlorophyll, mg m"^-3, ')')), cex.lab = 1.2)
-#plot(log10(ee$chlo), ee$phyto_max, ylab = expression(paste('log'[10], "(w"['max'], ')')), xlab = expression(paste('log'[10], "(Chlorophyll, mg m"^-3, ')')), cex.lab = 1.2)
-#par(mfrow = c(1,1))
-
-#ee$a <- log10(ee$a)
-#write.csv(ee, file = "enviro_5d_3.csv", row.names = FALSE)
