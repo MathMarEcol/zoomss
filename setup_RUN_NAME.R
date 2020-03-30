@@ -9,8 +9,8 @@
 source("fZooMSS_Model.R") #source the model code
 
 enviro_data <- readRDS("envirofull_20200317.RDS") # Load environmental data
-enviro_data$tmax <- 1000 # Set length of simulation (years)
-Groups <- read.csv("TestGroups_20200330.csv") # Load in functional group information
+enviro_data$tmax <- 100 # Set length of simulation (years)
+Groups <- read.csv("TestGroups.csv") # Load in functional group information
 
 jobname <- 'DATE_JOBNAME' #job name used on queue: Recommend: YYYYMMDD_AbbrevExperimentName.
 enviro_row <- 10 # Which row of the environmental data do you want to run if HPC=FALSE
