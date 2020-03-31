@@ -3,7 +3,7 @@ library(shinydashboard)
 library(tidyverse)
 
 header <- dashboardHeader(title = "ZooMSS Dashboard")
-dat <- readRDS("../RawOutput/DATE_JOBNAME_0350.RDS")
+dat <- readRDS("../RawOutput/DATE_JOBNAME_0010.RDS")
 
 ## Sidebar content
 sidebar <- dashboardSidebar(
