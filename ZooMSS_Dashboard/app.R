@@ -3,7 +3,7 @@ library(shinydashboard)
 library(tidyverse)
 
 header <- dashboardHeader(title = "ZooMSS Dashboard")
-dat <- readRDS("../RawOutput/DATE_JOBNAME_0010.RDS")
+dat <- readRDS("../RawOutput/DATE_JOBNAME_0350.RDS")
 
 ## Sidebar content
 sidebar <- dashboardSidebar(
@@ -64,8 +64,6 @@ server <- function(input, output) {
     
     
     output$copepods <- renderValueBox({
-        # The downloadRate is the number of rows in pkgData since
-        # either startTime or maxAgeSecs ago, whichever is later.
         NoCopepods <- round(sum(dat$abundances[dat$model$param$Groups$Species=="OmniCopepods" | dat$model$param$Groups$Species=="CarnCopepods"]))
         
         valueBox(
@@ -126,7 +124,6 @@ server <- function(input, output) {
     })
     
     
-    
     # dat_out <- readRDS(input$ModelFile$datapath)
     # dat <- reactiveFileReader(1000, session, input$ModelFile$datapath, readRDS)
     
@@ -155,7 +152,6 @@ server <- function(input, output) {
             theme_bw() + 
             labs(subtitle = "Abundance Spectrum")
     })
-    
     
     # Plot growth rates by species
     output$growthPlot <- renderPlot({
