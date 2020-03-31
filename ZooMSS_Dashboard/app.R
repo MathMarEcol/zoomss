@@ -3,7 +3,7 @@ library(shinydashboard)
 library(tidyverse)
 
 header <- dashboardHeader(title = "ZooMSS Dashboard")
-dat <- readRDS("../RawOutput/DATE_JOBNAME_0010.RDS")
+dat <- readRDS("../RawOutput/DATE_JOBNAME_0350.RDS")
 
 ## Sidebar content
 sidebar <- dashboardSidebar(
@@ -118,7 +118,7 @@ server <- function(input, output) {
     })
     output$Lon <- renderValueBox({
         valueBox(
-            value = formatC(dat$model$param$Lat, digits = 2, format = "f"),
+            value = formatC(dat$model$param$Lon, digits = 2, format = "f"),
             subtitle = "Longitude",
             # icon = icon("area-chart"),
             color = "blue"
