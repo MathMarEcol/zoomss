@@ -5,13 +5,14 @@
 ## Updated Friday 31st January 2020
 ## Updated Friday 13th March 2020
 ## Updated Tuesday 17th March 2020
+## Updated Tuesday 31st March 2020
 
-library(tidyverse)
 source("fZooMSS_Model.R") #source the model code
 
-enviro_data <- read_rds("envirofull_20200317.RDS") # Load environmental data
-enviro_data$tmax <- 10 # Set length of simulation (years)
-Groups <- read_csv("TestGroups.csv") # Load in functional group information
+enviro_data <- readRDS("envirofull_20200317.RDS") # Load environmental data
+enviro_data$tmax <- 100 # Set length of simulation (years)
+Groups <- read.csv("TestGroups.csv") # Load in functional group information
+
 jobname <- 'DATE_JOBNAME' #job name used on queue: Recommend: YYYYMMDD_AbbrevExperimentName.
 enviro_row <- 10 # Which row of the environmental data do you want to run if HPC=FALSE
 
@@ -28,6 +29,8 @@ ID_char <- sprintf("%04d",ID) # Set the ID as a 4 digit character so it will sor
 
 input_params <- enviro_data[ID,]
 
-out <- fZooMSS_Model(input_params, SaveTimeSteps)
+out$model$model_runtime <- system.time(
+  out <- fZooMSS_Model(input_params, SaveTimeSteps)
+)
 
 saveRDS(out, file = paste0("RawOutput/", jobname, "_", ID_char,".RDS"))
