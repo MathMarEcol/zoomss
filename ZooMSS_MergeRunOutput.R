@@ -5,14 +5,9 @@
 #
 # Written by Jason Everett (UQ/CSIRO/UNSW)
 # Written: Sunday 2nd February 2020
-# Last Updated: Sunday 2nd February 2020
+# Last Updated: Wednesday 1st April 2020
 
-
-run <- "Control_200cells_20200131"
-
-###
-### There should be no need to edit anything below these lines
-###
+run <- basename(getwd())
 
 library(tidyverse)
 files <- list.files("RawOutput", full.names = TRUE)
@@ -23,11 +18,11 @@ growth <- list()
 
 for (f in 1:length(files)){
   out <- read_rds(files[f])
-
+  
   res[[f]] <- out$abundances
   growth[[f]] <- out$growth
   diets[[f]] <- out$diets
-
+  
   rm(out)
 }
 
