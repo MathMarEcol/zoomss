@@ -18,7 +18,9 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(
     tabItems(
         # First tab content
-        tabItem(tabName = "dashboard", h2("ZooMSS Final Static Output"),
+        tabItem(tabName = "dashboard", 
+                h2("ZooMSS Final Static Output"),
+                
                 fluidRow(
                     valueBoxOutput("SST", width = 3),
                     valueBoxOutput("Chl", width = 3),
@@ -29,16 +31,15 @@ body <- dashboardBody(
                     fileInput("ModelFile", "Choose RDS File", accept = c(".RDS"), width = "80%", ),
                     tableOutput('GroupsTable')
                 ),
+                br(),
                 fluidRow(
-                    box(plotOutput("speciesPlot", height = 400)),
-                    box(plotOutput("PPMRPlot", height = 400)),
-                    # box(title = "Controls", sliderInput("slider", "Number of observations2:", 1, 100, 50))
+                    column(6, plotOutput("speciesPlot", height = 400)),
+                    column(6, plotOutput("PPMRPlot", height = 400))
                 ),
+                br(),
                 fluidRow(
-                    box(plotOutput("growthPlot", height = 400)),
-                    box(plotOutput("predationPlot", height = 400)),
-                    # box(plotOutput("growthPlot", height = 400)),
-                    # box(title = "Controls", sliderInput("slider", "Number of observations2:", 1, 100, 50))
+                    column(6, plotOutput("growthPlot", height = 400)),
+                    column(6, plotOutput("predationPlot", height = 400))
                 )
         ),
         
@@ -64,14 +65,15 @@ server <- function(input, output) {
     
     dat <- reactive({
         # browser()
-        if (is.null(input$ModelFile))
-            return(NULL)
+        # if (is.null(input$ModelFile))
+        #     return(NULL)
+        req(input$ModelFile)
         readRDS(input$ModelFile$datapath)
     })
     
     output$copepods <- renderValueBox({
-        if (is.null(dat()))
-            return(NULL)
+        # if (is.null(dat()))
+        #     return(NULL)
         NoCopepods <- round(sum(dat()$abundances[dat()$model$param$Groups$Species=="OmniCopepods" | dat()$model$param$Groups$Species=="CarnCopepods"]))
         valueBox(
             value = formatC(NoCopepods, digits = 1, format = "f"),
@@ -82,8 +84,8 @@ server <- function(input, output) {
     })
     
     output$fish <- renderValueBox({
-        if (is.null(dat()))
-            return(NULL)
+        # if (is.null(dat()))
+        #     return(NULL)
         fish <- colSums(dat()$abundances[which(dat()$model$param$Groups$Type=="Fish"),])
         FishBiomass <- sum(fish * dat()$model$w)
         
@@ -96,8 +98,8 @@ server <- function(input, output) {
     })
     
     output$SST <- renderValueBox({
-        if (is.null(dat()))
-            return(NULL)
+        # if (is.null(dat()))
+        #     return(NULL)
         valueBox(
             value = formatC(dat()$model$param$sst, digits = 2, format = "f"),
             subtitle = "SST",
@@ -107,8 +109,8 @@ server <- function(input, output) {
     })
     
     output$Chl <- renderValueBox({
-        if (is.null(dat()))
-            return(NULL)
+        # if (is.null(dat()))
+        #     return(NULL)
         valueBox(
             value = formatC(dat()$model$param$chlo, digits = 2, format = "f"),
             subtitle = "Chl. a (mg m-3)",
@@ -118,8 +120,8 @@ server <- function(input, output) {
     })
     
     output$Lat <- renderValueBox({
-        if (is.null(dat()))
-            return(NULL)
+        # if (is.null(dat()))
+        #     return(NULL)
         valueBox(
             value = formatC(dat()$model$param$Lat, digits = 2, format = "f"),
             subtitle = "Latitude",
@@ -128,8 +130,8 @@ server <- function(input, output) {
         )
     })
     output$Lon <- renderValueBox({
-        if (is.null(dat()))
-            return(NULL)
+        # if (is.null(dat()))
+        #     return(NULL)
         valueBox(
             value = formatC(dat()$model$param$Lon, digits = 2, format = "f"),
             subtitle = "Longitude",
@@ -140,8 +142,8 @@ server <- function(input, output) {
     
     
     output$GroupsTable <- renderTable({
-        if (is.null(dat()))
-            return(NULL)
+        # if (is.null(dat()))
+        #     return(NULL)
         dat()$model$param$Groups %>% 
             select(-c(Repro, PlotColour, GrossGEscale))}, 
         striped = TRUE, bordered = TRUE, label = "Test Group Parameters")
@@ -149,8 +151,8 @@ server <- function(input, output) {
     
     # Plot abundance spectra by species
     output$speciesPlot <- renderPlot({
-        if (is.null(dat()))
-            return(NULL)
+        # if (is.null(dat()))
+        #     return(NULL)
         species <- dat()$abundances
         rownames(species) <- dat()$model$param$Groups$Species
         species <- as_tibble(t(species))
