@@ -60,6 +60,20 @@ To run the model, you simply need to provide the relevent information in Setup_R
 
 TBC
 
+## Useful reading
+
+Datta Paper
+The other thing to look at would be some of the numerical methods we use 
+  - Simpson’s method for the growth, mortality and diffusion integrals and 
+  - a semi-implicit upward finite difference scheme to solve the PDE at each time step. 
+  For the PDE numerical method, check out Appendix 1 of my thesis (attached)
+  Info on the difference scheme in Press’ 2007 book: Numerical Recipes, the Art of Scientific Computing (Available at UQ Library)
+
+
+On 1 Apr 2020, at 06:50, Richardson, Anthony (O&A, St. Lucia) <Anthony.Richardson@csiro.au> wrote:
+
+<Datta et al. - 2010 - A Jump-Growth M odel for Predator–Prey Dynamics De.pdf>
+
 ## Publications
 
 1. Heneghan, R.F., Everett, J.D., Blanchard, J.L., Richardson, A.J., 2016. Zooplankton Are Not Fish: Improving Zooplankton Realism in Size-Spectrum Models Mediates Energy Transfer in Food Webs. Front. Mar. Sci. 3, 1–15. https://doi.org/10.3389/fmars.2016.00201
