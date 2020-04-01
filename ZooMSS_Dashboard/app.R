@@ -3,7 +3,7 @@ library(shinydashboard)
 library(tidyverse)
 
 header <- dashboardHeader(title = "ZooMSS Dashboard")
-dat <- readRDS("../RawOutput/DATE_JOBNAME_0350.RDS")
+# dat <- readRDS("../RawOutput/DATE_JOBNAME_0350.RDS")
 
 ## Sidebar content
 sidebar <- dashboardSidebar(
@@ -13,7 +13,6 @@ sidebar <- dashboardSidebar(
         menuItem("Widgets", tabName = "widgets", icon = icon("th"))
     )
 )
-
 
 ## Body content
 body <- dashboardBody(
@@ -61,11 +60,19 @@ body <- dashboardBody(
 ui <- dashboardPage(header, sidebar, body)
 
 server <- function(input, output) {
+    options(shiny.maxRequestSize=100*1024^2) # Set max file size to 100 MB
     
+    dat <- reactive({
+        # browser()
+        if (is.null(input$ModelFile))
+            return(NULL)
+        readRDS(input$ModelFile$datapath)
+    })
     
     output$copepods <- renderValueBox({
-        NoCopepods <- round(sum(dat$abundances[dat$model$param$Groups$Species=="OmniCopepods" | dat$model$param$Groups$Species=="CarnCopepods"]))
-        
+        if (is.null(dat()))
+            return(NULL)
+        NoCopepods <- round(sum(dat()$abundances[dat()$model$param$Groups$Species=="OmniCopepods" | dat()$model$param$Groups$Species=="CarnCopepods"]))
         valueBox(
             value = formatC(NoCopepods, digits = 1, format = "f"),
             subtitle = "Total Number of copepods (m-3)",
@@ -75,10 +82,10 @@ server <- function(input, output) {
     })
     
     output$fish <- renderValueBox({
-        # The downloadRate is the number of rows in pkgData since
-        # either startTime or maxAgeSecs ago, whichever is later.
-        fish <- colSums(dat$abundances[which(dat$model$param$Groups$Type=="Fish"),])
-        FishBiomass <- sum(fish * dat$model$w)
+        if (is.null(dat()))
+            return(NULL)
+        fish <- colSums(dat()$abundances[which(dat()$model$param$Groups$Type=="Fish"),])
+        FishBiomass <- sum(fish * dat()$model$w)
         
         valueBox(
             value = formatC(FishBiomass, digits = 1, format = "f"),
@@ -89,8 +96,10 @@ server <- function(input, output) {
     })
     
     output$SST <- renderValueBox({
+        if (is.null(dat()))
+            return(NULL)
         valueBox(
-            value = formatC(dat$model$param$sst, digits = 2, format = "f"),
+            value = formatC(dat()$model$param$sst, digits = 2, format = "f"),
             subtitle = "SST",
             # icon = icon("area-chart"),
             color = "red"
@@ -98,8 +107,10 @@ server <- function(input, output) {
     })
     
     output$Chl <- renderValueBox({
+        if (is.null(dat()))
+            return(NULL)
         valueBox(
-            value = formatC(dat$model$param$chlo, digits = 2, format = "f"),
+            value = formatC(dat()$model$param$chlo, digits = 2, format = "f"),
             subtitle = "Chl. a (mg m-3)",
             # icon = icon("area-chart"),
             color = "green"
@@ -107,16 +118,20 @@ server <- function(input, output) {
     })
     
     output$Lat <- renderValueBox({
+        if (is.null(dat()))
+            return(NULL)
         valueBox(
-            value = formatC(dat$model$param$Lat, digits = 2, format = "f"),
+            value = formatC(dat()$model$param$Lat, digits = 2, format = "f"),
             subtitle = "Latitude",
             # icon = icon("area-chart"),
             color = "blue"
         )
     })
     output$Lon <- renderValueBox({
+        if (is.null(dat()))
+            return(NULL)
         valueBox(
-            value = formatC(dat$model$param$Lon, digits = 2, format = "f"),
+            value = formatC(dat()$model$param$Lon, digits = 2, format = "f"),
             subtitle = "Longitude",
             # icon = icon("area-chart"),
             color = "blue"
@@ -124,70 +139,75 @@ server <- function(input, output) {
     })
     
     
-    # dat_out <- readRDS(input$ModelFile$datapath)
-    # dat <- reactiveFileReader(1000, session, input$ModelFile$datapath, readRDS)
-    
     output$GroupsTable <- renderTable({
-        dat$model$param$Groups %>% 
+        if (is.null(dat()))
+            return(NULL)
+        dat()$model$param$Groups %>% 
             select(-c(Repro, PlotColour, GrossGEscale))}, 
         striped = TRUE, bordered = TRUE, label = "Test Group Parameters")
     
     
     # Plot abundance spectra by species
     output$speciesPlot <- renderPlot({
-        species <- dat$abundances
-        rownames(species) <- dat$model$param$Groups$Species
+        if (is.null(dat()))
+            return(NULL)
+        species <- dat()$abundances
+        rownames(species) <- dat()$model$param$Groups$Species
         species <- as_tibble(t(species))
         species <- species %>%
-            add_column("Weight" = dat$model$w)
+            add_column("Weight" = dat()$model$w)
         species <- species %>%
             pivot_longer(-Weight, names_to = "Species", values_to = "Abundance") %>%
             filter(Abundance > 0) %>%
-            mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
+            mutate(Species = factor(Species, levels = dat()$model$param$Groups$Species))
         
         ggplot(data = species, mapping = aes(x = log10(Weight), y = log10(Abundance), colour = Species)) +
             geom_line() +
             geom_point() +
-            scale_color_manual(values = dat$model$param$Groups$PlotColour) +
+            scale_color_manual(values = dat()$model$param$Groups$PlotColour) +
             theme_bw() + 
             labs(subtitle = "Abundance Spectrum")
     })
     
     # Plot growth rates by species
     output$growthPlot <- renderPlot({
-        growth <- dat$growth
-        rownames(growth) <- dat$model$param$Groups$Species
+        if (is.null(dat()))
+            return(NULL)
+        growth <- dat()$growth
+        rownames(growth) <- dat()$model$param$Groups$Species
         growth <- as_tibble(t(growth))
         growth <- growth %>%
-            add_column("Weight" = dat$model$w)
+            add_column("Weight" = dat()$model$w)
         growth <- growth %>%
             pivot_longer(-Weight, names_to = "Species", values_to = "GrowthRate") %>%
             filter(GrowthRate > 0) %>%
-            mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
+            mutate(Species = factor(Species, levels = dat()$model$param$Groups$Species))
         
         ggplot(data = growth, mapping = aes(x = log10(Weight), y = log10(GrowthRate), colour = Species)) +
             geom_line() +
             geom_point() +
-            scale_color_manual(values = dat$model$param$Groups$PlotColour) +
+            scale_color_manual(values = dat()$model$param$Groups$PlotColour) +
             theme_bw() + 
             labs(subtitle = "Growth Rates")
     })
     
     # Plot predation by species
     output$predationPlot <- renderPlot({
-        predation <- dat$predation
-        rownames(predation) <- dat$model$param$Groups$Species
+        if (is.null(dat()))
+            return(NULL)
+        predation <- dat()$predation
+        rownames(predation) <- dat()$model$param$Groups$Species
         predation <- as_tibble(t(predation))
         predation <- predation %>%
-            add_column("Weight" = dat$model$w)
+            add_column("Weight" = dat()$model$w)
         predation <- predation %>%
             pivot_longer(-Weight, names_to = "Species", values_to = "PredationRate") %>%
-            mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
+            mutate(Species = factor(Species, levels = dat()$model$param$Groups$Species))
         
         ggplot(data = predation, mapping = aes(x = log10(Weight), y = log10(PredationRate), colour = Species)) +
             geom_line() +
             geom_point() +
-            scale_color_manual(values = dat$model$param$Groups$PlotColour) +
+            scale_color_manual(values = dat()$model$param$Groups$PlotColour) +
             theme_bw() + 
             labs(subtitle = "Predation Rates")
     })
@@ -195,30 +215,32 @@ server <- function(input, output) {
     
     # Plot predation by species
     output$PPMRPlot <- renderPlot({
+        if (is.null(dat()))
+            return(NULL)
         
-        min_size = min(dat$model$param$Groups$W0) # smallest size class
-        max_size = max(dat$model$param$Groups$Wmax) # largest size class
+        min_size = min(dat()$model$param$Groups$W0) # smallest size class
+        max_size = max(dat()$model$param$Groups$Wmax) # largest size class
         # w = 10^(seq(from = min_size, to = max_size, 0.1)) # all size classes
         
         # Calculate PPMR (beta) table, where dim1 = group, dim2 = body size with
         # value being PPMR for that body size (this is not realised PPMR - not
         # emergent from diet but calculated from m-values and Wirtz, 2012 equation)
-        D.z = 2*(3*(dat$model$w)*1e12/(4*pi))^(1/3) # convert body mass g to ESD (um)
-        zoo_m = dat$model$param$Groups$PPMRscale # pull out m-values from parameter table
+        D.z = 2*(3*(dat()$model$w)*1e12/(4*pi))^(1/3) # convert body mass g to ESD (um)
+        zoo_m = dat()$model$param$Groups$PPMRscale # pull out m-values from parameter table
         betas =  log10(t(sapply(zoo_m, function(x){(exp(0.02*log(D.z)^2 - x + 1.832))^3}))) # Convert m to betas, using Wirtz 2012 equation
-        betas = betas[-which(dat$model$param$Groups$Type=="Fish"),] # remove fish rows
+        betas = betas[-which(dat()$model$param$Groups$Type=="Fish"),] # remove fish rows
         
         
         ## Modify beta matrix for larvaceans and salps - all size classes for these groups feed on same prey, so log10PPMR increases by 0.1 for each 0.1 log10 size interval
-        betas[which(dat$model$param$Groups$Species=="Larvaceans"),45:75] <- betas[which(dat$model$param$Groups$Species=="Larvaceans"),44] + seq(0.1,3.1,0.1) # Larvaceans (index 44 in w vector is smallest size class, 75 is maximum size class)
-        betas[which(dat$model$param$Groups$Species=="Salps"),61:121] <- betas[which(dat$model$param$Groups$Species=="Salps"),61] + seq(0.1,6.1,0.1) # Larvaceans (index 61 in w vector is smallest size class, 121 is maximum size class
+        betas[which(dat()$model$param$Groups$Species=="Larvaceans"),45:75] <- betas[which(dat()$model$param$Groups$Species=="Larvaceans"),44] + seq(0.1,3.1,0.1) # Larvaceans (index 44 in w vector is smallest size class, 75 is maximum size class)
+        betas[which(dat()$model$param$Groups$Species=="Salps"),61:121] <- betas[which(dat()$model$param$Groups$Species=="Salps"),61] + seq(0.1,6.1,0.1) # Larvaceans (index 61 in w vector is smallest size class, 121 is maximum size class
         
         # Calculate ave abundances across oligo/eutro grid squares,
         # then calculate ave biomass and proportion of total zoo biomass
         # that is from each group size class
         
-        ave_biom = sweep(dat$abundances, 2, dat$model$w, "*") # Calculate oligo biomass for zoo groups
-        ave_biom = ave_biom[-which(dat$model$param$Groups$Type=="Fish"),] # remove rows for fish
+        ave_biom = sweep(dat()$abundances, 2, dat()$model$w, "*") # Calculate oligo biomass for zoo groups
+        ave_biom = ave_biom[-which(dat()$model$param$Groups$Type=="Fish"),] # remove rows for fish
         beta_props = ave_biom/sum(ave_biom) # Calculate fraction of zoo biomass in each group, in each size class
         
         out <- list()
@@ -246,19 +268,21 @@ server <- function(input, output) {
     
     # Plot abundance by time
     output$timeSpeciesPlot <- renderPlot({
-        tspecies <- rowSums(dat$model$N,dims = 2)
-        colnames(tspecies) <- dat$model$param$Groups$Species
+        if (is.null(dat()))
+            return(NULL)
+        tspecies <- rowSums(dat()$model$N,dims = 2)
+        colnames(tspecies) <- dat()$model$param$Groups$Species
         tspecies <- as_tibble(tspecies)
-        tspecies$Time <- seq(1,dat$model$param$tmax, dat$model$param$dt*dat$model$param$isave)
+        tspecies$Time <- seq(1,dat()$model$param$tmax, dat()$model$param$dt*dat()$model$param$isave)
         tspecies <- tspecies %>%
             pivot_longer(-Time, names_to = "Species", values_to = "Abundance") %>%
             filter(Abundance > 0) %>%
-            mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
+            mutate(Species = factor(Species, levels = dat()$model$param$Groups$Species))
         
         ggplot(data = tspecies, mapping = aes(x = Time, y = log10(Abundance), colour = Species)) +
             geom_line() +
             geom_point() +
-            scale_color_manual(values = dat$model$param$Groups$PlotColour) +
+            scale_color_manual(values = dat()$model$param$Groups$PlotColour) +
             theme_bw() + 
             labs(subtitle = "Abundance") + 
             xlab("Time (Years)")
@@ -267,19 +291,21 @@ server <- function(input, output) {
     
     # Plot abundance by time
     output$timeGrowthPlot <- renderPlot({
-        gg <- rowSums(dat$model$gg,dims = 2)
-        colnames(gg) <- dat$model$param$Groups$Species
+        if (is.null(dat()))
+            return(NULL)
+        gg <- rowSums(dat()$model$gg,dims = 2)
+        colnames(gg) <- dat()$model$param$Groups$Species
         gg <- as_tibble(gg)
-        gg$Time <- seq(1,dat$model$param$tmax, dat$model$param$dt*dat$model$param$isave)
+        gg$Time <- seq(1,dat()$model$param$tmax, dat()$model$param$dt*dat()$model$param$isave)
         gg <- gg %>%
             pivot_longer(-Time, names_to = "Species", values_to = "Growth") %>%
             filter(Growth > 0) %>%
-            mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
+            mutate(Species = factor(Species, levels = dat()$model$param$Groups$Species))
         
         ggplot(data = gg, mapping = aes(x = Time, y = log10(Growth), colour = Species)) +
             geom_line() +
             geom_point() +
-            scale_color_manual(values = dat$model$param$Groups$PlotColour) +
+            scale_color_manual(values = dat()$model$param$Groups$PlotColour) +
             theme_bw() + 
             labs(subtitle = "Growth Rate") + 
             xlab("Time (Years)")
@@ -287,19 +313,21 @@ server <- function(input, output) {
     
     # Plot predation by time
     output$timePredationPlot <- renderPlot({
-        m2 <- rowSums(dat$model$M2,dims = 2)
-        colnames(m2) <- dat$model$param$Groups$Species
+        if (is.null(dat()))
+            return(NULL)
+        m2 <- rowSums(dat()$model$M2,dims = 2)
+        colnames(m2) <- dat()$model$param$Groups$Species
         m2 <- as_tibble(m2)
-        m2$Time <- seq(1,dat$model$param$tmax, dat$model$param$dt*dat$model$param$isave)
+        m2$Time <- seq(1,dat()$model$param$tmax, dat()$model$param$dt*dat()$model$param$isave)
         m2 <- m2 %>%
             pivot_longer(-Time, names_to = "Species", values_to = "Predation") %>%
             filter(Predation > 0) %>%
-            mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
+            mutate(Species = factor(Species, levels = dat()$model$param$Groups$Species))
         
         ggplot(data = m2, mapping = aes(x = Time, y = Predation, colour = Species)) +
             geom_line() +
             geom_point() +
-            scale_color_manual(values = dat$model$param$Groups$PlotColour) +
+            scale_color_manual(values = dat()$model$param$Groups$PlotColour) +
             theme_bw() + 
             labs(subtitle = "Predation Rate") + 
             xlab("Time (Years)")
