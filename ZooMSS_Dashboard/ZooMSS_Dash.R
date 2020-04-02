@@ -275,15 +275,15 @@ server <- function(input, output) {
         tspecies <- rowSums(dat()$model$N,dims = 2)
         colnames(tspecies) <- dat()$model$param$Groups$Species
         tspecies <- as_tibble(tspecies)
-        tspecies$Time <- seq(1,dat()$model$param$tmax, dat()$model$param$dt*dat()$model$param$isave)
+        tspecies$Time <- seq(dat()$model$param$dt*dat()$model$param$isave,dat()$model$param$tmax, dat()$model$param$dt*dat()$model$param$isave)
         tspecies <- tspecies %>%
             pivot_longer(-Time, names_to = "Species", values_to = "Abundance") %>%
             filter(Abundance > 0) %>%
             mutate(Species = factor(Species, levels = dat()$model$param$Groups$Species))
 
         ggplot(data = tspecies, mapping = aes(x = Time, y = log10(Abundance), colour = Species)) +
-            geom_line() +
-            geom_point() +
+            geom_line(size = 0.2) +
+            geom_point(size = 0.2) +
             scale_color_manual(values = dat()$model$param$Groups$PlotColour) +
             theme_bw() +
             labs(subtitle = "Abundance") +
@@ -298,15 +298,15 @@ server <- function(input, output) {
         gg <- rowSums(dat()$model$gg,dims = 2)
         colnames(gg) <- dat()$model$param$Groups$Species
         gg <- as_tibble(gg)
-        gg$Time <- seq(1,dat()$model$param$tmax, dat()$model$param$dt*dat()$model$param$isave)
+        gg$Time <- seq(dat()$model$param$dt*dat()$model$param$isave,dat()$model$param$tmax, dat()$model$param$dt*dat()$model$param$isave)
         gg <- gg %>%
             pivot_longer(-Time, names_to = "Species", values_to = "Growth") %>%
             filter(Growth > 0) %>%
             mutate(Species = factor(Species, levels = dat()$model$param$Groups$Species))
 
         ggplot(data = gg, mapping = aes(x = Time, y = log10(Growth), colour = Species)) +
-            geom_line() +
-            geom_point() +
+            geom_line(size = 0.2) +
+            geom_point(size = 0.2) +
             scale_color_manual(values = dat()$model$param$Groups$PlotColour) +
             theme_bw() +
             labs(subtitle = "Growth Rate") +
@@ -320,22 +320,20 @@ server <- function(input, output) {
         m2 <- rowSums(dat()$model$M2,dims = 2)
         colnames(m2) <- dat()$model$param$Groups$Species
         m2 <- as_tibble(m2)
-        m2$Time <- seq(1,dat()$model$param$tmax, dat()$model$param$dt*dat()$model$param$isave)
+        m2$Time <- seq(dat()$model$param$dt*dat()$model$param$isave,dat()$model$param$tmax, dat()$model$param$dt*dat()$model$param$isave)
         m2 <- m2 %>%
             pivot_longer(-Time, names_to = "Species", values_to = "Predation") %>%
             filter(Predation > 0) %>%
             mutate(Species = factor(Species, levels = dat()$model$param$Groups$Species))
 
         ggplot(data = m2, mapping = aes(x = Time, y = Predation, colour = Species)) +
-            geom_line() +
-            geom_point() +
+            geom_line(size = 0.2) +
+            geom_point(size = 0.2) +
             scale_color_manual(values = dat()$model$param$Groups$PlotColour) +
             theme_bw() +
             labs(subtitle = "Predation Rate") +
             xlab("Time (Years)")
     })
-
-
 
 }
 
