@@ -78,29 +78,22 @@ fZooMSS_Run <- function(model){
     C[,idx] <- 1 + dt * Z[,idx] + dt/dx*(gg[,idx] + diff[,idx] * (log(10)/2+1/dx))
     S[,idx] <- N[,idx]
 
+    curr_min_size <- vector()
+    curr_max_size <- vector()
     ### RFH - I have a C++ implementation for this but it won't help with speed at this point I don't think.
     for(i in 1:model$param$ngrps){
 
       ### RFH - Can't these next few rows be done in fZooMSS_Setup and stored as a vector?
       ## Set size range index for current group
-      curr_min_size <- which(round(log10(model$w), digits = 2) == param$Groups$W0[i])
-      curr_max_size <- which(round(log10(model$w), digits = 2) == param$Groups$Wmax[i])
-      idx_curr <- (curr_min_size+1):curr_max_size
-
-      for(j in idx_curr){ ## Find the abundance at the next size class with standard MvF
-        N.iter[i,j] <- (S.iter[i,j] + A.iter[i,j]*N[i,j-1])/(C.iter[i,j])
-        if(j >= (idx_curr[1]+1)){ ## Find abundance with MvF with diffusion
-          k <- j - 1
-          N[i,k] <- (S[i,k] + A[i,k] * N[i,k-1] + B[i,k] * N.iter[i,k+1]) / C[i,k]
-        }
-
-        # MvF without diffusion for last size class
-        if(j == idx_curr[length(idx_curr)]){
-          N[i,j] <- 0
-          # N[i,curr_min_size] <- N.iter[i,curr_min_size] # Keep starting sizes constant
-        }
-      }
+      curr_min_size[i] <- which(round(log10(model$w), digits = 2) == param$Groups$W0[i])
+      curr_max_size[i] <- which(round(log10(model$w), digits = 2) == param$Groups$Wmax[i])
     }
+
+      N.iter <- fZooMSS_inner_project_loop(no_sp = model$param$ngrps, no_w = model$ngrid, niter = N.iter,
+                                   Aiter = A.iter, Citer = C.iter, Siter = S.iter,
+                                   S=S, n=N, A=A, B=B, C=C,
+                                   w_min_idx = curr_min_size, w_max_idx = curr_max_size)
+
 
     #### Keep smallest fish community size class as equal to equivalent zooplankton size class
     ### Keep smallest zooplankton size class abundnace
