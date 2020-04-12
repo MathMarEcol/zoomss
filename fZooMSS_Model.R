@@ -10,10 +10,10 @@ fZooMSS_Model <- function(input_params, save_all){
   model_output <- fZooMSS_Run(model) # Run the model
 
   ################### OUTPUT ABUNDANCES ##############################################
-  ave_abundances <- colMeans(model_output$N[(ceiling(0.5*dim(model_output$N)[1])):(dim(model_output$N)[1]),,], dim = 1)
-  ave_diets <- colMeans(model_output$diet[(ceiling(0.5*dim(model_output$diet)[1])):(dim(model_output$diet)[1]),,], dim = 1)
-  ave_growth <- colMeans(model_output$gg[(ceiling(0.5*dim(model_output$gg)[1])):(dim(model_output$gg)[1]),,], dim = 1)
-  ave_pred <- colMeans(model_output$M2[(ceiling(0.5*dim(model_output$M2)[1])):(dim(model_output$M2)[1]),,], dim = 1)
+  ave_abundances <- colMeans(model_output$N[(ceiling(0.5*dim(model_output$N)[1])):(dim(model_output$N)[1]),,], dims = 1)
+  ave_diets <- colMeans(model_output$diet[(ceiling(0.5*dim(model_output$diet)[1])):(dim(model_output$diet)[1]),,], dims = 1)
+  ave_growth <- colMeans(model_output$gg[(ceiling(0.5*dim(model_output$gg)[1])):(dim(model_output$gg)[1]),,], dims = 1)
+  ave_pred <- colMeans(model_output$M2[(ceiling(0.5*dim(model_output$M2)[1])):(dim(model_output$M2)[1]),,], dims = 1)
 
   if (SaveTimeSteps == TRUE){
   results <- list("abundances" = ave_abundances, # Save mean abundance
