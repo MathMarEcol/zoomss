@@ -7,7 +7,6 @@
 fZooMSS_Params <- function(Groups, input_params){
 
   param <- list(Groups = Groups, # Read in functional group specific parameters from file
-                nutrition = Groups$Carbon, # Extract carbon content (nutr. quality) of each group
                 ngrps = dim(Groups)[1],		# no. of Groups
                 dx = 0.1,         # log10 weight step
                 day = 12,          # day length (hours of each day in sun)
