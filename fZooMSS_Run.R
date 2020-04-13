@@ -45,37 +45,42 @@ fZooMSS_Run <- function(model){
 
     setTxtProgressBar(pb, itime) # Update progress bar
 
-    growth_multiplier <- colSums(N*model$assim_eff)
-    predation_multiplier <- N*model$temp_eff
-    diffusion_multiplier <- colSums(N*(model$assim_eff^2))
+    growth_multiplier <- colSums(N*model$assim_eff) # 1 x n_sizes
+    predation_multiplier <- N*model$temp_eff # n_species x n_sizes
+    diffusion_multiplier <- colSums(N*(model$assim_eff^2)) # 1 x n_sizes
 
-    ### Apply is slow as it implements a loop. Turns out colSums and aperm is 50 % faster in these cases
-    sw <- sweep(model$dynam_growthkernel, 3, growth_multiplier, '*')
-    ap <- colSums(aperm(sw, c(3,1,2)))
-    gg <- model$ingested_phyto + ap
+    ### DO GROWTH
+    sw <- sweep(model$dynam_growthkernel, 3, growth_multiplier, '*') # n_species x n_sizes x n_sizes
+    ap <- aperm(sw, c(3,1,2)) # n_sizes x n_species x n_sizes
+    cs <- colSums(ap) # n_species x n_sizes
+    gg <- model$ingested_phyto + cs
+    rm(sw, ap, cs)
 
-    sw2 <- sweep(model$dynam_mortkernel, c(2,3), predation_multiplier, '*')
-    M2 <- colSums(colSums(aperm(sw2, c(2,3,1))))
-    rm(sw, sw2, ap)
+    ### DO MORTALITY
+    sw2 <- sweep(model$dynam_mortkernel, c(2,3), predation_multiplier, '*') # n_sizes x n_species x n_sizes
+    ap2 <- aperm(sw2, c(2,3,1))
+    M2 <- colSums(colSums(ap2)) # 1 x n_sizes
+    Z <- sweep(model$M_sb + model$fish_mort, 2, M2, '+') # Total dynamic spectrum mortality (n_species x n_sizes)
+    rm(sw2, ap2)
 
-    # Total dynamic spectrum mortality
-    Z <- sweep(model$M_sb + model$fish_mort, 2, M2, '+')
-
-    sw <- sweep(model$dynam_diffkernel, 3, diffusion_multiplier, '*')
-    ap <- colSums(aperm(sw, c(3,1,2)))
-    diff <- model$diff_phyto + ap
+    ### DO DIFFUSION
+    sw3 <- sweep(model$dynam_diffkernel, 3, diffusion_multiplier, '*')
+    ap3 <- aperm(sw3, c(3,1,2))
+    cs3 <- colSums(ap3)
+    diff <- model$diff_phyto + cs3
+    rm(sw3, ap3, cs3)
 
     ### MvF WITH DIFFUSION ALGORITHM
     # Numerical implementation matrices (for MvF without diffusion)
     A.iter[,idx.iter] <- dt/dx * gg[,idx.iter-1] # Growth stuff
     C.iter[,idx.iter] <- 1 + dt * Z[,idx.iter] + dt/dx * gg[,idx.iter] # Mortality
-    S.iter[,idx.iter] <- N[,idx.iter] # N at
+    S.iter[,idx.iter] <- N[,idx.iter] # N at.....
     N.iter <- N # Current Abundance
 
     # Numerical implementation matrices (for MvF WITH diffusion)
-    A[,idx] <- dt/dx * (gg[,idx-1] + diff[,idx-1] * (log(10)/2+1/(2*dx)))
+    A[,idx] <- dt/dx * (gg[,idx-1] + diff[,idx-1] * (log(10)/2+1/(2*dx))) # Growth stuff
     B[,idx] <- diff[,idx+1] * dt/(2*dx^2) # Diffusion term
-    C[,idx] <- 1 + dt * Z[,idx] + dt/dx*(gg[,idx] + diff[,idx] * (log(10)/2+1/dx))
+    C[,idx] <- 1 + dt * Z[,idx] + dt/dx*(gg[,idx] + diff[,idx] * (log(10)/2+1/dx)) # Mortality
     S[,idx] <- N[,idx]
 
     ### RFH - I have a C++ implementation for this but it won't help with speed at this point I don't think.
@@ -115,7 +120,7 @@ fZooMSS_Run <- function(model){
     }
 
     fish_mins <- unlist(lapply(param$Groups$W0[param$fish_grps],
-                              function(x){which(round(log10(model$w), digits = 2) == x)}))
+                               function(x){which(round(log10(model$w), digits = 2) == x)}))
 
     if(length(param$fish_grps) > 1 & length(param$zoo_grps) > 1){
       N[param$fish_grps,fish_mins] <- (1/length(param$fish_grps))*(colSums(N[-param$fish_grps,fish_mins]))
@@ -142,22 +147,13 @@ fZooMSS_Run <- function(model){
       model$diet[isav,,1:3] <- cbind(pico_phyto_diet, nano_phyto_diet, micro_phyto_diet)
       model$diet[isav,,c(4:(dim(param$Groups)[1]+3))] <- dynam_diet
 
-      # Save N by taxa and size
-      model$N[isav,,] <- N
-
-      ## Save Total Abundance
-      model$Abundance[isav,] <- rowSums(model$N[isav,,])
-
-      ## Save biomass
-      model$Biomass[isav,] <- rowSums(model$N[isav,,]*matrix(model$w, nrow = model$param$ngrps, ncol = model$ngrid, byrow = TRUE))
-
-      ## Save predation mortality rates
-      model$M2[isav,,] <- M2 # Save predation mortality rates
-
-      ## Save growth
-      model$gg[isav,,] <-  model$ingested_phyto + apply(sweep(model$dynam_growthkernel, 3, growth_multiplier, '*'), c(1,2), sum)
+      model$N[isav,,] <- N # Save N by taxa and size
+      model$Abundance[isav,] <- rowSums(model$N[isav,,]) ## Save Total Abundance
+      model$Biomass[isav,] <- rowSums(model$N[isav,,]*matrix(model$w, nrow = model$param$ngrps, ncol = model$ngrid, byrow = TRUE)) ## Save biomass
+      model$M2[isav,,] <- matrix(M2, nrow = model$param$ngrps, ncol = length(M2), byrow=TRUE) # Save predation mortality rates
+      model$Z[isav,,] <-  Z ## Save mortality
+      model$gg[isav,,] <-  gg ## Save growth
     }
-
   } # End of time loop
 
   return(model)
