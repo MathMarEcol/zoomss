@@ -19,7 +19,7 @@ fZooMSS_Params <- function(Groups, input_params){
                 w0_phyto = 10^(-14.5),		# minimum phytoplankton size class (1um)
                 wMax_phyto = 10^input_params$phyto_max,		# maximum phytoplankton size class
                 cc_phyto = 0.1,  # Carbon content of phytoplankton size classes
-                isave = 10,	# how often to save results every 'isave' time steps
+                isave = 100,	# how often to save results every 'isave' time steps
                 zoo_grps = which(Groups$Type == "Zooplankton"), # Which rows are zooplankton
                 fish_grps = which(Groups$Type == "Fish"), # Which rows are fish
                 num_zoo = sum(Groups$Type == "Zooplankton"), # How many zooplankton
