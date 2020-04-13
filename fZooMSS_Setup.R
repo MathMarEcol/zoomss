@@ -85,6 +85,7 @@ fZooMSS_Setup <- function(param){
     # Output storage
     N = array(0, dim = c(nsave, param$ngrps, ngrid)), # dynamic abundance spectrum
     M2 = array(0, dim = c(nsave, param$ngrps, ngrid)), # Predation mortality
+    Z = array(0, dim = c(nsave, param$ngrps, ngrid)), # Total mortality
     gg = array(0, dim = c(nsave, param$ngrps, ngrid)), # Growth
     diet = array(0, dim = c(nsave, c(param$ngrps), c(param$ngrps+3))), # diet
     Biomass = matrix(0, nrow = nsave, ncol = param$ngrps), # Biomass of each group
