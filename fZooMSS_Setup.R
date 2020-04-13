@@ -17,22 +17,22 @@ fZooMSS_Setup <- function(param){
   # Number of time slots to save
   nsave  <- floor(param$tmax/(param$dt*param$isave))
 
-  # Diel Vertical Migration - change availability of phyto to zoo
-  # and zoo to fish based on slope of phytoplankton (calculated as
-  # proportion of day searching for food and available for predation)
-  dvm_max <- param$day/24 # maximum proportion of day spent migrating
-  ESD_sizes <- 2*(3/(4*pi)*w)^(1/3) # convert g wet weight to ESD (cm)
-  dvm <- dvm_max*(1.02*(ESD_sizes) - 0.02) # size-dependent amount of time spent away from surface
-  dvm[which(w < 10^-5.4)] <- 0 # Microzoo don't migrate (ESD < 0.02cm)
-  dvm[which(w > 10^-0.3)] <- dvm_max # Macrozoo migrate max time (ESD > 10cm)
-
-  dvm_mat <- matrix(dvm, nrow = ngrid, ncol = ngrid, byrow = TRUE) # Matrix of dvm, nrow = number of pred size classes
-
-  # This works out the proportion of time an predator of size w will have access to a prey of size w', for all w and w'
-  dvm_mat <- 1 - dvm_mat
-  dvm_mat[lower.tri(dvm_mat)] <- 0
-  dvm_mat <- t(dvm_mat) + dvm_mat
-  diag(dvm_mat) <- diag(dvm_mat)/2
+  # Commented out DVM as it is unused at the moment (April 2020)
+  # # Diel Vertical Migration - change availability of phyto to zoo
+  # # and zoo to fish based on slope of phytoplankton (calculated as
+  # # proportion of day searching for food and available for predation)
+  # dvm_max <- param$day/24 # maximum proportion of day spent migrating
+  # ESD_sizes <- 2*(3/(4*pi)*w)^(1/3) # convert g wet weight to ESD (cm)
+  # dvm <- dvm_max*(1.02*(ESD_sizes) - 0.02) # size-dependent amount of time spent away from surface
+  # dvm[which(w < 10^-5.4)] <- 0 # Microzoo don't migrate (ESD < 0.02cm)
+  # dvm[which(w > 10^-0.3)] <- dvm_max # Macrozoo migrate max time (ESD > 10cm)
+  # dvm_mat <- matrix(dvm, nrow = ngrid, ncol = ngrid, byrow = TRUE) # Matrix of dvm, nrow = number of pred size classes
+  #
+  # # This works out the proportion of time an predator of size w will have access to a prey of size w', for all w and w'
+  # dvm_mat <- 1 - dvm_mat
+  # dvm_mat[lower.tri(dvm_mat)] <- 0
+  # dvm_mat <- t(dvm_mat) + dvm_mat
+  # diag(dvm_mat) <- diag(dvm_mat)/2
 
   # Dynamic prey availability matrix: dim1 is predators, dim2 is predator size classes,
   # dim3 is prey groups, dim 4 is prey size classes.
@@ -75,22 +75,22 @@ fZooMSS_Setup <- function(param){
     fish_mort = matrix(0, nrow = param$ngrps, ncol = ngrid), # fishing mortality
 
     # Assimilation efficiency and temperature effect storage, by group and size class
-    assim_eff = matrix(NA, nrow = param$ngrps, ncol = ngrid),
-    temp_eff = matrix(NA, nrow = param$ngrps, ncol = ngrid),
+    assim_eff = matrix(0, nrow = param$ngrps, ncol = ngrid),
+    temp_eff = matrix(0, nrow = param$ngrps, ncol = ngrid),
 
     #### STORAGE FOR DIET KERNELS
     phyto_dietkernel = array(NA, dim = c(param$ngrps, ngrid, ngridPP)),
     dynam_dietkernel = array(NA, dim = c(param$ngrps, ngrid, ngrid)),
 
     # Output storage
-    N = array(0, dim = c(nsave, param$ngrps, ngrid)), # dynamic abundance spectrum
-    M2 = array(0, dim = c(nsave, param$ngrps, ngrid)), # Predation mortality
-    Z = array(0, dim = c(nsave, param$ngrps, ngrid)), # Total mortality
-    gg = array(0, dim = c(nsave, param$ngrps, ngrid)), # Growth
-    diet = array(0, dim = c(nsave, c(param$ngrps), c(param$ngrps+3))), # diet
-    Biomass = matrix(0, nrow = nsave, ncol = param$ngrps), # Biomass of each group
-    Abundance = matrix(0, nrow = nsave, ncol = param$ngrps), # Abundance of each group
-    Diff = array(0, dim = c(nsave, param$ngrps, ngrid)) # save diffusion
+    N = array(NA, dim = c(nsave, param$ngrps, ngrid)), # dynamic abundance spectrum
+    # M2 = array(NA, dim = c(nsave, param$ngrps, ngrid)), # Predation mortality
+    Z = array(NA, dim = c(nsave, param$ngrps, ngrid)), # Total mortality
+    gg = array(NA, dim = c(nsave, param$ngrps, ngrid)), # Growth
+    diet = array(NA, dim = c(nsave, c(param$ngrps), c(param$ngrps+3))) # diet
+    # Biomass = matrix(NA, nrow = nsave, ncol = param$ngrps), # Biomass of each group
+    # Abundance = matrix(NA, nrow = nsave, ncol = param$ngrps), # Abundance of each group
+    # Diff = array(NA, dim = c(nsave, param$ngrps, ngrid)) # save diffusion
   )
 
   # GGE for different groups
@@ -276,7 +276,7 @@ fZooMSS_Setup <- function(param){
   model$dynam_dietkernel <- sweep(sweep(sweep(dynam_theta, c(1,2,4), model$dynam_dietkernel, "*"),
                                        c(1,3), 1, "*"), c(1,2), model$temp_eff, "*")
 
-  # We won't sweep through temp_effect here, but do it in Project function. This is to make sure
+  # We won't sweep through temp_effect here, but do it in fZooMSS_Run function. This is to make sure
   # it can still work in the future if we have different temperature effects for different groups,
   # so then dynam_mortkernel is dim1 = prey sizes, dim 2 = pred groups, dim 3 = pred size
   model$dynam_mortkernel <- aperm(model$dynam_mortkernel, c(2,1,3))
