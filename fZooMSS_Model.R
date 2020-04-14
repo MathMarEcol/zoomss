@@ -8,7 +8,6 @@ fZooMSS_Model <- function(input_params, Groups, SaveTimeSteps){
   ################### RUN THE MODEL ###################
   param <- fZooMSS_Params(Groups, input_params) # Set up parameter list
   model <- fZooMSS_Setup(param) # Set up model equation stuff
-  # cat(tracemem(model$N), "\n")
   model_output <- fZooMSS_Run(model) # Run the model
 
   ################### AVERAGE THE LAST 50 % OF THE MODEL RUN ###################
@@ -20,7 +19,7 @@ fZooMSS_Model <- function(input_params, Groups, SaveTimeSteps){
 
   if (SaveTimeSteps == TRUE){
     model$Abundance <- rowSums(model$N) ## Save Total Abundance
-    model$Biomass <- colSums(aperm(sweep(model$N, 3, model$w, "*"), c(3,1,2)))
+    model$Biomass <- colSums(aperm(sweep(model$N, 3, model$param$w, "*"), c(3,1,2)))
 
   results <- list("abundances" = ave_abundances, # Save mean abundance
                  "diets" = ave_diets,  # Save mean diets
