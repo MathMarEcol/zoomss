@@ -107,9 +107,7 @@ fZooMSS_Run <- function(model){
     for(i in 1:ngrps){
 
       ## Set size range index for current group
-      curr_min_size <- which(round(log10(w), digits = 2) == W0[i])
-      curr_max_size <- which(round(log10(w), digits = 2) == Wmax[i])
-      idx_curr <- (curr_min_size+1):curr_max_size
+      idx_curr <- (curr_min_size[i]+1):curr_max_size[i]
 
       for(j in idx_curr){ ## Find the abundance at the next size class with standard MvF
         N.iter[i,j] <- (S.iter[i,j] + A.iter[i,j]*N[i,j-1])/(C.iter[i,j])
