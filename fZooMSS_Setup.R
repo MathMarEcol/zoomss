@@ -17,7 +17,7 @@ fZooMSS_Setup <- function(param){
   # Number of time slots to save
   nsave  <- floor(param$tmax/(param$dt*param$isave))
 
-  # Commented out DVM as it is unused at the moment (April 2020)
+  ## Commented out DVM as it is unused at the moment (April 2020)
   # # Diel Vertical Migration - change availability of phyto to zoo
   # # and zoo to fish based on slope of phytoplankton (calculated as
   # # proportion of day searching for food and available for predation)
@@ -34,22 +34,22 @@ fZooMSS_Setup <- function(param){
   # dvm_mat <- t(dvm_mat) + dvm_mat
   # diag(dvm_mat) <- diag(dvm_mat)/2
 
-  # Dynamic prey availability matrix: dim1 is predators, dim2 is predator size classes,
-  # dim3 is prey groups, dim 4 is prey size classes.
-  dynam_theta <- array(1, dim = c(param$ngrps, ngrid, param$ngrps, ngrid))
-  dynam_theta <- sweep(dynam_theta, c(2,4), dvm_mat,"*")
+  # # Dynamic prey availability matrix: dim1 is predators, dim2 is predator size classes,
+  # # dim3 is prey groups, dim 4 is prey size classes.
+  # dynam_theta <- array(1, dim = c(param$ngrps, ngrid, param$ngrps, ngrid))
+  # dynam_theta <- sweep(dynam_theta, c(2,4), dvm_mat,"*")
 
   # Phyto availability matrix: rows are predators, columns are their size classes,
   # entries are time spent feeding on phytoplankton for the size class
-  phyto_theta <- matrix(1-dvm, nrow = param$ngrps, ncol = ngrid, byrow = TRUE)
+  # phyto_theta <- matrix(1-dvm, nrow = param$ngrps, ncol = ngrid, byrow = TRUE)
+  ## End commented out DVM
 
-  ### REMOVE DVM
+  ### IN PLACE OF DVM
   dynam_theta <- array(1, dim = c(param$ngrps, ngrid, param$ngrps, ngrid))
   phyto_theta <- matrix(1, nrow = param$ngrps, ncol = ngrid, byrow = TRUE)
   ###
 
-  carn_grps <- which(param$Groups$FeedType == 'Carnivore')
-  phyto_theta[carn_grps,] <- 0 # Carnivorous groups can't eat phyto
+  phyto_theta[which(param$Groups$FeedType == 'Carnivore'),] <- 0 # Carnivorous groups can't eat phyto
 
   ## Makes the model object, full of constant functions for model
   model <- list(
