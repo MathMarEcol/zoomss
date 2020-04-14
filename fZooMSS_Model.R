@@ -2,6 +2,7 @@ fZooMSS_Model <- function(input_params, Groups, SaveTimeSteps){
 
   source("fZooMSS_Params.R")
   source("fZooMSS_Setup.R")
+  source("fZooMSS_inner_project_loop.R")
   source("fZooMSS_Run.R")
   source("fZooMSS_Xtras.R")
 
