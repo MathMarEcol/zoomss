@@ -36,12 +36,12 @@ out$model$model_runtime <- system.time(
 
 saveRDS(out, file = paste0("RawOutput/", jobname, "_", ID_char,".RDS"))
 
-# source("fZooMSS_CheckIdent.R")
-# out_old <- readRDS("RawOutput/DATE_JOBNAME_0001_20200414.RDS")
+source("fZooMSS_CheckIdent.R")
+out_old <- readRDS("RawOutput/DATE_JOBNAME_0001_20200414.RDS")
 # out_old <- readRDS("RawOutput/DATE_JOBNAME_0350_20200401.RDS")
 # out_old <- readRDS("RawOutput/DATE_JOBNAME_0611_20200401.RDS")
 
-# fZooMSS_CheckIdent(out, out_old)
+fZooMSS_CheckIdent(out, out_old)
 
 
 
@@ -57,3 +57,5 @@ saveRDS(out, file = paste0("RawOutput/", jobname, "_", ID_char,".RDS"))
 # 54.737   8.760  63.391 # Remove list accessing again
 # 61.679  11.131  68.390
 # 58.708   9.891  68.621
+
+# 50.791   8.354  58.669 $ With Rcpp (but wrong answer)
