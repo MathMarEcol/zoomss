@@ -1,24 +1,26 @@
-fZooMSS_Model <- function(input_params, Groups, save_all){
+fZooMSS_Model <- function(input_params, Groups, SaveTimeSteps){
 
   source("fZooMSS_Params.R")
   source("fZooMSS_Setup.R")
   source("fZooMSS_Run.R")
+  source("fZooMSS_Xtras.R")
 
-  ##################### RUN THE MODEL ################################################
+  ################### RUN THE MODEL ###################
   param <- fZooMSS_Params(Groups, input_params) # Set up parameter list
   model <- fZooMSS_Setup(param) # Set up model equation stuff
   # cat(tracemem(model$N), "\n")
   model_output <- fZooMSS_Run(model) # Run the model
 
-  ################### OUTPUT ABUNDANCES ##############################################
-  ave_abundances <- colMeans(model_output$N[(ceiling(0.5*dim(model_output$N)[1])):(dim(model_output$N)[1]),,], dims = 1)
-  ave_diets <- colMeans(model_output$diet[(ceiling(0.5*dim(model_output$diet)[1])):(dim(model_output$diet)[1]),,], dims = 1)
-  ave_growth <- colMeans(model_output$gg[(ceiling(0.5*dim(model_output$gg)[1])):(dim(model_output$gg)[1]),,], dims = 1)
-  ave_mort <- colMeans(model_output$Z[(ceiling(0.5*dim(model_output$Z)[1])):(dim(model_output$Z)[1]),,], dims = 1)
+  ################### AVERAGE THE LAST 50 % OF THE MODEL RUN ###################
+
+  ave_abundances <- fZooMSS_AveOutput(model_output$N)
+  ave_diets <- fZooMSS_AveOutput(model_output$diet)
+  ave_growth <- fZooMSS_AveOutput(model_output$gg)
+  ave_mort <- fZooMSS_AveOutput(model_output$Z)
 
   if (SaveTimeSteps == TRUE){
     model$Abundance <- rowSums(model$N) ## Save Total Abundance
-    # model$Biomass <- rowSums(model$N*matrix(model$w, nrow = model$param$ngrps, ncol = model$ngrid, byrow = TRUE)) ## Save biomass
+    model$Biomass <- colSums(aperm(sweep(model$N, 3, model$w, "*"), c(3,1,2)))
 
   results <- list("abundances" = ave_abundances, # Save mean abundance
                  "diets" = ave_diets,  # Save mean diets
