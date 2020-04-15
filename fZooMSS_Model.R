@@ -19,7 +19,7 @@ fZooMSS_Model <- function(input_params, Groups, SaveTimeSteps){
   ave_mort <- fZooMSS_AveOutput(model_output$Z)
 
   if (SaveTimeSteps == TRUE){
-    model_output$Abundance <- rowSums(model$N) ## Save Total Abundance
+    model_output$Abundance <- rowSums(model$N, dims = 2) ## Save Total Abundance
     model_output$Biomass <- colSums(aperm(sweep(model$N, 3, model$param$w, "*"), c(3,1,2)))
 
   results <- list("abundances" = ave_abundances, # Save mean abundance
