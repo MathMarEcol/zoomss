@@ -103,11 +103,9 @@ fZooMSS_Run <- function(model){
     C[,idx] <- 1 + dt * Z[,idx] + dt/dx*(gg[,idx] + diff[,idx] * (log(10)/2+1/dx)) # Mortality
     S[,idx] <- N[,idx]
 
-
     for(i in 1:ngrps){
 
-      ## Set size range index for current group
-      idx_curr <- (curr_min_size[i]+1):curr_max_size[i]
+      idx_curr <- (curr_min_size[i]+1):curr_max_size[i] ## Set size range index for current group
 
       for(j in idx_curr){ ## Find the abundance at the next size class with standard MvF
         N.iter[i,j] <- (S.iter[i,j] + A.iter[i,j]*N[i,j-1])/(C.iter[i,j])
