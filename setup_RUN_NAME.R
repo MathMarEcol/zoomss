@@ -35,13 +35,16 @@ out$model$model_runtime <- system.time(
 )
 
 saveRDS(out, file = paste0("RawOutput/", jobname, "_", ID_char,".RDS"))
+
+
 #
-# source("fZooMSS_CheckIdent.R")
+source("fZooMSS_CheckIdent.R")
 # out_old <- readRDS("RawOutput/DATE_JOBNAME_0001_20200414.RDS")
 # # out_old <- readRDS("RawOutput/DATE_JOBNAME_0350_20200401.RDS")
 # # out_old <- readRDS("RawOutput/DATE_JOBNAME_0611_20200401.RDS")
-#
-# fZooMSS_CheckIdent(out, out_old)
+
+out_old <- readRDS("RawOutput/DATE_JOBNAME_0001_BeforeBill.RDS")
+fZooMSS_CheckIdent(out, out_old)
 #
 
 
@@ -61,3 +64,10 @@ saveRDS(out, file = paste0("RawOutput/", jobname, "_", ID_char,".RDS"))
 # 57.719  12.591  69.833 # 15 April
 
 # 50.791   8.354  58.669 $ With Rcpp (but wrong answer)
+# 51.082  10.519  61.464 # After Bill - partial input
+# 52.699  10.639  63.087
+# 48.959  12.270  58.905 # After Bill - input Growth+Diff
+# 46.598  12.198  58.649
+# 47.307  10.832  57.969  # Changing to .colSums
+# 46.585   9.631  56.061
+
