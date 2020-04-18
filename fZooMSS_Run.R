@@ -22,6 +22,7 @@ fZooMSS_Run <- function(model){
   dynam_mortkernel <- model$dynam_mortkernel
   dynam_diffkernel <- model$dynam_diffkernel
   diff_phyto <- model$diff_phyto
+  ingested_phyto <- model$ingested_phyto
 
   curr_min_size <- vector()
   curr_max_size <- vector()
@@ -70,13 +71,23 @@ fZooMSS_Run <- function(model){
     diffusion_multiplier <- colSums(N * (assim_eff^2)) # 1 x n_sizes
 
     ### DO GROWTH
-    sw <- sweep(dynam_growthkernel, 3, growth_multiplier, '*') # n_species x n_sizes x n_sizes
-    ap <- aperm(sw, c(3,1,2)) # n_sizes x n_species x n_sizes
-    cs <- colSums(ap) # n_species x n_sizes
-    gg <- model$ingested_phyto + cs
-    rm(sw, ap, cs)
+    dim(dynam_growthkernel) <- c(ngrps*ngrid, ngrid)
+    cs <- .colSums(growth_multiplier * t(dynam_growthkernel), m = ngrid, n = ngrps*ngrid)
+    dim(cs) <- c(ngrps, ngrid)
+    gg <- ingested_phyto + cs
+
+    # sw <- sweep(dynam_growthkernel, 3, growth_multiplier, '*') # n_species x n_sizes x n_sizes
+    # ap <- aperm(sw, c(3,1,2)) # n_sizes x n_species x n_sizes
+    # cs <- colSums(ap) # n_species x n_sizes
+    # gg <- model$ingested_phyto + cs
+    # rm(sw, ap, cs)
 
     ### DO MORTALITY
+    # dynam_mortkernel <- model$dynam_mortkernel
+    # cs <- colSums(predation_multiplier * t(dynam_mortkernel))
+    # dim(cs) <- c(ngrps, ngrid)
+    # gg <- ingested_phyto + cs
+
     sw2 <- sweep(dynam_mortkernel, c(2,3), predation_multiplier, '*') # n_sizes x n_species x n_sizes
     ap2 <- aperm(sw2, c(2,3,1))
     M2 <- .colSums(colSums(ap2),ngrid,ngrid) # 1 x n_sizes
@@ -84,11 +95,16 @@ fZooMSS_Run <- function(model){
     rm(sw2, ap2)
 
     ### DO DIFFUSION
-    sw3 <- sweep(dynam_diffkernel, 3, diffusion_multiplier, '*')
-    ap3 <- aperm(sw3, c(3,1,2))
-    cs3 <- colSums(ap3)
-    diff <- diff_phyto + cs3
-    rm(sw3, ap3, cs3)
+    dim(dynam_diffkernel) <- c(ngrps*ngrid, ngrid)
+    cs <- .colSums(diffusion_multiplier * t(dynam_diffkernel), m = ngrid, n = ngrps*ngrid)
+    dim(cs) <- c(ngrps, ngrid)
+    diff <- diff_phyto + cs
+
+    # sw3 <- sweep(dynam_diffkernel, 3, diffusion_multiplier, '*')
+    # ap3 <- aperm(sw3, c(3,1,2))
+    # cs3 <- colSums(ap3)
+    # diff <- diff_phyto + cs3
+    # rm(sw3, ap3, cs3)
 
     ### MvF WITH DIFFUSION ALGORITHM
     # Numerical implementation matrices (for MvF without diffusion)
