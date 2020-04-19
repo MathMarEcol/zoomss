@@ -1,4 +1,4 @@
-load("Run_out.RData")
+load("Ancillary/Run_out.RData")
 source("fZooMSS_inner_project_loop.R")
 
 N_out <- fZooMSS_inner_project_loop(no_sp = ngrps, no_w = ngrid, niter = N.iter,
@@ -7,7 +7,7 @@ N_out <- fZooMSS_inner_project_loop(no_sp = ngrps, no_w = ngrid, niter = N.iter,
                                      w_min_idx = curr_min_size, w_max_idx = curr_max_size)
 
 
-
+load("Ancillary/Run_out.RData") #reload initial data
 
 for(i in 1:ngrps){
 
