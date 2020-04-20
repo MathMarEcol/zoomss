@@ -8,6 +8,8 @@
 ## Updated Tuesday 31st March 2020
 ## Updated Monday 13th April 2020
 
+library(Rcpp)
+
 source("fZooMSS_Model.R") #source the model code
 
 enviro_data <- readRDS("envirofull_20200317.RDS") # Load environmental data
@@ -43,10 +45,11 @@ source("fZooMSS_CheckIdent.R")
 # # out_old <- readRDS("RawOutput/DATE_JOBNAME_0350_20200401.RDS")
 # # out_old <- readRDS("RawOutput/DATE_JOBNAME_0611_20200401.RDS")
 
-out_old <- readRDS("RawOutput/DATE_JOBNAME_0001_BeforeBill.RDS")
-fZooMSS_CheckIdent(out, out_old)
 #
+out_old <- readRDS("RawOutput/DATE_JOBNAME_0001_BeforeBill.RDS")
+out_old <- readRDS("RawOutput/DATE_JOBNAME_0001_BaseR.RDS")
 
+fZooMSS_CheckIdent(out, out_old)
 
 # 25 years - after updates
 # user  system elapsed
