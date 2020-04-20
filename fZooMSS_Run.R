@@ -121,15 +121,14 @@ fZooMSS_Run <- function(model){
     S[,idx] <- N[,idx]
 
     # The original Base R code for the MvF equation
-    # N2 <- fZooMSS_MvF_BaseR(ngrps, curr_min_size, curr_max_size,
-    #                         A_iter, C_iter, N_iter, S_iter,
-    #                         A, B, C, N, S) # N2 first is 158923866
+    N <- fZooMSS_MvF_BaseR(ngrps, curr_min_size, curr_max_size,
+                            A_iter, C_iter, N_iter, S_iter,
+                            A, B, C, N, S)
 
-    N3 <- fZooMSS_MvF_Rcpp(cngrps=ngrps, cN_iter=N_iter,
-                           cA_iter=A_iter, cC_iter=C_iter, cS_iter=S_iter,
-                           cN=N, cA=A, cB=B, cC=C, cS=S,
-                           ccurr_min_size=curr_min_size, ccurr_max_size=curr_max_size) # N2 first is 158948467
-    rm(N_iter)
+    # N <- fZooMSS_MvF_Rcpp(cngrps=ngrps, cN_iter=N_iter,
+    #                        cA_iter=A_iter, cC_iter=C_iter, cS_iter=S_iter,
+    #                        cN=N, cA=A, cB=B, cC=C, cS=S,
+    #                        ccurr_min_size=curr_min_size, ccurr_max_size=curr_max_size)
 
 
     #### Keep smallest fish community size class as equal to equivalent zooplankton size class
