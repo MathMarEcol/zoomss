@@ -36,7 +36,7 @@ fZooMSS_CalculatePhytoParam = function(chlo){ # chlo is chlorophyll concentratio
   w_max_phyto <- 0.1*round((-8.4 + 2*micro)/0.1) # Maximum size depends on the proportion of micro
   w_max_phyto <- min(-7, w_max_phyto)
 
-  out <- data.frame("a" = a, "b" = b, "phyto_max" = w_max_phyto)
+  out <- data.frame("a" = a, "b" = b, "phyto_max" = w_max_phyto, "pico_biom" = pico_biom, "nano_biom" = nano_biom, "micro_biom" = micro_biom)
   return(out)
 }
 
