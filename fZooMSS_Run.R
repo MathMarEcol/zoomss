@@ -31,7 +31,7 @@ fZooMSS_Run <- function(model){
     curr_max_size[i] <- which(round(log10(w), digits = 2) == Wmax[i])
   }
 
-  idx.iter <- 2:ngrid
+  idx_iter <- 2:ngrid
   idx <- 2:(ngrid-1)
   itimemax  <- param$tmax / dt  #max index of time array
 
@@ -47,14 +47,14 @@ fZooMSS_Run <- function(model){
   }
 
   # Matrices for MvF and MvF-D numeric solution
-  A.iter <- matrix(0, nrow = ngrps, ncol = ngrid)
-  C.iter <- matrix(0, nrow = ngrps, ncol = ngrid)
-  S.iter <- matrix(0, nrow = ngrps, ncol = ngrid)
+  A_iter <- matrix(0, nrow = ngrps, ncol = ngrid)
+  C_iter <- matrix(0, nrow = ngrps, ncol = ngrid)
+  S_iter <- matrix(0, nrow = ngrps, ncol = ngrid)
 
   A <- matrix(0, nrow = ngrps, ncol = ngrid)
   B <- matrix(0, nrow = ngrps, ncol = ngrid)
   C <- matrix(0, nrow = ngrps, ncol = ngrid)
-  S <- matrix(0, nrow = ngrps, ncol = ngrid) # Previous abundance
+  S <- matrix(0, nrow = ngrps, ncol = ngrid)
 
   # Temporary Matrices that get updated each time step some of these saved for output
   N <- matrix(model$N[1,,], nrow = ngrps, ncol = ngrid) # Abundances of functional groups, dim 1 = groups, dim 2 = size classes
@@ -108,10 +108,11 @@ fZooMSS_Run <- function(model){
 
     ### MvF WITH DIFFUSION ALGORITHM
     # Numerical implementation matrices (for MvF without diffusion)
-    A.iter[,idx.iter] <- dt/dx * gg[,idx.iter-1] # Growth stuff
-    C.iter[,idx.iter] <- 1 + dt * Z[,idx.iter] + dt/dx * gg[,idx.iter] # Mortality
-    S.iter[,idx.iter] <- N[,idx.iter] # N at.....
-    N.iter <- N # Current Abundance
+    A_iter[,idx_iter] <- dt/dx * gg[,idx_iter-1] # Growth stuff
+    C_iter[,idx_iter] <- 1 + dt * Z[,idx_iter] + dt/dx * gg[,idx_iter] # Mortality
+    S_iter[,idx_iter] <- N[,idx_iter] # N at.....
+    N_iter <- N # Current Abundance
+    N_iter[1,1] <- N[1,1] # This forces R to make a copy of the variable. Otherwise N is linked to N_iter in the Rcpp code and they change together.
 
     # Numerical implementation matrices (for MvF WITH diffusion)
     A[,idx] <- dt/dx * (gg[,idx-1] + diff[,idx-1] * (log(10)/2+1/(2*dx))) # Growth stuff
@@ -119,33 +120,20 @@ fZooMSS_Run <- function(model){
     C[,idx] <- 1 + dt * Z[,idx] + dt/dx*(gg[,idx] + diff[,idx] * (log(10)/2+1/dx)) # Mortality
     S[,idx] <- N[,idx]
 
-    for(i in 1:ngrps){
+    # The original Base R code for the MvF equation
+    # N2 <- fZooMSS_MvF_BaseR(ngrps, curr_min_size, curr_max_size,
+    #                         A_iter, C_iter, N_iter, S_iter,
+    #                         A, B, C, N, S) # N2 first is 158923866
 
-      idx_curr <- (curr_min_size[i]+1):curr_max_size[i] ## Set size range index for current group
+    N3 <- fZooMSS_MvF_Rcpp(cngrps=ngrps, cN_iter=N_iter,
+                           cA_iter=A_iter, cC_iter=C_iter, cS_iter=S_iter,
+                           cN=N, cA=A, cB=B, cC=C, cS=S,
+                           ccurr_min_size=curr_min_size, ccurr_max_size=curr_max_size) # N2 first is 158948467
+    rm(N_iter)
 
-      for(j in idx_curr){ ## Find the abundance at the next size class with standard MvF
-        N.iter[i,j] <- (S.iter[i,j] + A.iter[i,j]*N[i,j-1])/(C.iter[i,j])
-        if(j >= (idx_curr[1]+1)){ ## Find abundance with MvF with diffusion
-          k <- j - 1
-          N[i,k] <- (S[i,k] + A[i,k] * N[i,k-1] + B[i,k] * N.iter[i,k+1]) / C[i,k]
-        }
-
-        # MvF without diffusion for last size class
-        if(j == idx_curr[length(idx_curr)]){
-          N[i,j] <- 0
-          # N[i,curr_min_size] <- N.iter[i,curr_min_size] # Keep starting sizes constant
-        }
-      }
-    }
-
-    # N.iter <- fZooMSS_inner_project_loop(no_sp = ngrps, no_w = ngrid, niter = N.iter,
-    #                                      Aiter = A.iter, Citer = C.iter, Siter = S.iter,
-    #                                      S = S, n = N, A = A, B = B, C = C,
-    #                                      w_min_idx = curr_min_size, w_max_idx = curr_max_size)
 
     #### Keep smallest fish community size class as equal to equivalent zooplankton size class
-    ### Keep smallest zooplankton size class abundnace
-    ### for each group locked to others in size spectrum
+    ### Keep smallest zooplankton size class abundnace for each group locked to others in size spectrum
     if(length(param$zoo_grps) > 1){ # If you only have one zoo group, it will be locked to phyto spectrum so you do not need to do this
       for(i in 1:length(w0idx)){
         w_min_curr <- w0mins[i]
