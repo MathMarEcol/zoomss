@@ -2,13 +2,9 @@
 ## Models multiple zooplankton functional groups, and three fish groups
 ## This code is to run the model across multiple cores
 ##
-## Updated Friday 31st January 2020
-## Updated Friday 13th March 2020
-## Updated Tuesday 17th March 2020
-## Updated Tuesday 31st March 2020
-## Updated Monday 13th April 2020
+## Last updated 28th April 2020
 
-# library(Rcpp)
+# library(Rcpp) # Only needed if we are running with Rcpp code.
 
 source("fZooMSS_Model.R") #source the model code
 
@@ -37,39 +33,3 @@ out$model$model_runtime <- system.time(
 )
 
 saveRDS(out, file = paste0("RawOutput/", jobname, "_", ID_char,".RDS"))
-
-#
-source("fZooMSS_CheckIdent.R")
-# out_old <- readRDS("RawOutput/DATE_JOBNAME_0001_20200414.RDS")
-# # out_old <- readRDS("RawOutput/DATE_JOBNAME_0350_20200401.RDS")
-# # out_old <- readRDS("RawOutput/DATE_JOBNAME_0611_20200401.RDS")
-
-#
-out_old <- readRDS("RawOutput/DATE_JOBNAME_0001_BeforeBill.RDS")
-out_old <- readRDS("RawOutput/DATE_JOBNAME_0001_BaseR.RDS")
-
-fZooMSS_CheckIdent(out, out_old)
-
-# 25 years - after updates
-# user  system elapsed
-# 58.126  11.076  65.322
-# 57.617   8.869  67.118
-
-# 55.924   8.022  63.699 # Removed all list accessing
-# 56.792  10.589  63.379
-
-# 59.514   8.850  68.369 # Added list again
-# 54.737   8.760  63.391 # Remove list accessing again
-# 61.679  11.131  68.390
-# 58.708   9.891  68.621
-
-# 57.719  12.591  69.833 # 15 April
-
-# 50.791   8.354  58.669 $ With Rcpp (but wrong answer)
-# 51.082  10.519  61.464 # After Bill - partial input
-# 52.699  10.639  63.087
-# 48.959  12.270  58.905 # After Bill - input Growth+Diff
-# 46.598  12.198  58.649
-# 47.307  10.832  57.969  # Changing to .colSums
-# 46.585   9.631  56.061
-

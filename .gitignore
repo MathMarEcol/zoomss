@@ -3,4 +3,4 @@
 .DS_Store
 Ancillary/EnvironmentalData/CreateEnviro/Data/GEBCO_2014_2D.nc
 .Rproj.user
-RawOutput/
+RawOutput/*
