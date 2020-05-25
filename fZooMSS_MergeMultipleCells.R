@@ -7,7 +7,7 @@
 # Written: Sunday 2nd February 2020
 # Last Updated: Wednesday 1st April 2020
 
-fZooMSS_MergeMultipleCells2List <- function(){
+fZooMSS_MergeMultipleCells <- function(){
   run <- basename(getwd())
 
   library(tidyverse)
