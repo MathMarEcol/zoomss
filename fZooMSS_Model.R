@@ -7,6 +7,8 @@ fZooMSS_Model <- function(input_params, Groups, SaveTimeSteps){
   source("fZooMSS_Run.R")
   source("fZooMSS_Xtras.R")
 
+  input_params <- untibble(input_params)
+
   ################### RUN THE MODEL ###################
   param <- fZooMSS_Params(Groups, input_params) # Set up parameter list
   model <- fZooMSS_Setup(param) # Set up model equation stuff
