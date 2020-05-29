@@ -19,3 +19,12 @@ fZooMSS_AveOutput = function(x){
 untibble <- function (tibble) {
   data.frame(unclass(tibble), check.names = FALSE, stringsAsFactors = FALSE)
 }  ## escape the nonsense
+
+
+# Convert Abundance to Biomass for all species and weight classes
+fZooMSS_Convert2Biomass <- function(res, w){
+  Biomass <- map(res, function(x) sweep(x, 2, w, '*'))
+  return(Biomass)
+}
+
+
