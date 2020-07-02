@@ -6,6 +6,20 @@ fZooMSS_SpeciesBiomass = function(res,w) {
   return(Biomass)
 }
 
+# Convert Abundance to Biomass for all species and weight classes
+fZooMSS_Biomass <- function(res, w){
+  Biomass <- map(res, function(x) sweep(x, 2, w, '*')) # Biomass in grams
+  return(Biomass)
+}
+
+# Summarise the biomass for each gridcell by sizeclass
+fZooMSS_SizeBiomass = function(res,w) {
+  Biomass <- map(res, function(x) apply(sweep(x, 2, w, '*'), 2, sum))
+  return(Biomass)
+}
+
+
+
 # Function to calculate the mean of the last 50 % of the model
 fZooMSS_AveOutput = function(x){
   ave_x <- colMeans(x[(ceiling(0.5*(dim(x)[1])):dim(x)[1]),,], dims = 1)
@@ -18,10 +32,6 @@ untibble <- function (tibble) {
 }  ## escape the nonsense
 
 
-# Convert Abundance to Biomass for all species and weight classes
-fZooMSS_Convert2Biomass <- function(res, w){
-  Biomass <- map(res, function(x) sweep(x, 2, w, '*'))
-  return(Biomass)
-}
+
 
 
