@@ -13,9 +13,11 @@ groups <- read_csv("TestGroups.csv")
 enviro <- read_rds("envirofull_20200317.RDS")
 
 # Calculate biomass of each species for each cell
-bioms <- fZooMSS_GlobalBiomass(res,w)
+bioms <- fZooMSS_SpeciesBiomass(res,w)
+bioms <- as.data.frame(t(as.data.frame(bioms)))
 colnames(bioms) <- groups$Species # Add names
-bioms <- as_tibble(bioms) # Convert to tibble
+rownames(bioms) <- c() # Remove row names
+
 bioms <- bind_cols(bioms, enviro) # Bind enviro data
 
 # Which variable to plot
@@ -61,4 +63,4 @@ gg_world <- ggplot() +
 graphics.off()
 x11(width = 8, height = 6)
 gg_world
-ggsave("Figures/Biomass.png", dpi = 300)
+ggsave(paste0("Figures/Biomass_",var,".png"), dpi = 300)
