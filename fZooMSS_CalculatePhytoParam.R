@@ -18,9 +18,9 @@ fZooMSS_CalculatePhytoParam = function(df){ # chlo is chlorophyll concentration 
   tot_biom <- tot_biom_c*(1/0.1) # convert to grams wet weight, assuming 0.1 C:ww
 
   # Break up total biom into pico, nano and micro
-  pico_biom <- pico*tot_biom
-  nano_biom <- nano*tot_biom
-  micro_biom <- micro*tot_biom
+  df$pico_biom <- pico*tot_biom
+  df$nano_biom <- nano*tot_biom
+  df$micro_biom <- micro*tot_biom
 
   ## Find abundances at boundaries of pico, nano size ranges, by analytically
   ## solving integral of N = aw^b
@@ -29,8 +29,8 @@ fZooMSS_CalculatePhytoParam = function(df){ # chlo is chlorophyll concentration 
   w_1 <- -11.5 # log minimum size of nanophytoplankton (max size of pico also)
   w_2 <- -8.5 # log minimum size of macrophytoplankton (max size of nano also)
 
-  df$phyto_slope <- (log10(pico_biom) - log10(nano_biom) - w_1 + w_2)/(w_1 - w_2)  # Calculate slope
-  df$phyto_int <- log10(pico_biom*(df$phyto_slope+1)/((10^(w_1))^(df$phyto_slope+1) - (10^(w_0))^(df$phyto_slope+1))) # Calculate intercept
+  df$phyto_slope <- (log10(df$pico_biom) - log10(df$nano_biom) - w_1 + w_2)/(w_1 - w_2)  # Calculate slope
+  df$phyto_int <- log10(df$pico_biom*(df$phyto_slope+1)/((10^(w_1))^(df$phyto_slope+1) - (10^(w_0))^(df$phyto_slope+1))) # Calculate intercept
 
   ## Calculate maximum size
   df$phyto_max <- 0.1*round((-8.4 + 2*micro)/0.1) # Maximum size depends on the proportion of micro
