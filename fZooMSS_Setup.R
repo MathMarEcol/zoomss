@@ -185,13 +185,10 @@ fZooMSS_Setup <- function(param){
         sqrt(2*pi*param$Groups$FeedWidth[i]^2)
 
       # The feeding kernal of filter feeders is not expected to change much with increasing size so we fix it here
-      if(param$Groups$Species[i] == "Larvaceans"){
-        sp_phyto_predkernel <- matrix(sp_phyto_predkernel[44,], nrow = param$ngrid, ncol = param$ngridPP, byrow = TRUE)
-        sp_dynam_predkernel <- matrix(sp_dynam_predkernel[44,], nrow = param$ngrid, ncol = param$ngrid, byrow = TRUE)
-      }
-      if(param$Groups$Species[i] == "Salps"){
-        sp_phyto_predkernel <- matrix(sp_phyto_predkernel[61,], nrow = param$ngrid, ncol = param$ngridPP, byrow = TRUE)
-        sp_dynam_predkernel <- matrix(sp_dynam_predkernel[61,], nrow = param$ngrid, ncol = param$ngrid, byrow = TRUE)
+      if(param$Groups$FeedType == "FilterFeeder"){
+        w0idx <- which(round(param$Groups$W0[i],2)==round(log10(param$w),2))
+        sp_phyto_predkernel <- matrix(sp_phyto_predkernel[w0idx,], nrow = param$ngrid, ncol = param$ngridPP, byrow = TRUE)
+        sp_dynam_predkernel <- matrix(sp_dynam_predkernel[w0idx,], nrow = param$ngrid, ncol = param$ngrid, byrow = TRUE)
       }
 
     } else { # If group is fish
