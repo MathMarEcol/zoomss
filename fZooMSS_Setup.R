@@ -151,13 +151,13 @@ fZooMSS_Setup <- function(param){
   #### CALCULATES CONSTANT BITS OF THE MODEL FUNCTIONS FOR EACH GROUP
   for(i in 1:param$ngrps){
     ## Senescence mortality
-    if(i < 10){
+    if(param$Groups$Type[i] == "Zooplankton"){
       model$M_sb[i,] <- param$ZSpre*(param$w/(10^(param$Groups$Wmat[i])))^param$ZSexp
       model$M_sb[i, 10^(param$Groups$Wmax[i]) < param$w] <- 0
       model$M_sb[i, 10^(param$Groups$Wmat[i]) > param$w] <- 0
     }
 
-    if(i > 9){
+    if(param$Groups$Type[i] == "Fish"){
       model$M_sb[i,] <- 0.1*param$ZSpre*(param$w/(10^(param$Groups$Wmat[i])))^param$ZSexp
       model$M_sb[i, 10^(param$Groups$Wmax[i]) < param$w] <- 0
       model$M_sb[i, 10^(param$Groups$Wmat[i]) > param$w] <- 0
@@ -169,7 +169,7 @@ fZooMSS_Setup <- function(param){
     SearchVol[i, 10^(param$Groups$W0[i]) > param$w] <- 0
 
     ### Predation Kernels
-    if(is.na(param$Groups$PPMRscale[i]) == FALSE){ # If group has an m-value (zooplankton)
+    if(param$Groups$Type[i] == "Zooplankton"){ # If group has an m-value (zooplankton)
       # Calculate PPMR for zooplankton, which changes according to body-size (Wirtz, 2012)
       D.z <- 2*(3*param$w*1e12/(4*pi))^(1/3) # convert body mass g to ESD (um)
       betas <- (exp(0.02*log(D.z)^2 - param$Groups$PPMRscale[i] + 1.832))^3 # Wirtz's equation
@@ -178,35 +178,32 @@ fZooMSS_Setup <- function(param){
 
       # Calculate feeding kernels
       sp_phyto_predkernel <- exp(-0.5*(log((beta_mat_phyto*phyto_prey_weight_matrix)/
-                                            phyto_pred_weight_matrix)/param$Groups$FeedWidth[i])^2)/
+                                             phyto_pred_weight_matrix)/param$Groups$FeedWidth[i])^2)/
         sqrt(2*pi*param$Groups$FeedWidth[i]^2)
       sp_dynam_predkernel <- exp(-0.5*(log((beta_mat_dynam*dynam_prey_weight_matrix)/
-                                            dynam_pred_weight_matrix)/param$Groups$FeedWidth[i])^2)/
+                                             dynam_pred_weight_matrix)/param$Groups$FeedWidth[i])^2)/
         sqrt(2*pi*param$Groups$FeedWidth[i]^2)
 
       # The feeding kernal of filter feeders is not expected to change much with increasing size so we fix it here
+      if(param$Groups$Species[i] == "Larvaceans"){
+        sp_phyto_predkernel <- matrix(sp_phyto_predkernel[44,], nrow = param$ngrid, ncol = param$ngridPP, byrow = TRUE)
+        sp_dynam_predkernel <- matrix(sp_dynam_predkernel[44,], nrow = param$ngrid, ncol = param$ngrid, byrow = TRUE)
+      }
+      if(param$Groups$Species[i] == "Salps"){
+        sp_phyto_predkernel <- matrix(sp_phyto_predkernel[61,], nrow = param$ngrid, ncol = param$ngridPP, byrow = TRUE)
+        sp_dynam_predkernel <- matrix(sp_dynam_predkernel[61,], nrow = param$ngrid, ncol = param$ngrid, byrow = TRUE)
+      }
 
-      # if (param$fixed_filterPPMR == TRUE){
-        if(i == 3){
-          sp_phyto_predkernel <- matrix(sp_phyto_predkernel[44,], nrow = param$ngrid, ncol = param$ngridPP, byrow = TRUE)
-          sp_dynam_predkernel <- matrix(sp_dynam_predkernel[44,], nrow = param$ngrid, ncol = param$ngrid, byrow = TRUE)
-        }
-        if(i == 8){
-          sp_phyto_predkernel <- matrix(sp_phyto_predkernel[61,], nrow = param$ngrid, ncol = param$ngridPP, byrow = TRUE)
-          sp_dynam_predkernel <- matrix(sp_dynam_predkernel[61,], nrow = param$ngrid, ncol = param$ngrid, byrow = TRUE)
-        }
-      # }
-
-    } else { # If group does not have an m-value (fish)
+    } else { # If group is fish
       beta_mat_phyto <- matrix(param$Groups$PPMR[i], nrow = param$ngrid, ncol = param$ngridPP)
       beta_mat_dynam <- matrix(param$Groups$PPMR[i], nrow = param$ngrid, ncol = param$ngrid)
 
       # Calculate feeding kernels
       sp_phyto_predkernel <- exp(-0.5*(log((beta_mat_phyto*phyto_prey_weight_matrix)/
-                                            phyto_pred_weight_matrix)/param$Groups$FeedWidth[i])^2)/
+                                             phyto_pred_weight_matrix)/param$Groups$FeedWidth[i])^2)/
         sqrt(2*pi*param$Groups$FeedWidth[i]^2)
       sp_dynam_predkernel <- exp(-0.5*(log((beta_mat_dynam*dynam_prey_weight_matrix)/
-                                            dynam_pred_weight_matrix)/param$Groups$FeedWidth[i])^2)/
+                                             dynam_pred_weight_matrix)/param$Groups$FeedWidth[i])^2)/
         sqrt(2*pi*param$Groups$FeedWidth[i]^2)
     }
 
@@ -252,7 +249,7 @@ fZooMSS_Setup <- function(param){
 
   # We still need four dimensions for diet matrix
   model$dynam_dietkernel <- sweep(sweep(sweep(dynam_theta, c(1,2,4), model$dynam_dietkernel, "*"),
-                                       c(1,3), 1, "*"), c(1,2), model$temp_eff, "*")
+                                        c(1,3), 1, "*"), c(1,2), model$temp_eff, "*")
 
   # We won't sweep through temp_effect here, but do it in fZooMSS_Run function. This is to make sure
   # it can still work in the future if we have different temperature effects for different groups,
