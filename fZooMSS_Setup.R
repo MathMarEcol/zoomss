@@ -189,6 +189,7 @@ fZooMSS_Setup <- function(param){
         w0idx <- which(round(param$Groups$W0[i],2)==round(log10(param$w),2))
         sp_phyto_predkernel <- matrix(sp_phyto_predkernel[w0idx,], nrow = param$ngrid, ncol = param$ngridPP, byrow = TRUE)
         sp_dynam_predkernel <- matrix(sp_dynam_predkernel[w0idx,], nrow = param$ngrid, ncol = param$ngrid, byrow = TRUE)
+        rm(w0idx)
       }
 
     } else { # If group is fish
