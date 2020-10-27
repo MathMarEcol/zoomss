@@ -38,4 +38,6 @@ fZooMSS_MergeMultipleCells <- function(){
 
   save(list = c("res", "growth", "diets", "mdl"), file = paste0(paste0("Output/full_",run,".RData")))
 
+  print("Consider running `tar -cf RawOutput.tar RawOutput` to reduce the number of files to be synced")
+
 }
