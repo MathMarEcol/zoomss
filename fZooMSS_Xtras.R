@@ -19,6 +19,12 @@ fZooMSS_SpeciesBiomass = function(res, w) {
   return(Biomass)
 }
 
+# Sum ZooMSS output across all species and sizes
+fZooMSS_SumAll = function(list_in) {
+  out <- unlist(map(list_in, function(x) sum(x))) # Sum ZooMSS output across the species bins
+  return(out)
+}
+
 # Convert Abundance to Biomass for all species and weight classes
 fZooMSS_Biomass <- function(res, w) {
   Biomass <- map(res, function(x) sweep(x, 2, w, '*')) # Biomass in grams
