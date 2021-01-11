@@ -2,7 +2,9 @@
 ## This version models multiple zooplankton functional groups, and three fish groups
 ##
 ## If you save timesteps, you can examine the model dynamics at
-#   https://jaseeverett.shinyapps.io/ZooMSS_Dashboard/
+##   https://jaseeverett.shinyapps.io/ZooMSS_Dashboard/
+##  Alternatively you can close the ZooMSS_Dashboard from Github
+##   https://github.com/MathMarEcol/ZooMSS_Dashboard
 ##
 ## Last updated 28th April 2020
 ## Additional commenting 12th January 2021
@@ -29,7 +31,7 @@ enviro_row <- 1 # Which row of the environmental data do you want to run if HPC=
 HPC <- FALSE # Is this being run on a HPC for all cells or will we manually choose the row of the enviro_data to be used.
 SaveTimeSteps <- TRUE # Should we save all time steps. This can be very large if tmax is large
 
-Groups <- read.csv("TestGroups.csv", stringsAsFactors = FALSE) # Load in functional group information
+Groups <- read.csv("TestGroups.csv", stringsAsFactors = FALSE) # Load in functional group information. This can be edited directly.
 
 ### No need to change anything below here.
 if (HPC == TRUE){
