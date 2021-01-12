@@ -14,18 +14,17 @@
 source("fZooMSS_Model.R") #source the model code
 source("fZooMSS_CalculatePhytoParam.R")
 
-# enviro_data <- readRDS("envirofull_20200317.RDS") # Load environmental data.
+enviro_data <- readRDS("envirofull_20200317.RDS") # Load environmental data.
 
 # You can also create your own environmental data using the below.
-enviro_data <- fZooMSS_CalculatePhytoParam(data.frame(cellID = 1,
-                                                      sst = 5,
-                                                      chlo = 2,
-                                                      dt = 0.01))
+# enviro_data <- fZooMSS_CalculatePhytoParam(data.frame(cellID = 1,
+#                                                       sst = 5,
+#                                                       chlo = 2,
+#                                                       dt = 0.01))
 
-enviro_data$tmax <- 1000 # Set length of simulation (years)
+enviro_data$tmax <- 25 # Set length of simulation (years)
 
-# jobname <- "DATE_JOBNAME"  # This is the job name used on the HPC queue, and also to save the run: Recommend: YYYYMMDD_AbbrevExperimentName.
-jobname <- paste0("YiwenExp_Chl_", enviro_data$chlo, "_SST_", enviro_data$sst)
+jobname <- "DATE_JOBNAME"  # This is the job name used on the HPC queue, and also to save the run: Recommend: YYYYMMDD_AbbrevExperimentName.
 enviro_row <- 1 # Which row of the environmental data do you want to run if HPC=FALSE.
 
 HPC <- FALSE # Is this being run on a HPC for all cells or will we manually choose the row of the enviro_data to be used.
