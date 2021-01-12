@@ -1,5 +1,3 @@
-rm(list = ls())
-
 library(tidyverse)
 library(ncdf4)
 library(yaImpute)
@@ -26,7 +24,7 @@ bathy_matrix <- bathy_matrix[!is.na(bathy_matrix$BATHY),] # Remove all the land 
 SST_files <- list.files(path = EnviroDir, pattern = "MC_SST", recursive = TRUE, full.names = TRUE)
 Chl_files <- list.files(path = EnviroDir, pattern = "MC_CHL", recursive = TRUE, full.names = TRUE)
 
-# Rearrange to get January first up. 
+# Rearrange to get January first up.
 SST_files <- SST_files[c(7:12, 1:6)]
 Chl_files <- Chl_files[c(7:12, 1:6)]
 
@@ -55,7 +53,7 @@ for(i in 1:12){
   SST_store[,c(i+2)] <- as.vector((unlist(SST_nc_vall[[i]])))
   Chl_store[,c(i+2)] <- as.vector((unlist(Chl_nc_vall[[i]])))
 }
-colnames(SST_store) <- colnames(Chl_store) <- c("Long","Lat","January", "February", "March", "April", "May", 
+colnames(SST_store) <- colnames(Chl_store) <- c("Long","Lat","January", "February", "March", "April", "May",
                                                 "June", "July", "August", "September", "October", "November", "December")
 SST_store <- as.data.frame(SST_store)
 Chl_store <- as.data.frame(Chl_store)
@@ -72,8 +70,8 @@ dat$Month2 <- month(dat$Month,label = TRUE, abbr = FALSE)
 dat$SST = NA
 dat$Chl = NA
 dat$Bathy = NA
-nvsc <- ann(as.matrix(SST_store[,c("Long", "Lat")]), 
-            as.matrix(dat[,c("Longitude", "Latitude")]), 
+nvsc <- ann(as.matrix(SST_store[,c("Long", "Lat")]),
+            as.matrix(dat[,c("Longitude", "Latitude")]),
             k = 1, verbose = FALSE)$knnIndexDist[,1]
 nvb <- ann(as.matrix(bathy_matrix[,c("Long", "Lat")]), as.matrix(dat[,c("Longitude", "Latitude")]), k = 1, verbose = FALSE)$knnIndexDist[,1]
 

@@ -2,7 +2,6 @@
 
 library(tidyverse)
 library(patchwork)
-
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(sf)

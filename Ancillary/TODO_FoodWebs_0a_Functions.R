@@ -10,9 +10,7 @@ Extract_ZooMSS_Species <- function(N, TestGroups, w){
   out <- as_tibble(t(species))
   out <- out %>%
     add_column("Weight" = w)
-
 }
-
 
 # Return Abundance/Biomass by weight class
 

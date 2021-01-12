@@ -1,7 +1,6 @@
 # This function checks the model output against a previous run to see where any differences are.
 
 fZooMSS_CheckIdent <- function(out,out_old){
-
   nm <- names(out_old$model$param)
   for(a in 1:length(nm)){
     b <- eval(parse(text = paste0("identical(out_old$model$param$",nm[a],",out$model$param$",nm[a],")")))

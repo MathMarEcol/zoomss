@@ -2,7 +2,6 @@
 
 ### Get the environmental data
 # enviro_data <- read_rds(paste0(data_dir,"enviro200_20200209.RDS")) # Load in environmental data
-
 TestGroups <- read_csv("~/Nextcloud/MME2Work/ZooMSS/_LatestModel/20200212_Control_Full_UNSW/TestGroups.csv") # Load in functional group information
 
 # Lets add these colours to TestGroup

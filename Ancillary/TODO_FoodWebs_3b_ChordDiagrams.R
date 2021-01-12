@@ -10,7 +10,6 @@ source("FoodWebs_0b_Initialise.R")
 # model <- read_rds(paste0(data_dir, "Output/ModelParameters.RDS"))
 # enviro_data <- read_rds(paste0(data_dir, "envirofull_20200312.RDS"))
 
-
 data_dir <- "~/Nextcloud/MME2Work/ZooMSS/_LatestModel/20200428_NoDiffusion/"
 diets <- read_rds(paste0(data_dir, "Output/diets_20200428_NoDiffusion.RDS"))
 res <- read_rds(paste0(data_dir, "Output/res_20200428_NoDiffusion.RDS"))

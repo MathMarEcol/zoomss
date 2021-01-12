@@ -5,12 +5,8 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(sf)
 
-
-
 df_raster <- rasterFromXYZ(df)  #Convert first two columns as lon-lat and third as value
 df_poly <- rasterToPolygons(df_raster, fun=NULL, n=4, na.rm=TRUE, digits=12, dissolve=FALSE) # Convert to polyg
-
-
 
 biomass_brick <- readRDS("../GlobalZoopAbundModels/ModelOutput/GlobalLayers/Num_Brick_Biomass.rds")
 BB <- dropLayer(biomass_brick, c("Fish_Small", "Fish_Med", "Fish_Large", "SST", "Chl"))
