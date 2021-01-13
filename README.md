@@ -45,9 +45,9 @@ Run using:
 * `gg <- ZooMSS_Plot_PPMR(dat)`    
 
 If you have saved the timesteps you can plot the timeseries:    
-* `gg <- ZooMSS_Plot_AbundTimeSeries(out)`  
-* `gg <- ZooMSS_Plot_GrowthTimeSeries(out)`   
-* `gg <- ZooMSS_Plot_PredTimeSeries(out)`   
+* `gg <- ZooMSS_Plot_AbundTimeSeries(dat)`  
+* `gg <- ZooMSS_Plot_GrowthTimeSeries(dat)`   
+* `gg <- ZooMSS_Plot_PredTimeSeries(dat)`   
 
 where `dat` is the model output list, and `gg` is a ggplot output from the plotting routines.
 
