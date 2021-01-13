@@ -3,7 +3,7 @@
 ##
 ## If you save timesteps, you can examine the model dynamics at
 ##   https://jaseeverett.shinyapps.io/ZooMSS_Dashboard/
-##  Alternatively you can close the ZooMSS_Dashboard from Github
+##  Alternatively you can clone the ZooMSS_Dashboard from Github
 ##   https://github.com/MathMarEcol/ZooMSS_Dashboard
 ##
 ##
