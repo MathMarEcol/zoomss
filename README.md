@@ -43,6 +43,12 @@ Besides writing your own plotting routines, you can now easily plot the overall 
 Run using:    
 * `gg <- ZooMSS_Plot_SizeSpectra(dat)`    
 * `gg <- ZooMSS_Plot_PPMR(dat)`    
+
+If you have saved the timesteps you can plot the timeseries:    
+* `gg <- ZooMSS_Plot_AbundTimeSeries(out)`  
+* `gg <- ZooMSS_Plot_GrowthTimeSeries(out)`   
+* `gg <- ZooMSS_Plot_PredTimeSeries(out)`   
+
 where `dat` is the model output list, and `gg` is a ggplot output from the plotting routines.
 
 ### ZooMSS Dashboard
