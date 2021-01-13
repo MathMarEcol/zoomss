@@ -39,6 +39,13 @@ ZooMSS requires two input files:
 ### Running
 To run the model, you simply need to provide the relevent information in Setup_RUN_NAME.R and run the script.
 
+### Plotting
+Besides writing your own plotting routines, you can now easily plot the overall species-resolved size-spectra and the PPMRs.
+Run using:
+	+ `gg <- ZooMSS_Plot_SizeSpectra(dat)`    
+	+ `gg <- ZooMSS_Plot_PPMR(dat)`    
+where `dat` is the model output list, and `gg` is a ggplot output from the plotting routines.
+
 ## Publications
 
 1. Heneghan, R.F., Everett, J.D., Blanchard, J.L., Richardson, A.J., 2016. Zooplankton Are Not Fish: Improving Zooplankton Realism in Size-Spectrum Models Mediates Energy Transfer in Food Webs. Front. Mar. Sci. 3, 1–15. https://doi.org/10.3389/fmars.2016.00201
