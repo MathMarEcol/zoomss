@@ -61,3 +61,61 @@ untibble <- function (tibble) {
 
 
 
+
+
+PPMR_plot = function(dat){
+
+  min_size = min(dat$model$param$Groups$W0) # smallest size class
+  max_size = max(dat$model$param$Groups$Wmax) # largest size class
+  w = 10^(seq(from = min_size, to = max_size, 0.1)) # all size classes
+
+  # Calculate PPMR (beta) table, where dim1 = group, dim2 = body size with
+  # value being PPMR for that body size (this is not realised PPMR - not
+  # emergent from diet but calculated from m-values and Wirtz, 2012 equation)
+  D.z = 2*(3*(w)*1e12/(4*pi))^(1/3) # convert body mass g to ESD (um)
+  zoo_m = dat$model$param$Groups$PPMRscale # pull out PPMR scaling values from parameter table
+  betas =  log10(t(sapply(zoo_m, function(x){(exp(0.02*log(D.z)^2 - x + 1.832))^3}))) # Convert m to betas, using Wirtz 2012 equation
+  betas = betas[-which(is.na(dat$model$param$Groups$PPMRscale)),] # remove fish rows
+
+  ## Modify beta matrix for larvaceans and salps - all size classes for these groups feed on same prey, so log10PPMR increases by 0.1 for each 0.1 log10 size interval
+  betas[which(dat$model$param$Groups$Species=="Larvaceans"),45:75] <- betas[which(dat$model$param$Groups$Species=="Larvaceans"),44] + seq(0.1,3.1,0.1) # Larvaceans (index 44 in w vector is smallest size class, 75 is maximum size class)
+  betas[which(dat$model$param$Groups$Species=="Salps"),61:121] <- betas[which(dat$model$param$Groups$Species=="Salps"),61] + seq(0.1,6.1,0.1) # Larvaceans (index 61 in w vector is smallest size class, 121 is maximum size class
+
+  # Calculate ave abundances across oligo/eutro grid squares, then calculate ave
+  # biomass and proportion of total zoo biomass that is from each group size class
+
+  ave = matrix(0, nrow = dim(dat$model$param$Groups)[1], ncol = length(w))
+  for(i in 1:length(dat$abundances)){
+    ave = ave + dat$abundances[[i]]/length(dat$abundances)
+  }
+  ave_biom = sweep(ave, 2, w, "*") # Calculate oligo biomass for zoo groups
+  ave_biom = ave_biom[-which(is.na(dat$model$param$Groups$PPMRscale)),] # remove rows for fish
+  beta_props = ave_biom/sum(ave_biom) # Calculate fraction of zoo biomass in each group, in each size class
+
+  out <- list()
+  out[[1]] <- betas
+  out[[2]] <- beta_props
+  names(out) <- c("betas", "beta_props")
+
+  temp <- density(betas, weights = beta_props)
+
+  out <- tibble("x" = temp$x, "y" = temp$y, "mn_beta" = sum(beta_props*betas))
+
+  spbeta_props = ave_biom/rowSums(ave_biom) # Species specific proportions
+  spPPMR <- tibble("Species" = as.factor(dat$model$param$Groups$Species[-which(is.na(dat$model$param$Groups$PPMRscale))]), "Betas" = rowSums(spbeta_props*betas), "y" = NA) # Get species-specific PPMR
+
+  for (s in 1:length(spPPMR$Species)){
+    spPPMR$y[s] <- out$y[which.min(abs(out$x - spPPMR$Betas[s]))]
+  }
+
+  spPPMR <- spPPMR %>%
+    mutate(y = y * 0) %>%
+    bind_rows(spPPMR)
+
+  out2 <- list()
+  out2[[1]] <- out
+  out2[[2]] <- spPPMR
+
+  return(out2)
+}
+
