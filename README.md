@@ -40,13 +40,13 @@ To run the model, you simply need to provide the relevent information in Setup_R
 
 ### Plotting
 Besides writing your own plotting routines, you can now easily plot the overall species-resolved size-spectra and the PPMRs.
-Run using:
-	+ `gg <- ZooMSS_Plot_SizeSpectra(dat)`    
-	+ `gg <- ZooMSS_Plot_PPMR(dat)`    
+Run using:    
+* `gg <- ZooMSS_Plot_SizeSpectra(dat)`    
+* `gg <- ZooMSS_Plot_PPMR(dat)`    
 where `dat` is the model output list, and `gg` is a ggplot output from the plotting routines.
 
 ### ZooMSS Dashboard
-	Assuming you have saved all the time-steps (using `SaveTimeSteps <- TRUE`) you can explore the output using our newly created **ZooMSS Dashboard**. To access, go here: https://jaseeverett.shinyapps.io/ZooMSS_Dashboard/. Please drop us a line with any comments or ideas.
+Assuming you have saved all the time-steps (using `SaveTimeSteps <- TRUE`) you can explore the output using our newly created **ZooMSS Dashboard**. To access, go here: https://jaseeverett.shinyapps.io/ZooMSS_Dashboard/. Please drop us a line with any comments or ideas.
 
 ## Publications
 
