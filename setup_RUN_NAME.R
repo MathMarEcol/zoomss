@@ -48,3 +48,22 @@ out$model$model_runtime <- system.time(
 )
 
 saveRDS(out, file = paste0("RawOutput/", jobname, "_", ID_char,".RDS"))
+
+
+source("ZooMSS_Plot_PPMR.R")
+gg <- ZooMSS_Plot_PPMR(out)
+
+source("ZooMSS_Plot_SizeSpectra.R")
+gg <- ZooMSS_Plot_SizeSpectra(out)
+
+
+## If you have saved the timesteps you can plot the timeseries
+source("ZooMSS_Plot_AbundTimeSeries.R")
+gg <- ZooMSS_Plot_AbundTimeSeries(out)
+
+source("ZooMSS_Plot_GrowthTimeSeries.R")
+gg <- ZooMSS_Plot_GrowthTimeSeries(out)
+
+source("ZooMSS_Plot_PredTimeSeries.R")
+gg <- ZooMSS_Plot_PredTimeSeries(out)
+
