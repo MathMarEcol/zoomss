@@ -1,7 +1,7 @@
 # Plot growth by time
 
 ZooMSS_Plot_GrowthTimeSeries <- function(dat){
-
+  library(tidyverse)
   gr <- rowSums(dat$model$gg, dims = 2) / length(dat$model$param$w)
   colnames(gr) <- dat$model$param$Groups$Species
   gr <- as_tibble(gr)

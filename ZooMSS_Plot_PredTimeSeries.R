@@ -1,6 +1,6 @@
 # Plot predation by time
 ZooMSS_Plot_OredTimeSeries <- function(dat){
-
+  library(tidyverse)
   Z <- rowSums(dat$model$Z,dims = 2) / length(dat$model$param$w)
   colnames(Z) <- dat$model$param$Groups$Species
   Z <- as_tibble(Z)

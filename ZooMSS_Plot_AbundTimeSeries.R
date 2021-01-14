@@ -1,6 +1,6 @@
 # Plot abundance by time
 ZooMSS_Plot_AbundTimeSeries <- function(dat){
-
+  library(tidyverse)
   tspecies <- rowSums(dat$model$N, dims = 2)
   colnames(tspecies) <- dat$model$param$Groups$Species
   tspecies <- as_tibble(tspecies)

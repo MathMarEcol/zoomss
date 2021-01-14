@@ -1,5 +1,5 @@
 ZooMSS_Plot_SizeSpectra <- function(dat) {
-library(tidyverse)
+  library(tidyverse)
   species <- dat$abundances
 
   rownames(species) <- dat$model$param$Groups$Species
