@@ -46,6 +46,14 @@ fZooMSS_SizeBiomass = function(res,w) {
 
 
 
+# Sum ZooMSS output across size bins
+fZooMSS_ExtractSizeRange = function(list_in, minb, maxb) {
+  out <- map(list_in, function(x) x[,minb:maxb] )
+  return(out)
+}
+
+
+
 # Function to calculate the mean of the last 50 % of the model
 fZooMSS_AveOutput = function(x){
   ave_x <- colMeans(x[(ceiling(0.5*(dim(x)[1])):dim(x)[1]),,], dims = 1)
@@ -56,6 +64,9 @@ fZooMSS_AveOutput = function(x){
 untibble <- function (tibble) {
   data.frame(unclass(tibble), check.names = FALSE, stringsAsFactors = FALSE)
 }  ## escape the nonsense
+
+
+
 
 
 
