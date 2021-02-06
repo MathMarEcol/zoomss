@@ -15,7 +15,7 @@ fZooMSS_SumSpecies = function(list_in) {
 
 # Summarise the biomass for each grid-cell by species
 fZooMSS_SpeciesBiomass = function(res, mdl) {
-  if (dim(res[[1]])[2] != length(mdl$param$w)){print("error")}
+  # if (dim(res[[1]])[2] != length(mdl$param$w)){print("error")}
 
   Biomass <- map(res, function(x) apply(sweep(x, 2, mdl$param$w, '*'), 1, sum))
   return(Biomass)
