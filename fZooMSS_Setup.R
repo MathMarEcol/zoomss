@@ -169,7 +169,8 @@ fZooMSS_Setup <- function(param){
     SearchVol[i, 10^(param$Groups$W0[i]) > param$w] <- 0
 
     ### Predation Kernels
-    if(param$Groups$Type[i] == "Zooplankton"){ # If group has an m-value (zooplankton)
+    # if(param$Groups$Type[i] == "Zooplankton"){ # If group is zooplankton
+    if(!is.na(param$Groups$PPMRscale[i])){ # If group has a PPMR scaling value (m-value)
       # Calculate PPMR for zooplankton, which changes according to body-size (Wirtz, 2012)
       D.z <- 2*(3*param$w*1e12/(4*pi))^(1/3) # convert body mass g to ESD (um)
       betas <- (exp(0.02*log(D.z)^2 - param$Groups$PPMRscale[i] + 1.832))^3 # Wirtz's equation
@@ -184,7 +185,7 @@ fZooMSS_Setup <- function(param){
                                              dynam_pred_weight_matrix)/param$Groups$FeedWidth[i])^2)/
         sqrt(2*pi*param$Groups$FeedWidth[i]^2)
 
-      # The feeding kernal of filter feeders is not expected to change much with increasing size so we fix it here
+      # The feeding kernel of filter feeders is not expected to change much with increasing size so we fix it here
       if(param$Groups$FeedType[i] == "FilterFeeder"){
         w0idx <- which(round(param$Groups$W0[i],2)==round(log10(param$w),2))
         sp_phyto_predkernel <- matrix(sp_phyto_predkernel[w0idx,], nrow = param$ngrid, ncol = param$ngridPP, byrow = TRUE)
