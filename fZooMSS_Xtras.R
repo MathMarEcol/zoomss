@@ -80,7 +80,7 @@ fZooMSS_Convert2Tibble <- function(li, mdl){
 fZooMSS_AddEnviro <- function(Zoo, enviro){
   df <- Zoo %>%
     mutate(cellID = 1:n()) %>% # Create a cellID
-    left_join(dplyr::select(enviro, cellID, chlo, sst), by = "cellID") %>%
+    left_join(dplyr::select(enviro, cellID, chlo, sst, phyto_int, phyto_slope, phyto_max), by = "cellID") %>%
     rename(SST = sst, Chl = chlo) %>%
     mutate(Chl_log10 = log10(Chl))
   return(df)
