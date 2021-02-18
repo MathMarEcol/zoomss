@@ -57,8 +57,8 @@ fZooMSS_ExtractSizeRange = function(list_in, minb, maxb) {
 
 
 # Function to calculate the mean of the last 50 % of the model
-fZooMSS_AveOutput = function(x){
-  ave_x <- colMeans(x[(ceiling(0.5*(dim(x)[1])):dim(x)[1]),,], dims = 1)
+fZooMSS_AveOutput = function(x, prop = 0.5){
+  ave_x <- colMeans(out$model$N[(ceiling(dim(out$model$N)[1] - prop*(dim(out$model$N)[1])):dim(out$model$N)[1]),,], dims = 1)
   return(ave_x)
 }
 
