@@ -47,7 +47,9 @@ Run using:
 If you have saved the timesteps you can plot the timeseries:    
 * `gg <- ZooMSS_Plot_AbundTimeSeries(dat)`  
 * `gg <- ZooMSS_Plot_GrowthTimeSeries(dat)`   
-* `gg <- ZooMSS_Plot_PredTimeSeries(dat)`   
+* `gg <- ZooMSS_Plot_PredTimeSeries(dat)` 
+* `gg_list <- fZooMSS_Plot_RuntimeAveraging(file_name)`   
+* `fZooMSS_Plot_Wavelet(file_name, species_name)`   
 
 where `dat` is the model output list, and `gg` is a ggplot output from the plotting routines.
 
