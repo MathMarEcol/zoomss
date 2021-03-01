@@ -14,9 +14,9 @@ fZooMSS_SumSpecies = function(list_in) {
 }
 
 # Summarise the biomass for each grid-cell by species
-fZooMSS_SpeciesBiomass = function(res, mdl) {
+fZooMSS_SpeciesBiomass = function(res, vmdl) {
   # if (dim(res[[1]])[2] != length(mdl$param$w)){print("error")}
-  Biomass <- map(res, function(x) apply(sweep(x, 2, mdl$param$w, '*'), 1, sum))
+  Biomass <- map(res, function(x) apply(sweep(x, 2, vmdl$param$w, '*'), 1, sum))
   return(Biomass)
 }
 
@@ -70,16 +70,16 @@ untibble <- function (tibble) {
 
 # At the moment you need to subset the zoomss data by species or size in order to use this function.
 # I will rewrite sometime to include other variables but at the moment its only for 2D data
-fZooMSS_Convert2Tibble <- function(li, mdl){
+fZooMSS_Convert2Tibble <- function(li, vmdl){
   df <- as_tibble(matrix(unlist(li), nrow=length(li), byrow=T), .name_repair = "unique") %>%
-    rename_with(~mdl$param$Groups$Species)
+    rename_with(~vmdl$param$Groups$Species)
     return(df)
 }
 
-fZooMSS_AddEnviro <- function(Zoo, enviro){
+fZooMSS_AddEnviro <- function(Zoo, venviro){
   df <- Zoo %>%
     mutate(cellID = 1:n()) %>% # Create a cellID
-    left_join(dplyr::select(enviro, cellID, chlo, sst, phyto_int, phyto_slope, phyto_max), by = "cellID") %>%
+    left_join(dplyr::select(venviro, cellID, chlo, sst, phyto_int, phyto_slope, phyto_max), by = "cellID") %>%
     rename(SST = sst, Chl = chlo) %>%
     mutate(Chl_log10 = log10(Chl))
   return(df)
