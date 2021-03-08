@@ -7,31 +7,34 @@
 fZooMSS_Setup <- function(param){
 
   ## Commented out DVM as it is unused at the moment (April 2020)
-  # # Diel Vertical Migration - change availability of phyto to zoo
-  # # and zoo to fish based on slope of phytoplankton (calculated as
-  # # proportion of day searching for food and available for predation)
+  ## Diel Vertical Migration - change availability of phyto to zoo
+  ## and zoo to fish based on slope of phytoplankton (calculated as
+  ## proportion of day searching for food and available for predation)
   # dvm_max <- param$day/24 # maximum proportion of day spent migrating
   # ESD_sizes <- 2*(3/(4*pi)*w)^(1/3) # convert g wet weight to ESD (cm)
   # dvm <- dvm_max*(1.02*(ESD_sizes) - 0.02) # size-dependent amount of time spent away from surface
   # dvm[which(w < 10^-5.4)] <- 0 # Microzoo don't migrate (ESD < 0.02cm)
   # dvm[which(w > 10^-0.3)] <- dvm_max # Macrozoo migrate max time (ESD > 10cm)
   # dvm_mat <- matrix(dvm, nrow = param$ngrid, ncol = param$ngrid, byrow = TRUE) # Matrix of dvm, nrow = number of pred size classes
-  #
-  # # This works out the proportion of time an predator of size w will have access to a prey of size w', for all w and w'
+
+  ## This works out the proportion of time an predator of size w will have access to a prey of size w', for all w and w'
   # dvm_mat <- 1 - dvm_mat
   # dvm_mat[lower.tri(dvm_mat)] <- 0
   # dvm_mat <- t(dvm_mat) + dvm_mat
   # diag(dvm_mat) <- diag(dvm_mat)/2
 
-  # # Dynamic prey availability matrix: dim1 is predators, dim2 is predator size classes,
-  # # dim3 is prey groups, dim 4 is prey size classes.
+
+  ## Dynamic prey availability matrix: dim1 is predators, dim2 is predator size classes,
+  ## dim3 is prey groups, dim 4 is prey size classes.
   # dynam_theta <- array(1, dim = c(param$ngrps, param$ngrid, param$ngrps, param$ngrid))
   # dynam_theta <- sweep(dynam_theta, c(2,4), dvm_mat,"*")
 
-  # Phyto availability matrix: rows are predators, columns are their size classes,
-  # entries are time spent feeding on phytoplankton for the size class
+
+  ## Phyto availability matrix: rows are predators, columns are their size classes,
+  ## entries are time spent feeding on phytoplankton for the size class
   # phyto_theta <- matrix(1-dvm, nrow = param$ngrps, ncol = param$ngrid, byrow = TRUE)
   # phyto_theta[which(param$Groups$FeedType == 'Carnivore'),] <- 0 # Carnivorous groups can't eat phyto
+
   ## End commented out DVM
 
   ### IN PLACE OF DVM
@@ -93,6 +96,10 @@ fZooMSS_Setup <- function(param){
 
   # Fishing mortality
   model$fish_mort[param$fish_grps, c(param$w >= 1)] <- param$f_mort
+
+  for(g in 1:12){
+    model$fish_mort[g,match(param$Groups$Fmort_W0[g], param$w_log10):match(param$Groups$Fmort_Wmax[g], param$w_log10)] <- param$Groups$Fmort[g]
+  }
 
   ### MATRICES FOR LOG TRANSFORM OF EQUATION
   # Predators are rows, phyto prey weights are columns
