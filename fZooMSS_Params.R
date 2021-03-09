@@ -30,8 +30,8 @@ fZooMSS_Params <- function(Groups, input_params){
 
   ## Add additional parameters which are based on the parameter set
   param2 <- list(
-    w_log10 = round(seq(from = log10(param$w0), to = log10(param$wMax), param$dx), digits = 2), # Set up log10 dynamic weight grid
-    w = 10^(seq(from = log10(param$w0), to = log10(param$wMax), param$dx)), # Set up log10 dynamic weight grid
+    w_log10 = round(seq(from = min(Groups$W0), to = max(Groups$Wmax), param$dx), digits = 2), # Set up log10 dynamic weight grid
+    w = 10^(seq(from = min(Groups$W0), to = max(Groups$Wmax), param$dx)), # Set up log10 dynamic weight grid
     w_phyto = 10^(seq(from = log10(param$w0_phyto), to = log10(param$wMax_phyto), param$dx)), # Set up phytoplankton size classes
     nsave  = floor(param$tmax/(param$dt*param$isave)) # Number of time slots to save
   )
