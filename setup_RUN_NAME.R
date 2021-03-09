@@ -10,11 +10,6 @@
 ## Last updated 28th April 2020
 ## Additional commenting 12th January 2021
 
-
-# f_mort = 0, # fishing mortality (yr^-1)
-
-
-
 # library(Rcpp) # Only needed if we are running with Rcpp code.
 
 source("fZooMSS_Model.R") #source the model code
