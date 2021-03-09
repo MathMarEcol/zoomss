@@ -10,6 +10,11 @@
 ## Last updated 28th April 2020
 ## Additional commenting 12th January 2021
 
+
+# f_mort = 0, # fishing mortality (yr^-1)
+
+
+
 # library(Rcpp) # Only needed if we are running with Rcpp code.
 
 source("fZooMSS_Model.R") #source the model code
@@ -29,7 +34,7 @@ jobname <- "DATE_JOBNAME"  # This is the job name used on the HPC queue, and als
 enviro_row <- 1 # Which row of the environmental data do you want to run if HPC=FALSE.
 
 HPC <- FALSE # Is this being run on a HPC for all cells or will we manually choose the row of the enviro_data to be used.
-SaveTimeSteps <- TRUE # Should we save all time steps. This can be very large if tmax is large
+SaveTimeSteps <- FALSE # Should we save all time steps. This can be very large if tmax is large
 
 Groups <- read.csv("TestGroups.csv", stringsAsFactors = FALSE) # Load in functional group information. This can be edited directly.
 

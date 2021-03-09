@@ -18,7 +18,6 @@ fZooMSS_Params <- function(Groups, input_params){
     gge_base = 0.25, # baseline gross growth efficiency
     ZSpre = 1, # senescence mortality prefactor
     ZSexp = 0.3, # senescence mortality exponent
-    f_mort = 0, # fishing mortality (yr^-1)
     w0_phyto = 10^(-14.5), # minimum phytoplankton size class (1um)
     wMax_phyto = 10^input_params$phyto_max, # maximum phytoplankton size class
     zoo_grps = which(Groups$Type == "Zooplankton"), # Which rows are zooplankton
@@ -31,7 +30,8 @@ fZooMSS_Params <- function(Groups, input_params){
 
   ## Add additional parameters which are based on the parameter set
   param2 <- list(
-    w = 10^(seq(from = log10(param$w0), to = log10(param$wMax), param$dx)), # Set up dynamic weight grid
+    w_log10 = round(seq(from = min(Groups$W0), to = max(Groups$Wmax), param$dx), digits = 2), # Set up log10 dynamic weight grid
+    w = 10^(seq(from = min(Groups$W0), to = max(Groups$Wmax), param$dx)), # Set up log10 dynamic weight grid
     w_phyto = 10^(seq(from = log10(param$w0_phyto), to = log10(param$wMax_phyto), param$dx)), # Set up phytoplankton size classes
     nsave  = floor(param$tmax/(param$dt*param$isave)) # Number of time slots to save
   )
