@@ -86,6 +86,16 @@ fZooMSS_AddEnviro <- function(Zoo, venviro){
 }
 
 
+# Return the diet matrix as a long tibble
+fZooMS_MakeDietTibble <- function(mat, mdl){
+  suppressMessages(
+    out <- as_tibble(mat, .name_repair = "unique") %>%
+      rename_with(~c("Phyto_Small", "Phyto_Med", "Phyto_Large", mdl$param$Groups$Species)) %>%
+      mutate(Predator = mdl$param$Groups$Species) %>%
+      pivot_longer(cols = Phyto_Small:Fish_Large, names_to = "Prey", values_to = "Diet")
+  )
+  return(out)
+}
 
 
 PPMR_plot = function(dat){
