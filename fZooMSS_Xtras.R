@@ -27,18 +27,28 @@ fZooMSS_SumAll = function(list_in) {
 }
 
 # Convert Abundance to Biomass for all species and weight classes
-fZooMSS_Biomass <- function(res, w) {
-  if (dim(res[[1]])[2] != length(w)){print("error")}
-  Biomass <- map(res, function(x) sweep(x, 2, w, '*')) # Biomass in grams
+fZooMSS_Biomass <- function(res, vmdl) {
+  if (dim(res[[1]])[2] != length(vmdl$param$w)){print("error")}
+  Biomass <- map(res, function(x) sweep(x, 2, vmdl$param$w, '*')) # Biomass in grams
   return(Biomass)
 }
 
 # Convert Abundance to Carbon Biomass for all species and weight classes
-fZooMSS_CarbonBiomass <- function(res, w, carbon) {
-  if (dim(res[[1]])[2] != length(w)){print("error")}
-  Biomass <- map(res, function(x) sweep(x, 2, w, '*'))  # Biomass in grams (WW)
-  Biomass <- map(Biomass, function(x) sweep(x, 1, carbon, '*')) # Now convert to Carbon
+fZooMSS_CarbonBiomass <- function(res, vmdl) {
+  if (dim(res[[1]])[2] != length(vmdl$param$w)){print("error")}
+  Biomass <- map(res, function(x) sweep(x, 2, vmdl$param$w, '*'))  # Biomass in grams (WW)
+  Biomass <- map(Biomass, function(x) sweep(x, 1, vmdl$param$Groups$Carbon, '*')) # Now convert to Carbon
   return(Biomass)
+}
+
+# Convert Abundance to Carbon Biomass for all species and weight classes
+fZooMSS_SpeciesCarbonBiomass <- function(res, vmdl) {
+  if (dim(res[[1]])[2] != length(vmdl$param$w)){print("error")}
+  Biomass <- map(res, function(x) sweep(x, 2, vmdl$param$w, '*'))  # Biomass in grams (WW)
+  Biomass <- map(Biomass, function(x) sweep(x, 1, vmdl$param$Groups$Carbon, '*')) # Now convert to Carbon
+  Biomass <- fZooMSS_SumSize(Biomass)
+
+    return(Biomass)
 }
 
 # Summarise the biomass for each grid-cell by size-class
@@ -47,7 +57,6 @@ fZooMSS_SizeBiomass = function(res,w) {
   Biomass <- map(res, function(x) apply(sweep(x, 2, w, '*'), 2, sum))
   return(Biomass)
 }
-
 
 # Sum ZooMSS output across size bins
 fZooMSS_ExtractSizeRange = function(list_in, minb, maxb) {
