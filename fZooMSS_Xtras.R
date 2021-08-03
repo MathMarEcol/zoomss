@@ -88,7 +88,7 @@ fZooMSS_Convert2Tibble <- function(li, vmdl){
 fZooMSS_AddEnviro <- function(Zoo, venviro){
   df <- Zoo %>%
     mutate(cellID = 1:n()) %>% # Create a cellID
-    left_join(dplyr::select(venviro, cellID, chlo, sst, phyto_int, phyto_slope, phyto_max), by = "cellID") %>%
+    left_join(dplyr::select(venviro, cellID, chlo, sst, phyto_int, phyto_slope, phyto_max, Lat, Lon, geometry), by = "cellID") %>%
     rename(SST = sst, Chl = chlo) %>%
     mutate(Chl_log10 = log10(Chl))
   return(df)
@@ -96,7 +96,7 @@ fZooMSS_AddEnviro <- function(Zoo, venviro){
 
 
 # Return the diet matrix as a long tibble
-fZooMS_MakeDietTibble <- function(mat, mdl){
+fZooMSS_MakeDietTibble <- function(mat, mdl){
   suppressMessages(
     out <- as_tibble(mat, .name_repair = "unique") %>%
       rename_with(~c("Phyto_Small", "Phyto_Med", "Phyto_Large", mdl$param$Groups$Species)) %>%
