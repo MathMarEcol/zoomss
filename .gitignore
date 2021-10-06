@@ -4,4 +4,5 @@
 Ancillary/EnvironmentalData/CreateEnviro/Data/GEBCO_2014_2D.nc
 .Rproj.user
 RawOutput/*
-Ancillary/Supplementary
+Ancillary/*
+
