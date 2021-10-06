@@ -13,7 +13,7 @@ ZooMSS_Plot_GrowthTimeSeries <- function(dat){
     filter(Growth > 0) %>%
     mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
 
-  gg <- ggplot(data = gg, mapping = aes(x = Time, y = log10(Growth), colour = Species)) +
+  gg <- ggplot(data = gr, mapping = aes(x = Time, y = log10(Growth), colour = Species)) +
     geom_line(size = 1) +
     geom_point(size = 1.2) +
     scale_color_manual(values = dat$model$param$Groups$PlotColour) +
