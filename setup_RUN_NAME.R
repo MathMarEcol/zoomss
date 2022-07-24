@@ -7,7 +7,7 @@
 ##   https://github.com/MathMarEcol/ZooMSS_Dashboard
 ##
 ##
-## Code written by Dr Jason Everett (UQ/UNSW/CSIRO), Dr Ryan Heneghan (QUT) and Mr Patrick Sykes (U)
+## Code written by Dr Jason Everett (UQ/UNSW/CSIRO), Dr Ryan Heneghan (QUT) and Mr Patrick Sykes (UQ)
 ## Last updated 6th October 2021
 
 
@@ -15,21 +15,24 @@
 source("fZooMSS_Model.R") #source the model code
 source("fZooMSS_Xtras.R")
 
-enviro_data <- readRDS("envirodata_fiveDeg_20200317.rds") # Load environmental data.
+# enviro_data <- readRDS("envirodata_fiveDeg_20200317.rds") # Load environmental data.
+enviro_data <- readRDS("/Users/jason/Nextcloud/MME2Work/ZooMSS/_LatestModel/20220315_TheMatrix2/ClimateChange_Compiled_Distinct.rds")
 
-# You can also create your own environmental data using the below.
-# enviro_data <- fZooMSS_CalculatePhytoParam(data.frame(cellID = 1,
-#                                                       sst = 5,
-#                                                       chlo = 2,
-#                                                       dt = 0.01))
+# # You can also create your own environmental data using the below.
+enviro_data <- fZooMSS_CalculatePhytoParam(data.frame(cellID = 1,
+                                                      sst = -1.7,
+                                                      chlo = 0.4897788,
+                                                      dt = 0.01))
 
-enviro_data$tmax <- 100 # Set length of simulation (years)
+enviro_data2 <- readRDS("/Users/jason/Nextcloud/MME2Work/ZooMSS/_LatestModel/20200526_TheMatrix/enviro_Matrix.RDS")
+enviro_data$tmax <- 20 # Set length of simulation (years)
+enviro_data$dt <- 0.01
 
 jobname <- "DATE_JOBNAME"  # This is the job name used on the HPC queue, and also to save the run: Recommend: YYYYMMDD_AbbrevExperimentName.
 enviro_row <- 1 # Which row of the environmental data do you want to run if HPC=FALSE.
 
 HPC <- FALSE # Is this being run on a HPC for all cells or will we manually choose the row of the enviro_data to be used.
-SaveTimeSteps <- TRUE # Should we save all time steps. This can be very large if tmax is large
+SaveTimeSteps <- FALSE # Should we save all time steps. This can be very large if tmax is large
 
 Groups <- read.csv("TestGroups.csv", stringsAsFactors = FALSE) # Load in functional group information. This can be edited directly.
 
@@ -42,27 +45,28 @@ if (HPC == TRUE){
 ID_char <- sprintf("%04d",ID) # Set the ID as a 4 digit character so it will sort properly
 
 input_params <- enviro_data[ID,]
+rm(enviro_data)
 
 out$model$model_runtime <- system.time(
   out <- fZooMSS_Model(input_params, Groups, SaveTimeSteps)
 )
-
-# Save the output if you want
-saveRDS(out, file = paste0("RawOutput/", jobname, "_", ID_char,".RDS"))
-
-
-## Plotting
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(tibble)
-source("fZooMSS_Plot.R")
-
-(ggPPMR <- fZooMSS_Plot_PPMR(out))
-(ggSizeSpec <- fZooMSS_Plot_SizeSpectra(out))
-
-## If you have saved the timesteps you can plot the timeseries
-(ggAbundTS <- fZooMSS_Plot_AbundTimeSeries(out))
-(ggGrowthTS <- fZooMSS_Plot_GrowthTimeSeries(out))
-(ggPredTS <- fZooMSS_Plot_PredTimeSeries(out))
+#
+# # Save the output if you want
+# saveRDS(out, file = paste0("RawOutput/", jobname, "_", ID_char,".RDS"))
+#
+#
+# ## Plotting
+# library(ggplot2)
+# library(dplyr)
+# library(tidyr)
+# library(tibble)
+# source("fZooMSS_Plot.R")
+#
+# (ggPPMR <- fZooMSS_Plot_PPMR(out))
+# (ggSizeSpec <- fZooMSS_Plot_SizeSpectra(out))
+#
+# ## If you have saved the timesteps you can plot the timeseries
+# (ggAbundTS <- fZooMSS_Plot_AbundTimeSeries(out))
+# (ggGrowthTS <- fZooMSS_Plot_GrowthTimeSeries(out))
+# (ggPredTS <- fZooMSS_Plot_PredTimeSeries(out))
 

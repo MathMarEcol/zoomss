@@ -94,6 +94,14 @@ fZooMSS_Run <- function(model){
     Z <- sweep(model$M_sb + model$fish_mort, 2, M2, '+') # Total dynamic spectrum mortality (n_species x n_sizes)
     rm(sw2, ap2)
 
+
+    # Tried to speed up the code above but not luck so far - JDE 16th March 2022
+    # browser()
+    # ap2 <- array(NA, dim = c(ngrps, ngrid, ngrid))
+    # for (iix in 1:ngrid){
+    #   ap2[,,iix] <- dynam_mortkernel[iix,,] * predation_multiplier
+    # }
+
     ### DO DIFFUSION
     dim(dynam_diffkernel) <- c(ngrps*ngrid, ngrid)
     cs <- .colSums(diffusion_multiplier * t(dynam_diffkernel), m = ngrid, n = ngrps*ngrid)

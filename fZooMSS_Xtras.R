@@ -48,7 +48,7 @@ fZooMSS_SpeciesCarbonBiomass <- function(res, vmdl) {
   Biomass <- map(Biomass, function(x) sweep(x, 1, vmdl$param$Groups$Carbon, '*')) # Now convert to Carbon
   Biomass <- fZooMSS_SumSize(Biomass)
 
-    return(Biomass)
+  return(Biomass)
 }
 
 # Summarise the biomass for each grid-cell by size-class
@@ -82,7 +82,7 @@ untibble <- function (tibble) {
 fZooMSS_Convert2Tibble <- function(li, vmdl){
   df <- as_tibble(matrix(unlist(li), nrow=length(li), byrow=T), .name_repair = "unique") %>%
     rename_with(~vmdl$param$Groups$Species)
-    return(df)
+  return(df)
 }
 
 fZooMSS_AddEnviro <- function(Zoo, venviro){
@@ -170,7 +170,7 @@ PPMR_plot = function(dat){
 
 # Last updated 17th September 2020
 
-fZooMSS_CalculatePhytoParam = function(df){ # chlo is chlorophyll concentration in mg m^-3
+fZooMSS_CalculatePhytoParam = function(df){ # chlo is chlorophyll concentration in mg m^-3, phy is mean euphotic zone phyto in g wet weight m-3
 
   ## Calculate pico, nano, micro phytoplankton proportions of total chlorophyll
   ## BREWIN ET AL., 2015
@@ -178,11 +178,15 @@ fZooMSS_CalculatePhytoParam = function(df){ # chlo is chlorophyll concentration 
   nano <- (0.77*(1-exp(-0.94/0.77*df$chlo)))/df$chlo - pico
   micro <- (df$chlo - 0.77*(1-exp(-0.94/0.77*df$chlo)))/df$chlo
 
-  ## Convert total chlorophyll to g m^-3 total wet weight - biomass
-  ## Allocate total chlorophyll to the three size classes
-  c_chl <- ((df$chlo^0.89)*(10^1.79))/df$chlo # chlo:carbon ratio, from Mara??on et al. 2014
-  tot_biom_c <- c_chl*df$chlo/1000 # (convert to grams carbon)
-  tot_biom <- tot_biom_c*(1/0.1) # convert to grams wet weight, assuming 0.1 C:ww
+  if("phy" %in% colnames(df)){
+    tot_biom <- df$phy
+  } else {
+    ## Convert total chlorophyll to g m^-3 total wet weight - biomass
+    ## Allocate total chlorophyll to the three size classes
+    c_chl <- ((df$chlo^0.89)*(10^1.79))/df$chlo # chlo:carbon ratio, from Maranon et al. 2014
+    tot_biom_c <- c_chl*df$chlo/1000 # (convert to grams carbon)
+    tot_biom <- tot_biom_c*(1/0.1) # convert to grams wet weight, assuming 0.1 C:ww
+  }
 
   # Break up total biom into pico, nano and micro
   df$pico_biom <- pico*tot_biom
