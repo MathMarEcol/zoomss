@@ -1,3 +1,7 @@
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(tibble)
 
 # Plot PPMR
 fZooMSS_Plot_PPMR <- function(dat){
@@ -5,8 +9,8 @@ fZooMSS_Plot_PPMR <- function(dat){
   out <- PPMR_plot(dat)
 
   gg <- ggplot() +
-    geom_line(data = out[[2]], mapping = aes(x = Betas, y = y, colour = Species), size = 1) +
-    geom_line(data = out[[1]], mapping = aes(x = x, y = y), size = 1.2) +
+    geom_line(data = out[[2]], mapping = aes(x = Betas, y = y, colour = Species), linewidth = 1) +
+    geom_line(data = out[[1]], mapping = aes(x = x, y = y), linewidth = 1.2) +
     theme_bw() +
     theme(plot.margin=grid::unit(c(0,0,0,0), "mm")) +
     labs(x = expression('log' [10] * PPMR),
@@ -60,7 +64,7 @@ fZooMSS_Plot_AbundTimeSeries <- function(dat){
     mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
 
   gg <- ggplot(data = tspecies, mapping = aes(x = Time, y = log10(Abundance), colour = Species)) +
-    geom_line(size = 1) +
+    geom_line(linewidth = 1) +
     geom_point(size = 1.2) +
     scale_color_manual(values = dat$model$param$Groups$PlotColour) +
     theme_bw() +
@@ -84,7 +88,7 @@ fZooMSS_Plot_GrowthTimeSeries <- function(dat){
     mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
 
   gg <- ggplot(data = gr, mapping = aes(x = Time, y = log10(Growth), colour = Species)) +
-    geom_line(size = 1) +
+    geom_line(linewidth = 1) +
     geom_point(size = 1.2) +
     scale_color_manual(values = dat$model$param$Groups$PlotColour) +
     theme_bw() +
@@ -110,7 +114,7 @@ fZooMSS_Plot_PredTimeSeries <- function(dat){
     mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
 
   gg <- ggplot(data = Z, mapping = aes(x = Time, y = Mortality, colour = Species)) +
-    geom_line(size = 1) +
+    geom_line(linewidth = 1) +
     geom_point(size = 1.2) +
     scale_color_manual(values = dat$model$param$Groups$PlotColour) +
     theme_bw() +
