@@ -56,6 +56,20 @@ where `dat` is the model output list, and `gg` is a ggplot output from the plott
 ### ZooMSS Dashboard
 Assuming you have saved all the time-steps (using `SaveTimeSteps <- TRUE`) you can explore the output using our newly created **ZooMSS Dashboard**. To access, go here: https://jaseeverett.shinyapps.io/ZooMSS_Dashboard/. Please drop us a line with any comments or ideas.
 
+## Reproduction Modeling: DBPM Example
+
+As part of ongoing model development, we have added the Dynamic Body-size Predator-Prey Model (DBPM) as an example implementation of reproduction processes in marine ecosystems. The DBPM provides a detailed, size-structured approach to modeling fish reproduction and ecosystem dynamics.
+
+Key features of the DBPM reproduction implementation include:
+
+- Dynamic reproduction can be turned on or off via a parameter
+- Reproduction is calculated based on energy allocation from feeding
+- Recruitment at the smallest consumer mass is modeled with specific ecological rules
+- Supports temperature-dependent metabolic rates
+- Allows exploration of different reproductive strategies across marine trophic levels
+
+The DBPM model (`DBPM_size_model.r`) serves as a reference implementation for researchers looking to incorporate more sophisticated reproduction mechanisms into size-spectrum ecosystem models.
+
 ## Publications
 
 1. Heneghan, R.F., Everett, J.D., Blanchard, J.L., Richardson, A.J., 2016. Zooplankton Are Not Fish: Improving Zooplankton Realism in Size-Spectrum Models Mediates Energy Transfer in Food Webs. Front. Mar. Sci. 3, 1–15. https://doi.org/10.3389/fmars.2016.00201
@@ -68,5 +82,3 @@ Assuming you have saved all the time-steps (using `SaveTimeSteps <- TRUE`) you c
 If you are running the model come across a problem, raise an issue on GitHub: https://github.com/MathMarEcol/ZoopSizeSpectraModel/issues
 
 If you find some errors, or just want to improve the model, we'd love you to go ahead and make the changes and then submit a pull request for us to check and approve.
-
-
