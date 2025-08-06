@@ -1,4 +1,5 @@
-# This script contains a list of helper functions which can be used to analyse and plot the ZooMSS output
+# This script contains a list of helper functions which can be used to analyse
+# and plot the ZooMSS output
 
 
 # Sum ZooMSS output across size bins
@@ -28,7 +29,7 @@ fZooMSS_SumAll = function(list_in) {
 
 # Convert Abundance to Biomass for all species and weight classes
 fZooMSS_Biomass <- function(res, vmdl) {
-  if (dim(res[[1]])[2] != length(vmdl$param$w)){print("error")}
+  # if (dim(res[[1]])[2] != length(vmdl$param$w)){print("error")}
   Biomass <- map(res, function(x) sweep(x, 2, vmdl$param$w, '*')) # Biomass in grams
   return(Biomass)
 }
@@ -134,7 +135,19 @@ PPMR_plot = function(dat){
   }
   ave_biom = sweep(ave, 2, w, "*") # Calculate oligo biomass for zoo groups
   ave_biom = ave_biom[-which(is.na(dat$model$param$Groups$PPMRscale)),] # remove rows for fish
-  beta_props = ave_biom/sum(ave_biom) # Calculate fraction of zoo biomass in each group, in each size class
+  
+  # Check for non-finite values and handle edge cases
+  total_biom = sum(ave_biom)
+  if (!is.finite(total_biom) || total_biom == 0) {
+    # If total biomass is zero or non-finite, create uniform weights
+    beta_props = matrix(1/length(ave_biom), nrow = nrow(ave_biom), ncol = ncol(ave_biom))
+    warning("Non-finite or zero total biomass detected. Using uniform weights for density calculation.")
+  } else {
+    beta_props = ave_biom/total_biom # Calculate fraction of zoo biomass in each group, in each size class
+  }
+  
+  # Ensure beta_props values are finite for density function
+  beta_props[!is.finite(beta_props)] <- 0
 
   out <- list()
   out[[1]] <- betas
@@ -145,7 +158,17 @@ PPMR_plot = function(dat){
 
   out <- tibble("x" = temp$x, "y" = temp$y, "mn_beta" = sum(beta_props*betas))
 
-  spbeta_props = ave_biom/rowSums(ave_biom) # Species specific proportions
+  # Calculate species-specific proportions with safety checks
+  row_sums <- rowSums(ave_biom)
+  spbeta_props = ave_biom
+  for(i in 1:nrow(ave_biom)) {
+    if(is.finite(row_sums[i]) && row_sums[i] > 0) {
+      spbeta_props[i,] = ave_biom[i,] / row_sums[i]
+    } else {
+      spbeta_props[i,] = 1/ncol(ave_biom)  # uniform distribution if row sum is invalid
+    }
+  }
+  spbeta_props[!is.finite(spbeta_props)] <- 0  # ensure all values are finite
   spPPMR <- tibble("Species" = as.factor(dat$model$param$Groups$Species[-which(is.na(dat$model$param$Groups$PPMRscale))]), "Betas" = rowSums(spbeta_props*betas), "y" = NA) # Get species-specific PPMR
 
   for (s in 1:length(spPPMR$Species)){
@@ -170,7 +193,7 @@ PPMR_plot = function(dat){
 
 # Last updated 17th September 2020
 
-fZooMSS_CalculatePhytoParam = function(df){ # chlo is chlorophyll concentration in mg m^-3, phy is mean euphotic zone phyto in g wet weight m-3
+fZooMSS_CalculatePhytoParam <- function(df){ # chlo is chlorophyll concentration in mg m^-3, phy is mean euphotic zone phyto in g wet weight m-3
 
   ## Calculate pico, nano, micro phytoplankton proportions of total chlorophyll
   ## BREWIN ET AL., 2015

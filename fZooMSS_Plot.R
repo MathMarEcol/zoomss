@@ -48,6 +48,8 @@ fZooMSS_Plot_SizeSpectra <- function(dat) {
     scale_color_manual(values = dat$model$param$Groups$PlotColour) +
     theme_bw() +
     labs(subtitle = "Abundance Spectrum")
+
+  return(gg)
 }
 
 # Plot abundance by time
@@ -72,6 +74,8 @@ fZooMSS_Plot_AbundTimeSeries <- function(dat){
     scale_y_continuous(expand = c(0, 0)) +
     labs(subtitle = "Abundance") +
     xlab("Time (Years)")
+
+  return(gg)
 }
 
 # Plot growth by time
@@ -96,6 +100,8 @@ fZooMSS_Plot_GrowthTimeSeries <- function(dat){
     scale_y_continuous(expand = c(0, 0)) +
     labs(subtitle = "Growth Rate") +
     xlab("Time (Years)")
+
+  return(gg)
 }
 
 
@@ -122,4 +128,95 @@ fZooMSS_Plot_PredTimeSeries <- function(dat){
     scale_y_continuous(expand = c(0, 0)) +
     labs(subtitle = "Mortality Rate") +
     xlab("Time (Years)")
+
+  return(gg)
+}
+
+# Plot Biomass Time Series
+fZooMSS_Plot_BiomassTimeSeries <- function(dat, stacked = FALSE, proportional = FALSE, species = NULL){
+  if (!("N" %in% names(dat$model))) {
+    stop("Abundance data not available. Make sure SaveTimeSteps=TRUE when running the model.")
+  }
+  
+  # Calculate biomass from abundance and weights
+  # dat$model$N dims: [time, groups, sizes]
+  # dat$model$param$w: weights for each size class
+  # Result: sum across size classes for each group at each time step -> [time, groups]
+  biomass <- rowSums(sweep(dat$model$N, 3, dat$model$param$w, "*"), dims = 2)
+  time_steps <- seq_len(nrow(biomass))
+  time_years <- time_steps * dat$model$param$dt * dat$model$param$isave
+  
+  # Create long format dataframe
+  biomass_df <- as.data.frame(biomass)
+  colnames(biomass_df) <- dat$model$param$Groups$Species
+  biomass_df$Time <- time_years
+  
+  # Filter species if specified
+  if (!is.null(species)) {
+    # Check if specified species exist
+    missing_species <- species[!species %in% dat$model$param$Groups$Species]
+    if (length(missing_species) > 0) {
+      warning("Species not found in data: ", paste(missing_species, collapse = ", "))
+    }
+    # Keep only specified species that exist
+    valid_species <- species[species %in% dat$model$param$Groups$Species]
+    if (length(valid_species) == 0) {
+      stop("No valid species specified. Available species: ", paste(dat$model$param$Groups$Species, collapse = ", "))
+    }
+    # Select only specified species columns plus Time
+    biomass_df <- biomass_df[, c("Time", valid_species)]
+  }
+  
+  # Convert to long format
+  biomass_long <- biomass_df %>%
+    pivot_longer(-Time, names_to = "Species", values_to = "Biomass") %>%
+    mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
+  
+  # Calculate proportions if needed for proportional stacked plot
+  if (proportional && (stacked || length(unique(biomass_long$Species)) > 1)) {
+    biomass_long <- biomass_long %>%
+      group_by(Time) %>%
+      mutate(Biomass = Biomass / sum(Biomass, na.rm = TRUE)) %>%
+      ungroup()
+  }
+  
+  # Get colors for selected species
+  if (!is.null(species)) {
+    # Get indices of selected species
+    species_indices <- match(intersect(species, dat$model$param$Groups$Species), dat$model$param$Groups$Species)
+    plot_colors <- dat$model$param$Groups$PlotColour[species_indices]
+    names(plot_colors) <- dat$model$param$Groups$Species[species_indices]
+  } else {
+    plot_colors <- dat$model$param$Groups$PlotColour
+    names(plot_colors) <- dat$model$param$Groups$Species
+  }
+  
+  # Create plot based on options
+  if (stacked || proportional) {
+    # Stacked area plot (absolute or proportional)
+    y_label <- if (proportional) "Proportion" else "Biomass (mg C/m³)"
+    subtitle <- if (proportional) "Proportional Biomass Time Series" else "Stacked Biomass Time Series"
+    
+    gg <- ggplot(data = biomass_long, mapping = aes(x = Time, y = Biomass, fill = Species)) +
+      geom_area(position = "stack", alpha = 0.7) +
+      scale_fill_manual(values = plot_colors) +
+      theme_bw() +
+      scale_x_continuous(expand = c(0, 0)) +
+      scale_y_continuous(expand = c(0, 0)) +
+      labs(subtitle = subtitle, y = y_label) +
+      xlab("Time (Years)")
+  } else {
+    # Line plot (original)
+    gg <- ggplot(data = biomass_long, mapping = aes(x = Time, y = Biomass, colour = Species)) +
+      geom_line(linewidth = 1) +
+      geom_point(size = 1.2) +
+      scale_color_manual(values = plot_colors) +
+      theme_bw() +
+      scale_x_continuous(expand = c(0, 0)) +
+      scale_y_continuous(expand = c(0, 0)) +
+      labs(subtitle = "Total Biomass Time Series", y = "Biomass (mg C/m³)") +
+      xlab("Time (Years)")
+  }
+  
+  return(gg)
 }

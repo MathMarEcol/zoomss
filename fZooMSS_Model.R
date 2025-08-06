@@ -6,8 +6,16 @@ fZooMSS_Model <- function(input_params, Groups, SaveTimeSteps){
   # sourceCpp("fZooMSS_MvF_Rcpp.cpp")
   source("fZooMSS_Run.R")
   source("fZooMSS_Xtras.R")
+  source("fZooMSS_Environmental_Utils.R")
 
   input_params <- untibble(input_params)
+  
+  # Validate that input_params has the required environmental data
+  if (nrow(input_params) > 1 && all(c("time_step", "sst", "chlo") %in% names(input_params))) {
+    # Environmental time series found - proceed with model
+  } else {
+    stop("No environmental time series provided and input_params doesn't contain expanded time series data")
+  }
 
   ################### RUN THE MODEL ###################
   param <- fZooMSS_Params(Groups, input_params) # Set up parameter list
