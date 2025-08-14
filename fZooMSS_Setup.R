@@ -1,9 +1,18 @@
-## The Setup function calculates the feeding kernels, dvm (if included), temp effects...
-## everything that can be solved before we start iterating through time to solve MvF-D
-## Dynamic environmental forcing only
+## Setup function for ZooMSS model
+## Calculates feeding kernels and fixed model components that do NOT depend on environmental forcing
+## Dynamic components (phytoplankton spectrum, temperature effects) are updated in Run function
+## 
+## What's calculated here (STATIC across time steps):
+## - Feeding kernels (predation preferences based on size ratios)
+## - Search volumes and mortality kernels  
+## - Initial abundances and group parameters
+##
+## What's updated dynamically in Run function:
+## - Phytoplankton spectrum (nPP) - changes with chlorophyll
+## - Temperature effects (temp_eff) - changes with SST  
+## - Growth/diffusion from phytoplankton - depends on both nPP and temp_eff
 
-## Last Updated Tuesday 17th March 2020
-## Dynamic modifications: August 2025
+## Last Updated: August 2025 (ZooMSS)
 
 fZooMSS_Setup <- function(param){
 
@@ -41,11 +50,10 @@ fZooMSS_Setup <- function(param){
     temp_eff = matrix(1, nrow = param$ngrps, ncol = param$ngrid), # Will be updated dynamically in run
     M_sb = matrix(0, nrow = param$ngrps, ncol = param$ngrid), # senescence mortality with temp effect
 
-    # Phytoplankton parameters (for maintaining compatibility)
+    # Phytoplankton feeding parameters (for maintaining compatibility)
     phyto_theta = matrix(1, nrow = param$ngrps, ncol = param$ngrid, byrow = TRUE),
-    assim_phyto = rep(1, param$ngrps),
     
-    # Abundance storage for dynamic model - needed for Run function
+    # Abundance storage for model - needed for Run function
     N = array(NA, dim = c(param$nsave, param$ngrps, param$ngrid)), # dynamic abundance spectrum
     Z = array(NA, dim = c(param$nsave, param$ngrps, param$ngrid)), # Total mortality  
     gg = array(NA, dim = c(param$nsave, param$ngrps, param$ngrid)), # Growth
@@ -69,8 +77,8 @@ fZooMSS_Setup <- function(param){
   tempN[param$fish_grps,] <- (1/param$num_fish) * tempN[param$fish_grps,] # Set abundandances of fish groups based on smallest size class proportions
 
   # For each group, set densities at w > Winf and w < Wmin to 0
-  tempN[unlist(tapply(param$w_log10, 1:length(param$w), function(wx,Winf) Winf < wx, Winf = param$Groups$Wmax))] <- 0
-  tempN[unlist(tapply(param$w_log10, 1:length(param$w), function(wx,Wmin) Wmin > wx, Wmin = param$Groups$W0))] <- 0
+  tempN[unlist(tapply(param$w_log10, seq_along(param$w), function(wx,Winf) Winf < wx, Winf = param$Groups$Wmax))] <- 0
+  tempN[unlist(tapply(param$w_log10, seq_along(param$w), function(wx,Wmin) Wmin > wx, Wmin = param$Groups$W0))] <- 0
   model$N[1,,] <- tempN
 
   # Fishing mortality (yr^-1)
@@ -161,7 +169,7 @@ fZooMSS_Setup <- function(param){
     }
 
     ### PHYTOPLANKTON FEEDING KERNELS  
-    # Calculate phytoplankton predation kernel - use PPMRscale like static model
+    # Calculate phytoplankton predation kernel - consistent with model PPMR scaling
     if(!is.na(param$Groups$PPMRscale[i])){ # If group has a PPMR scaling value (m-value)
       # Calculate PPMR for zooplankton, which changes according to body-size (Wirtz, 2012)
       D.z <- 2*(3*param$w*1e12/(4*pi))^(1/3) # convert body mass g to ESD (um)
@@ -219,10 +227,10 @@ fZooMSS_Setup <- function(param){
   model$phyto_diffkernel <- sweep(sweep(model$phyto_diffkernel, c(1,2), model$phyto_theta, "*"), 1, assim_phyto^2, "*")
   model$phyto_dietkernel <- sweep(sweep(model$phyto_dietkernel, c(1,2), model$phyto_theta, "*"), 1, 1, "*")
 
-  ## Initialize M_sb with temperature effects applied (like static model line 243)
+  ## Initialize M_sb with temperature effects applied (consistent with model structure)
   model$M_sb <- model$temp_eff * model$M_sb_base # Incorporate temp effect on senescence mortality
 
-  ## Convert diet kernel to 4D for proper calculation (like static model)
+  ## Convert diet kernel to 4D for proper calculation (consistent with model structure)
   # We need four dimensions for diet matrix: pred groups x pred sizes x prey groups x prey sizes
   model$dynam_dietkernel <- sweep(dynam_theta, c(1,2,4), model$dynam_dietkernel, "*")
 

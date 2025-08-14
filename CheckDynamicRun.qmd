@@ -11,8 +11,7 @@ First lets load all the common data and scripts
 ```{r}
 #| message: false
 
-source("fZooMSS_Model.R") #source the static model code
-source("fZooMSS_Model_Dynamic.R") #source the dynamic model code
+source("fZooMSS_Model.R") #source the model code
 source("fZooMSS_Xtras.R")
 source("fZooMSS_Plot.R")
 
@@ -59,11 +58,15 @@ out_static$model$model_runtime <- system.time(
 n_time_steps <- floor(input_params$tmax / input_params$dt)
 time_years <- seq(0, input_params$tmax, by = input_params$dt)[1:n_time_steps]
 
+# Create environmental data for time-varying conditions
 enviro_dynamic <- data.frame(
   time_step = 1:n_time_steps,
   sst = input_params$sst,
   chlo = input_params$chlo # Constant chlorophyll
 )
+
+# Merge environmental data with input parameters for model run
+input_params_dynamic <- cbind(input_params, enviro_dynamic)
 
 ggplot(data = enviro_dynamic) +
   geom_line(aes(x = time_step, y = sst)) +
@@ -77,7 +80,7 @@ ggplot(data = enviro_dynamic) +
 ```{r}
 #| results: hide
 out_dynamic$model$model_runtime <- system.time(
-  out_dynamic <- fZooMSS_Model_Dynamic(input_params, Groups, SaveTimeSteps, enviro_dynamic)
+  out_dynamic <- fZooMSS_Model(input_params_dynamic, Groups, SaveTimeSteps)
 )
 
 ```

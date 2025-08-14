@@ -1,18 +1,20 @@
-## Dynamic ZooMSS Setup Script
+## ZooMSS Setup Script
 ## This script demonstrates how to run ZooMSS with time-varying environmental data
 ## Based on the original setup by Dr Jason Everett, Dr Ryan Heneghan, and Mr Patrick Sykes
-## Dynamic environmental forcing only - August 2025
+## Environmental forcing - August 2025
 
 # Load all required functions
-source("fZooMSS_Model.R") #source the dynamic model code
+source("fZooMSS_Model.R") #source the model code
 source("fZooMSS_Xtras.R") # For fZooMSS_CalculatePhytoParam and other utilities
 source("fZooMSS_Environmental_Utils.R") # For environmental time series functions
+
+plotting <- FALSE
 
 # Setup user defined parameters -------------------------------------------
 dt <- 0.01 # years^-1
 tmax <- 250 # years
 cellID <- 1
-isave <- 100 # Match static model's save frequency
+isave <- 100 # Model save frequency
 base_sst <- 15
 base_chlo <- 0.01
 
@@ -27,7 +29,7 @@ input_params <- data.frame(
   chlo = base_chlo
 )
 
-# input_params$chlo <- 0.1 + 0.0002 * input_params$time_step # Linear increasing Chlorophyll
+# input_params$chlo <- 0.01 + 0.00015 * input_params$time_step # Linear increasing Chlorophyll
 # input_params$chlo <- 0.5 + 0.49 * sin(2 * pi * (input_params$time_step * dt)) # Chlorophyll cycles between 0.01-0.99 mg/m³
 
 # Ensure chlorophyll stays positive
@@ -39,7 +41,7 @@ fZooMSS_PlotEnvironment(input_params)
 
 
 # Setup jobname
-jobname <- "20250806_chl0_01"  # This is the job name to save the run
+jobname <- "20250813_chl0_01"  # This is the job name to save the run
 enviro_row <- 1 # Which row of the environmental data to use
 HPC <- FALSE # Is this being run on a HPC
 SaveTimeSteps <- TRUE # Should we save all time steps
@@ -59,9 +61,9 @@ cat("- SST range:", round(min(input_params$sst), 1), "to", round(max(input_param
 cat("- Chlorophyll range:", round(min(input_params$chlo), 2), "to", round(max(input_params$chlo), 2), "mg/m³\n")
 
 
-cat("Running dynamic model...\n")
+cat("Running model...\n")
 out <- fZooMSS_Model(input_params, Groups, SaveTimeSteps)
-cat("✅ Dynamic model run completed successfully!\n")
+cat("✅ Model run completed successfully!\n")
 
 
 # Save outputs
@@ -74,16 +76,17 @@ if (HPC == FALSE) {
 # Optional: Generate plots if you want to visualize results
 # NOTE: Plotting disabled temporarily due to PPMR plot issue - core model works perfectly
 
-source("fZooMSS_Plot.R")
+if (isTRUE(plotting)){
+  source("fZooMSS_Plot.R")
 
-# Plot results
-# (ggPPMR_dynamic <- fZooMSS_Plot_PPMR(out))
-(ggSizeSpec <- fZooMSS_Plot_SizeSpectra(out))
-(ggAbundTS <- fZooMSS_Plot_AbundTimeSeries(out))
-(ggGrowthTS <- fZooMSS_Plot_GrowthTimeSeries(out))
-(ggBiomassTS <- fZooMSS_Plot_BiomassTimeSeries(out))
-(ggBiomassTS_stacked <- fZooMSS_Plot_BiomassTimeSeries(out, stacked = TRUE))
+  # Plot results
+  # (ggPPMR_dynamic <- fZooMSS_Plot_PPMR(out))
+  (ggSizeSpec <- fZooMSS_Plot_SizeSpectra(out))
+  (ggAbundTS <- fZooMSS_Plot_AbundTimeSeries(out))
+  (ggGrowthTS <- fZooMSS_Plot_GrowthTimeSeries(out))
+  (ggBiomassTS <- fZooMSS_Plot_BiomassTimeSeries(out))
+  (ggBiomassTS_stacked <- fZooMSS_Plot_BiomassTimeSeries(out, stacked = TRUE))
 
-cat("✅ Plots generated successfully!\n")
-
+  cat("✅ Plots generated successfully!\n")
+}
 

@@ -1,9 +1,9 @@
-## Set up Model Parameter List, this imports "Groups", but also sets parameters that are
-## fixed across all Groups, or required to run the model
-## Dynamic environmental forcing only
+## Set up Model Parameter List for ZooMSS model
+## This function imports "Groups" and sets parameters for environmental forcing
+## - Static parameters: fixed across all time steps (e.g., dx, group properties)
+## - Dynamic parameters: calculated for each time step (e.g., phytoplankton, temperature)
 
-## Last Updated Tuesday 17th March 2020
-## Dynamic modifications: August 2025
+## Last Updated: August 2025 (ZooMSS)
 
 fZooMSS_Params <- function(Groups, input_params){
 
@@ -16,13 +16,13 @@ fZooMSS_Params <- function(Groups, input_params){
     day = 12, # day length (hours of each day in sun)
     tmax = input_params$tmax[1], # max years - use scalar value
     dt = input_params$dt[1], # timestep - use scalar value
-    w0 = 10^(min(Groups$W0)),		# minimum dynamic size class
-    wMax = 10^(max(Groups$Wmax)),# maximum dynamic size class
+    w0 = 10^(min(Groups$W0)),		# minimum size class
+    wMax = 10^(max(Groups$Wmax)),# maximum size class
     gge_base = 0.25, # baseline gross growth efficiency
     ZSpre = 1, # senescence mortality prefactor
     ZSexp = 0.3, # senescence mortality exponent
     w0_phyto = 10^(-14.5), # minimum phytoplankton size class (1um)
-    wMax_phyto = 10^(-1.5), # maximum phytoplankton size class (added for dynamic version)
+    # wMax_phyto will be calculated from time series
     zoo_grps = which(Groups$Type == "Zooplankton"), # Which rows are zooplankton
     fish_grps = which(Groups$Type == "Fish"), # Which rows are fish
     num_zoo = sum(Groups$Type == "Zooplankton"), # How many zooplankton
@@ -37,7 +37,7 @@ fZooMSS_Params <- function(Groups, input_params){
     ntime = ceiling(param$tmax / param$dt) # Total number of time steps
   )
 
-  # Dynamic case - use provided time series
+  # Process provided time series
   n_time_steps <- nrow(input_params)
   
   # Validate that environmental data covers the full simulation
@@ -79,7 +79,7 @@ fZooMSS_Params <- function(Groups, input_params){
     param2$phyto_max_ts <- input_params$phyto_max
     param2$wMax_phyto_ts <- 10^input_params$phyto_max
     
-    # Calculate temperature effects for each time step - use same formula as static model
+    # Calculate temperature effects for each time step - consistent temperature formula throughout model
     for (i in 1:n_time_steps) {
       sst_i <- input_params$sst[i]
       temp_factor <- 2^((sst_i - 30)/10)
@@ -104,7 +104,7 @@ fZooMSS_Params <- function(Groups, input_params){
       param2$phyto_max_ts[i] <- phyto_params$phyto_max
       param2$wMax_phyto_ts[i] <- 10^phyto_params$phyto_max
       
-      # Temperature effects (same calculation as static model)
+      # Temperature effects (same calculation throughout model)
       temp_factor <- 2^((sst_i - 30)/10)
       param2$temp_eff_zoo_ts[i, ] <- temp_factor
       param2$temp_eff_fish_ts[i, ] <- temp_factor
@@ -115,19 +115,16 @@ fZooMSS_Params <- function(Groups, input_params){
   param2$wMax_phyto <- max(param2$wMax_phyto_ts)
   
   # Add final parameters that depend on the complete parameter set (calculate only once)
-  param2$w_log10 <- round(seq(from = min(Groups$W0), to = max(Groups$Wmax), param$dx), digits = 2) # Set up log10 dynamic weight grid
-  param2$w <- 10^(seq(from = min(Groups$W0), to = max(Groups$Wmax), param$dx)) # Set up log10 dynamic weight grid
+  param2$w_log10 <- round(seq(from = min(Groups$W0), to = max(Groups$Wmax), param$dx), digits = 2) # Set up log10 weight grid
+  param2$w <- 10^(seq(from = min(Groups$W0), to = max(Groups$Wmax), param$dx)) # Set up weight grid
   param2$w_phyto <- 10^(seq(from = log10(param$w0_phyto), to = log10(param2$wMax_phyto), param$dx)) # Set up phytoplankton size classes
   param2$ngrid <- length(param2$w) # total number of size classes for zoo and fish
   param2$ngridPP <- length(param2$w_phyto) # total number of size classes for phyto
 
-  # Final parameter combination - ensure scalar parameters take precedence
-  # Exclude vector parameters from input_params that should be scalar for model operation
-  input_params_filtered <- input_params[!names(input_params) %in% c("tmax", "dt", "isave", "time_step", "sst", "chlo")]
+  # Final parameter combination
+  # Exclude time series vectors from input_params since they're now stored as _ts arrays in param2
+  input_params_filtered <- input_params[!names(input_params) %in% c("tmax", "dt", "isave", "time_step", "sst", "chlo", "phyto_int", "phyto_slope", "phyto_max")]
   
-  # Remove wMax_phyto from param since we want to use the time-series-derived value from param2
-  param_filtered <- param[!names(param) %in% c("wMax_phyto")]
-  
-  param_final <- c(input_params_filtered, param_filtered, param2)
+  param_final <- c(input_params_filtered, param, param2)
   return(param_final)
 }
