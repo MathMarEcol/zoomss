@@ -18,8 +18,11 @@
 #' @param input_params Data frame containing model parameters and environmental time series.
 #'   Must include columns: tmax (simulation length), dt (time step), isave (save frequency),
 #'   and environmental data (time_step, sst, chlo) if running with environmental forcing.
+#'   Can be created using fZooMSS_createInputs().
 #' @param Groups Data frame defining functional groups with their biological parameters.
 #'   Must include columns defining species characteristics, size ranges, and feeding parameters.
+#'   If NULL, uses default ZooMSS functional groups. Can be obtained/customized using
+#'   fZooMSS_GetGroups().
 #' @param SaveTimeSteps Logical indicating whether to save full time series (TRUE) or 
 #'   just model parameters (FALSE). TRUE saves complete model output including time series
 #'   of abundance and biomass.
@@ -36,27 +39,32 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Load functional groups data
-#' data(Groups)
-#' 
-#' # Create environmental time series
+#' # Basic usage with default groups
 #' env_data <- fZooMSS_CreateSimpleTimeSeries(1000, 0.01)
+#' input_params <- fZooMSS_createInputs(1:1000, env_data$sst, env_data$chlo,
+#'                                      dt = 0.01, tmax = 10, isave = 50)
+#' results <- fZooMSS_Model(input_params, SaveTimeSteps = FALSE)
 #' 
-#' # Set up input parameters
-#' input_params <- data.frame(
-#'   tmax = 10,
-#'   dt = 0.01, 
-#'   isave = 10,
-#'   time_step = 1:1000,
-#'   sst = env_data$sst,
-#'   chlo = env_data$chlo
-#' )
-#' 
-#' # Run the model
+#' # Using custom groups
+#' Groups <- fZooMSS_GetGroups()  # Get default groups
+#' Groups$W0[1] <- -12.5          # Modify a parameter
 #' results <- fZooMSS_Model(input_params, Groups, SaveTimeSteps = FALSE)
+#' 
+#' # Loading groups from file
+#' custom_groups <- fZooMSS_GetGroups(source = "file", file = "my_groups.csv")
+#' results <- fZooMSS_Model(input_params, custom_groups, SaveTimeSteps = TRUE)
 #' }
 #'
-fZooMSS_Model <- function(input_params, Groups, SaveTimeSteps){
+fZooMSS_Model <- function(input_params, Groups = NULL, SaveTimeSteps){
+
+  # Handle default Groups parameter
+  if (is.null(Groups)) {
+    Groups <- fZooMSS_GetGroups(source = "default")
+    message("ℹ Using default ZooMSS functional groups. Use fZooMSS_GetGroups() to customize.")
+  } else {
+    # Validate user-provided Groups
+    fZooMSS_ValidateGroups(Groups)
+  }
 
   input_params <- untibble(input_params)
   
