@@ -1,19 +1,62 @@
-## Setup function for ZooMSS model
-## Calculates feeding kernels and fixed model components that do NOT depend on environmental forcing
-## Dynamic components (phytoplankton spectrum, temperature effects) are updated in Run function
-## 
-## What's calculated here (STATIC across time steps):
-## - Feeding kernels (predation preferences based on size ratios)
-## - Search volumes and mortality kernels  
-## - Initial abundances and group parameters
-##
-## What's updated dynamically in Run function:
-## - Phytoplankton spectrum (nPP) - changes with chlorophyll
-## - Temperature effects (temp_eff) - changes with SST  
-## - Growth/diffusion from phytoplankton - depends on both nPP and temp_eff
-
-## Last Updated: August 2025 (ZooMSS)
-
+#' Setup ZooMSS Model Structure and Feeding Kernels
+#'
+#' @title Initialize ZooMSS model components and calculate feeding interactions
+#' @description Sets up the ZooMSS model structure by calculating feeding kernels, mortality 
+#'   rates, and other model components that remain static during the simulation.
+#' @details This function initializes the core ZooMSS model structure by calculating:
+#'   
+#'   **Static Components (calculated once):**
+#'   - Feeding preference kernels based on predator-prey size ratios
+#'   - Search volumes and encounter rates between size classes
+#'   - Baseline mortality rates (senescence, fishing)
+#'   - Initial abundance distributions for all functional groups
+#'   
+#'   **Dynamic Component Structures (updated during run):**
+#'   - Phytoplankton feeding kernels (structure calculated here, values updated with environment)
+#'   - Growth and diffusion kernels for zooplankton and fish interactions
+#'   - Diet and mortality tracking arrays
+#'   
+#'   **Model Architecture:**
+#'   - Size-structured populations across logarithmic size classes  
+#'   - Multiple functional groups with different feeding behaviors
+#'   - Environmental coupling through phytoplankton and temperature
+#'   
+#'   The function separates static calculations (done once for efficiency) from 
+#'   dynamic calculations (updated each time step in fZooMSS_Run).
+#'
+#' @param param Complete parameter list created by fZooMSS_Params containing:
+#'   - Groups: Functional group definitions and biological parameters
+#'   - Model dimensions (ngrps, ngrid, time parameters)  
+#'   - Environmental forcing time series
+#'   - Physical and biological constants
+#'
+#' @return Model object containing:
+#'   \itemize{
+#'     \item param: Input parameters (passed through)
+#'     \item dynam_*: Dynamic feeding kernel arrays for group interactions
+#'     \item phyto_*: Phytoplankton feeding kernel arrays
+#'     \item nPP: Initial phytoplankton abundance spectrum
+#'     \item M_sb_base: Baseline senescence mortality rates
+#'     \item fish_mort: Fishing mortality rates
+#'     \item assim_eff: Assimilation efficiency matrix
+#'     \item temp_eff: Temperature effect matrix (initialized)
+#'     \item N: Initial abundance arrays
+#'     \item Additional model structure components
+#'   }
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Create parameters for model setup
+#' params <- fZooMSS_Params(Groups, input_params)
+#' 
+#' # Initialize model structure
+#' model <- fZooMSS_Setup(params)
+#' 
+#' # Model is now ready for time integration with fZooMSS_Run
+#' results <- fZooMSS_Run(model)
+#' }
+#'
 fZooMSS_Setup <- function(param){
 
   ## Dynamic prey availability matrix: dim1 is predators, dim2 is predator size classes,

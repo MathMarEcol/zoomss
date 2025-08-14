@@ -1,107 +1,168 @@
-## Utility functions for processing environmental data for dynamic ZooMSS
-## These functions help users work with real environmental data
-
-#' Format real environmental data for ZooMSS
+#' Create ZooMSS Input Parameters Object
 #'
-#' @param env_data Data frame with environmental data
-#' @param time_col Name of time column
-#' @param sst_col Name of SST column
-#' @param chlo_col Name of chlorophyll column
-#' @param dt Time step for model (years)
+#' @title Create input parameters data frame for ZooMSS model runs
+#' @description Creates a properly formatted input parameters data frame for ZooMSS model
+#'   simulations, combining temporal parameters with environmental time series data.
+#' @details This function combines environmental time series (SST and chlorophyll) with
+#'   model temporal parameters to create the input_params object required by fZooMSS_Model().
+#'   The function performs validation checks using assertthat to ensure:
+#'   - All input vectors are numeric and of equal length
+#'   - SST values are within reasonable ocean range (-2 to 35°C)
+#'   - Chlorophyll values are positive and within typical range (0 to 50 mg/m³)
+#'   - Temporal parameters are positive and reasonable
 #'
-#' @return Formatted data frame ready for ZooMSS
+#'   The resulting data frame includes time_step indices, environmental data, and
+#'   model parameters needed for ZooMSS simulations.
 #'
-fZooMSS_FormatRealData <- function(env_data, time_col = "time", sst_col = "sst", chlo_col = "chlo", dt = 0.01) {
+#' @param time Numeric vector of time values (any units, used for time_step sequence)
+#' @param sst Numeric vector of sea surface temperature values in °C
+#' @param chl Numeric vector of chlorophyll concentration values in mg/m³
+#' @param cellID Optional numeric vector of cell identifiers for spatial data (default: NULL)
+#' @param dt Time step size in years (default: 0.01)
+#' @param tmax Maximum simulation time in years (default: 250)
+#' @param isave Save frequency in time steps (default: 100)
+#'
+#' @return Data frame with columns: time_step, sst, chlo, dt, tmax, isave, and cellID (if provided)
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Create simple environmental time series
+#' time_vec <- 1:100
+#' sst_vec <- 15 + 3*sin(2*pi*time_vec/50)
+#' chl_vec <- 0.5 + 0.2*cos(2*pi*time_vec/50)
+#'
+#' # Create input parameters object
+#' input_params <- fZooMSS_createInputs(time_vec, sst_vec, chl_vec,
+#'                                      dt = 0.01, tmax = 10, isave = 50)
+#'
+#' # Use with ZooMSS model
+#' results <- fZooMSS_Model(input_params, Groups, SaveTimeSteps = TRUE)
+#' }
+#'
+fZooMSS_createInputs <- function(time, sst, chl,
+                                 cellID = NULL,
+                                 dt = 0.01,
+                                 tmax = 250,
+                                 isave = 100) {
 
-  # Standardize column names
-  formatted_data <- data.frame(
-    time_step = seq_len(nrow(env_data)),
-    time = env_data[[time_col]],
-    sst = env_data[[sst_col]],
-    chlo = env_data[[chlo_col]]
-  )
-
-  # Validate data
-  if (any(is.na(formatted_data$sst))) {
-    warning("SST data contains NA values")
-  }
-  if (any(is.na(formatted_data$chlo))) {
-    warning("Chlorophyll data contains NA values")
+  # Load assertthat package for validation
+  if (!requireNamespace("assertthat", quietly = TRUE)) {
+    stop("assertthat package required for input validation")
   }
 
-  # Check for reasonable ranges
-  if (any(formatted_data$sst < -2 | formatted_data$sst > 35)) {
-    warning("SST values outside typical ocean range (-2 to 35°C)")
-  }
-  if (any(formatted_data$chlo < 0 | formatted_data$chlo > 50)) {
-    warning("Chlorophyll values outside typical range (0 to 50 mg/m³)")
+  # Validate input data types and structure
+  assertthat::assert_that(is.numeric(time), msg = "time must be numeric")
+  assertthat::assert_that(is.numeric(sst), msg = "sst must be numeric")
+  assertthat::assert_that(is.numeric(chl), msg = "chl must be numeric")
+
+  # Validate equal lengths
+  assertthat::assert_that(length(time) == length(sst),
+                         msg = "time and sst must have the same length")
+  assertthat::assert_that(length(time) == length(chl),
+                         msg = "time and chl must have the same length")
+
+  # Validate cellID if provided
+  if (!is.null(cellID)) {
+    assertthat::assert_that(is.numeric(cellID), msg = "cellID must be numeric")
+    assertthat::assert_that(length(cellID) == length(time),
+                           msg = "cellID must have the same length as time")
   }
 
-  cat("✅ Environmental data formatted:\n")
+  # Validate temporal parameters
+  assertthat::assert_that(is.numeric(dt) && length(dt) == 1 && dt > 0,
+                         msg = "dt must be a positive number")
+  assertthat::assert_that(is.numeric(tmax) && length(tmax) == 1 && tmax > 0,
+                         msg = "tmax must be a positive number")
+  assertthat::assert_that(is.numeric(isave) && length(isave) == 1 && isave > 0,
+                         msg = "isave must be a positive number")
+
+  # Validate environmental data ranges
+  assertthat::assert_that(all(!is.na(sst)), msg = "sst cannot contain NA values")
+  assertthat::assert_that(all(!is.na(chl)), msg = "chl cannot contain NA values")
+  assertthat::assert_that(all(sst >= -2 & sst <= 35),
+                         msg = "sst values must be within ocean range (-2 to 35°C)")
+  assertthat::assert_that(all(chl >= 0 & chl <= 50),
+                         msg = "chl values must be within range (0 to 50 mg/m³)")
+
+  # Create formatted data frame
+  if (is.null(cellID)) {
+    formatted_data <- data.frame(
+      time_step = seq_along(time),
+      sst = sst,
+      chlo = chl,
+      dt = dt,
+      tmax = tmax,
+      isave = isave
+    )
+  } else {
+    formatted_data <- data.frame(
+      time_step = seq_along(time),
+      sst = sst,
+      chlo = chl,
+      cellID = cellID,
+      dt = dt,
+      tmax = tmax,
+      isave = isave
+    )
+  }
+
+  # Provide summary information
+  cat("✅ ZooMSS input parameters created:\n")
   cat("- Time steps:", nrow(formatted_data), "\n")
-  cat("- SST range:", round(min(formatted_data$sst, na.rm=TRUE), 1), "to",
-      round(max(formatted_data$sst, na.rm=TRUE), 1), "°C\n")
-  cat("- Chlorophyll range:", round(min(formatted_data$chlo, na.rm=TRUE), 2), "to",
-      round(max(formatted_data$chlo, na.rm=TRUE), 2), "mg/m³\n")
+  cat("- SST range:", round(min(formatted_data$sst), 1), "to",
+      round(max(formatted_data$sst), 1), "°C\n")
+  cat("- Chlorophyll range:", round(min(formatted_data$chlo), 2), "to",
+      round(max(formatted_data$chlo), 2), "mg/m³\n")
+  cat("- Model parameters: dt =", dt, "years, tmax =", tmax, "years, isave =", isave, "steps\n")
 
   return(formatted_data)
 }
 
-#' Plot environmental time series
+
+#' Create Simple Environmental Time Series for Testing
 #'
-#' @param env_data Environmental data frame with time, sst, chlo columns
+#' @title Generate synthetic environmental data for ZooMSS testing
+#' @description Creates simple synthetic environmental time series with optional seasonal
+#'   variation for testing ZooMSS model runs when real environmental data is not available.
+#' @details This function generates synthetic sea surface temperature and chlorophyll
+#'   time series that can be used for testing ZooMSS model behavior. The function can
+#'   create either static environmental conditions or seasonal cycles with sinusoidal
+#'   variation. This is particularly useful for:
+#'   - Testing model sensitivity to environmental forcing
+#'   - Creating idealized scenarios for model exploration
+#'   - Generating data when real environmental data is unavailable
 #'
-#' @return ggplot object
+#'   The seasonal option creates SST and chlorophyll cycles that are out of phase,
+#'   mimicking typical ocean patterns where chlorophyll peaks when SST is lower.
 #'
-fZooMSS_PlotEnvironment <- function(env_data) {
-
-  if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("ggplot2 package required for plotting")
-  }
-  if (!requireNamespace("tidyr", quietly = TRUE)) {
-    stop("tidyr package required for plotting")
-  }
-
-  # Convert to long format for plotting
-  env_long <- tidyr::pivot_longer(env_data,
-                                  cols = c("sst", "chlo"),
-                                  names_to = "variable",
-                                  values_to = "value")
-
-  # Create separate y-axes for SST and chlorophyll
-  p1 <- ggplot2::ggplot(data = subset(env_long, variable == "sst"),
-                        ggplot2::aes(x = time_step*dt, y = value)) +
-    ggplot2::geom_line(color = "red", linewidth = 1) +
-    ggplot2::labs(y = "SST (°C)", title = "Environmental Forcing") +
-    ggplot2::theme_bw() +
-    ggplot2::theme(axis.title.x = ggplot2::element_blank())
-
-  p2 <- ggplot2::ggplot(data = subset(env_long, variable == "chlo"),
-                        ggplot2::aes(x = time_step*dt, y = value)) +
-    ggplot2::geom_line(color = "green", linewidth = 1) +
-    ggplot2::labs(x = "Time (years)", y = "Chlorophyll (mg/m³)") +
-    ggplot2::theme_bw()
-
-  # Combine plots
-  if (requireNamespace("patchwork", quietly = TRUE)) {
-    return(patchwork::wrap_plots(p1, p2, ncol = 1))
-  } else {
-    cat("Install gridExtra package to combine plots\n")
-    return(list(sst_plot = p1, chlo_plot = p2))
-  }
-}
-
-#' Create simple environmental time series for testing
-#'
-#' @param n_time_steps Number of time steps
+#' @param n_time_steps Number of time steps to generate
 #' @param dt Time step size in years
-#' @param base_sst Base sea surface temperature (°C)
-#' @param base_chlo Base chlorophyll concentration (mg/m³)
-#' @param seasonal Logical, add seasonal variation?
-#' @param sst_amplitude Amplitude of SST variations (°C)
-#' @param chlo_amplitude Amplitude of chlorophyll variations (mg/m³)
+#' @param base_sst Base sea surface temperature in °C (default: 15)
+#' @param base_chlo Base chlorophyll concentration in mg/m³ (default: 0.5)
+#' @param seasonal Logical, whether to add seasonal variation (default: TRUE)
+#' @param sst_amplitude Amplitude of SST seasonal variations in °C (default: 3)
+#' @param chlo_amplitude Amplitude of chlorophyll seasonal variations in mg/m³ (default: 0.2)
 #'
-#' @return Data frame with time, sst, and chlo columns
+#' @return Data frame with columns: time, sst, chlo
+#' @export
+#'
+#' @examples
+#' # Create seasonal environmental data
+#' env_data <- fZooMSS_CreateSimpleTimeSeries(
+#'   n_time_steps = 1000,
+#'   dt = 0.01,
+#'   seasonal = TRUE
+#' )
+#'
+#' # Create static environmental conditions
+#' static_data <- fZooMSS_CreateSimpleTimeSeries(
+#'   n_time_steps = 500,
+#'   dt = 0.01,
+#'   seasonal = FALSE,
+#'   base_sst = 20,
+#'   base_chlo = 1.0
+#' )
 #'
 fZooMSS_CreateSimpleTimeSeries <- function(n_time_steps, dt,
                                           base_sst = 15, base_chlo = 0.5,

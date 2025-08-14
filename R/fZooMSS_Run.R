@@ -1,9 +1,59 @@
-## Run ZooMSS model forward in time
-## Updates environmental forcing (phytoplankton, temperature) at each time step
-## Unlike previous versions, phytoplankton spectrum and temperature effects change with environmental conditions
-
-## Last Updated: August 2025 (ZooMSS)
-
+#' Run ZooMSS Model Forward in Time
+#'
+#' @title Execute the main ZooMSS simulation loop with dynamic environmental forcing
+#' @description Runs the ZooMSS model forward in time, updating environmental conditions
+#'   and population dynamics at each time step using the McKendrick-von Foerster framework.
+#' @details This is the core simulation engine of ZooMSS that:
+#'   
+#'   **Environmental Dynamics:**
+#'   - Updates phytoplankton abundance spectrum based on chlorophyll time series
+#'   - Applies temperature effects on zooplankton and fish metabolism
+#'   - Recalculates feeding kernels with current environmental conditions
+#'   
+#'   **Population Dynamics:**
+#'   - Solves McKendrick-von Foerster equation for size-structured growth
+#'   - Updates feeding interactions between all size classes and groups
+#'   - Calculates mortality from predation, senescence, and fishing
+#'   - Handles recruitment and boundary conditions for each functional group
+#'   
+#'   **Time Integration:**
+#'   - Processes model through all time steps with adaptive environmental forcing
+#'   - Saves output at specified intervals for memory efficiency
+#'   - Maintains mass balance and numerical stability throughout simulation
+#'   
+#'   Unlike static models, this version dynamically updates phytoplankton spectra 
+#'   and temperature effects at each time step based on provided environmental data.
+#'
+#' @param model Model object created by fZooMSS_Setup containing:
+#'   - param: Complete parameter list with environmental time series
+#'   - Feeding kernels and biological rate parameters
+#'   - Initial conditions and model structure
+#'
+#' @return List containing complete model output:
+#'   \itemize{
+#'     \item param: Model parameters used in simulation
+#'     \item N: Abundance time series (time x groups x size classes)
+#'     \item gg: Growth rate time series 
+#'     \item diet: Diet composition time series
+#'     \item Z: Mortality rate time series
+#'     \item w: Size class weights (g)
+#'     \item Additional time series if SaveTimeSteps enabled
+#'   }
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Set up model parameters and structure
+#' params <- fZooMSS_Params(Groups, input_params)
+#' model <- fZooMSS_Setup(params)
+#' 
+#' # Run the simulation
+#' results <- fZooMSS_Run(model)
+#' 
+#' # Access final abundances
+#' final_abundances <- results$N[dim(results$N)[1],,]
+#' }
+#'
 fZooMSS_Run <- function(model){
 
   # Pull out some useful parameters - just a shortcut
@@ -63,12 +113,17 @@ fZooMSS_Run <- function(model){
   # Temporary Matrices that get updated each time step some of these saved for output
   N <- matrix(model$N[1,,], nrow = ngrps, ncol = ngrid) # Abundances of functional groups, dim 1 = groups, dim 2 = size classes
 
-  pb <- txtProgressBar(min = 0, max = itimemax, initial = 1, style = 3) # Initial progress bar
+  pb <- progress::progress_bar$new(
+    format = "ZooMSS Time Loop [:bar] :percent eta: :eta elapsed: :elapsed",
+    total = itimemax,
+    width = 60,
+    show_after = 0
+  )
 
   # BIG TIME LOOP
   for (itime in 1:itimemax){
 
-    setTxtProgressBar(pb, itime) # Update progress bar
+    pb$tick() # Update progress bar
     
     # DYNAMIC ENVIRONMENTAL FORCING - Update for current time step
     current_phyto_int <- phyto_int_ts[itime]      # Phytoplankton intercept (varies with chlorophyll)

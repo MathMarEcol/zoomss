@@ -1,10 +1,67 @@
-## Set up Model Parameter List for ZooMSS model
-## This function imports "Groups" and sets parameters for environmental forcing
-## - Static parameters: fixed across all time steps (e.g., dx, group properties)
-## - Dynamic parameters: calculated for each time step (e.g., phytoplankton, temperature)
-
-## Last Updated: August 2025 (ZooMSS)
-
+#' Set Up ZooMSS Model Parameters
+#'
+#' @title Initialize and validate ZooMSS model parameters
+#' @description Sets up the complete parameter list for ZooMSS model runs, including 
+#'   functional group parameters, model dimensions, and environmental forcing data.
+#' @details This function creates a comprehensive parameter object that contains:
+#'   
+#'   **Static Parameters (fixed across time steps):**
+#'   - Model dimensions (number of groups, size classes, time steps)
+#'   - Biological parameters (growth efficiency, mortality rates)
+#'   - Size class definitions and ranges for each functional group
+#'   - Phytoplankton size spectrum parameters
+#'   
+#'   **Dynamic Parameters (calculated from environmental data):**  
+#'   - Phytoplankton abundance time series based on chlorophyll
+#'   - Temperature effects on metabolism for zooplankton and fish
+#'   - Environmental forcing validation and interpolation
+#'   
+#'   The function validates that environmental time series data covers the full
+#'   simulation period and pre-calculates time-varying parameters to optimize
+#'   model performance during the main simulation loop.
+#'
+#' @param Groups Data frame containing functional group definitions with columns:
+#'   Species, Type, W0 (log min size), Wmax (log max size), and various biological parameters
+#' @param input_params Data frame with model parameters including:
+#'   tmax (max years), dt (time step), isave (save frequency), and environmental time series
+#'   (time_step, sst, chlo) for dynamic forcing
+#'
+#' @return List containing comprehensive model parameters:
+#'   \itemize{
+#'     \item Groups: Functional group definitions
+#'     \item ngrps: Number of functional groups
+#'     \item ngrid: Number of size classes
+#'     \item w: Size class weights (g)
+#'     \item tmax, dt, isave: Temporal parameters
+#'     \item zoo_grps, fish_grps: Indices for different organism types
+#'     \item phyto_int_ts, phyto_slope_ts: Time series of phytoplankton parameters
+#'     \item temp_eff_zoo_ts, temp_eff_fish_ts: Time series of temperature effects
+#'     \item Additional biological and physical parameters
+#'   }
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Load functional groups
+#' data(Groups)
+#' 
+#' # Create environmental time series
+#' env_data <- fZooMSS_CreateSimpleTimeSeries(1000, 0.01)
+#' 
+#' # Set up input parameters with environmental forcing
+#' input_params <- data.frame(
+#'   tmax = 10,
+#'   dt = 0.01,
+#'   isave = 10, 
+#'   time_step = 1:1000,
+#'   sst = env_data$sst,
+#'   chlo = env_data$chlo
+#' )
+#' 
+#' # Generate parameter list
+#' params <- fZooMSS_Params(Groups, input_params)
+#' }
+#'
 fZooMSS_Params <- function(Groups, input_params){
 
   source("fZooMSS_Xtras.R")

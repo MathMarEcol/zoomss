@@ -1,113 +1,354 @@
-# This script contains a list of helper functions which can be used to analyse
-# and plot the ZooMSS output
+#' ZooMSS Utility Functions for Analysis and Post-Processing
+#'
+#' @title Collection of helper functions for analyzing ZooMSS model outputs
+#' @description This file contains utility functions for processing, analyzing, and
+#'   transforming ZooMSS model outputs for visualization and interpretation.
+#' @details The utility functions in this file provide tools for:
+#'   - Converting between abundance and biomass
+#'   - Aggregating results across size classes or functional groups
+#'   - Calculating ecological metrics (trophic levels, PPMR)
+#'   - Processing environmental data for model input
+#'   - Data format conversions for analysis workflows
+#'
+#'   These functions are essential for the ZooMSS analysis pipeline and help users
+#'   work with model outputs in different formats depending on their research needs.
 
-
-# Sum ZooMSS output across size bins
+#' Sum ZooMSS Output Across Size Bins
+#'
+#' @title Aggregate ZooMSS abundances across all size classes
+#' @description Sums abundance values across all size classes for each functional group,
+#'   providing total abundance per group.
+#' @details This function collapses the size dimension of ZooMSS output by summing
+#'   across all size classes. Useful for analyzing total abundance patterns without
+#'   size structure detail.
+#'
+#' @param list_in List of abundance matrices (typically from multiple spatial cells)
+#'
+#' @return List of vectors with total abundance per functional group
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # After running ZooMSS model
+#' results <- fZooMSS_Model(input_params, Groups, SaveTimeSteps = FALSE)
+#' total_abundances <- fZooMSS_SumSize(results$abundances)
+#' }
+#'
 fZooMSS_SumSize = function(list_in) {
-  out <- map(list_in, function(x) apply(x, 1, sum)) # Sum ZooMSS output across the size bins
+  out <- purrr::map(list_in, function(x) apply(x, 1, sum)) # Sum ZooMSS output across the size bins
   return(out)
 }
 
-# Sum ZooMSS output across species bins
+#' Sum ZooMSS Output Across Functional Groups
+#'
+#' @title Aggregate ZooMSS abundances across all functional groups
+#' @description Sums abundance values across all functional groups for each size class,
+#'   providing total abundance per size class.
+#' @details This function collapses the functional group dimension by summing across
+#'   all groups for each size class. Useful for analyzing community size spectrum
+#'   patterns without functional group detail.
+#'
+#' @param list_in List of abundance matrices (typically from multiple spatial cells)
+#'
+#' @return List of vectors with total abundance per size class
+#' @export
+#'
 fZooMSS_SumSpecies = function(list_in) {
-  out <- map(list_in, function(x) apply(x, 2, sum)) # Sum ZooMSS output across the species bins
+  out <- purrr::map(list_in, function(x) apply(x, 2, sum)) # Sum ZooMSS output across the species bins
   return(out)
 }
 
-# Summarise the biomass for each grid-cell by species
+#' Calculate Species-Level Biomass
+#'
+#' @title Sum biomass across size classes for each functional group
+#' @description Converts abundance to biomass and sums across all size classes
+#'   to provide total biomass per functional group per spatial cell.
+#' @details This function combines abundance-to-biomass conversion with size-class
+#'   aggregation in one step, providing species-level biomass summaries useful
+#'   for spatial analyses and ecological comparisons.
+#'
+#' @param res List of abundance matrices from ZooMSS output
+#' @param vmdl ZooMSS model object containing weight vector (param$w)
+#'
+#' @return List of vectors with total biomass per functional group (grams wet weight)
+#' @export
+#'
 fZooMSS_SpeciesBiomass = function(res, vmdl) {
   # if (dim(res[[1]])[2] != length(mdl$param$w)){print("error")}
-  Biomass <- map(res, function(x) apply(sweep(x, 2, vmdl$param$w, '*'), 1, sum))
+  Biomass <- purrr::map(res, function(x) apply(sweep(x, 2, vmdl$param$w, '*'), 1, sum))
   return(Biomass)
 }
 
-# Sum ZooMSS output across all species and sizes
+#' Sum All ZooMSS Output
+#'
+#' @title Sum abundances across all groups and size classes
+#' @description Calculates total abundance across all functional groups and size classes,
+#'   providing a single abundance value per spatial cell.
+#' @details This function provides the most aggregated view of ZooMSS output by
+#'   summing across both functional groups and size classes. Useful for comparing
+#'   total community abundance between locations or time periods.
+#'
+#' @param list_in List of abundance matrices (typically from multiple spatial cells)
+#'
+#' @return Vector of total abundance values (one per spatial cell)
+#' @export
+#'
 fZooMSS_SumAll = function(list_in) {
-  out <- unlist(map(list_in, function(x) sum(x))) # Sum ZooMSS output across the species bins
+  out <- unlist(purrr::map(list_in, function(x) sum(x))) # Sum ZooMSS output across the species bins
   return(out)
 }
 
-# Convert Abundance to Biomass for all species and weight classes
+#' Convert Abundance to Biomass
+#'
+#' @title Convert ZooMSS abundance matrices to biomass by multiplying by body weights
+#' @description Converts abundance data to wet weight biomass by multiplying abundances
+#'   by the corresponding body weights for each size class.
+#' @details This function transforms abundance matrices to biomass by applying the
+#'   weight vector across size classes. Essential for analyses requiring biomass
+#'   units rather than abundance counts.
+#'
+#' @param res List of abundance matrices from ZooMSS output
+#' @param vmdl ZooMSS model object containing weight vector (param$w)
+#'
+#' @return List of biomass matrices in grams wet weight
+#' @export
+#'
 fZooMSS_Biomass <- function(res, vmdl) {
   # if (dim(res[[1]])[2] != length(vmdl$param$w)){print("error")}
-  Biomass <- map(res, function(x) sweep(x, 2, vmdl$param$w, '*')) # Biomass in grams
+  Biomass <- purrr::map(res, function(x) sweep(x, 2, vmdl$param$w, '*')) # Biomass in grams
   return(Biomass)
 }
 
-# Convert Abundance to Carbon Biomass for all species and weight classes
+#' Convert Abundance to Carbon Biomass
+#'
+#' @title Convert ZooMSS abundances to carbon biomass across all size classes
+#' @description Converts abundance data to carbon biomass by multiplying by body weights
+#'   and then by carbon content factors for each functional group.
+#' @details This function performs a two-step conversion:
+#'   1. Abundance to wet weight biomass (using body weights)
+#'   2. Wet weight to carbon biomass (using group-specific carbon content)
+#'
+#'   Carbon biomass is essential for biogeochemical analyses and comparisons
+#'   with field data that are often reported in carbon units.
+#'
+#' @param res List of abundance matrices from ZooMSS output
+#' @param vmdl ZooMSS model object containing weight vector and carbon content factors
+#'
+#' @return List of carbon biomass matrices (grams carbon)
+#' @export
+#'
 fZooMSS_CarbonBiomass <- function(res, vmdl) {
   if (dim(res[[1]])[2] != length(vmdl$param$w)){print("error")}
-  Biomass <- map(res, function(x) sweep(x, 2, vmdl$param$w, '*'))  # Biomass in grams (WW)
-  Biomass <- map(Biomass, function(x) sweep(x, 1, vmdl$param$Groups$Carbon, '*')) # Now convert to Carbon
+  Biomass <- purrr::map(res, function(x) sweep(x, 2, vmdl$param$w, '*'))  # Biomass in grams (WW)
+  Biomass <- purrr::map(Biomass, function(x) sweep(x, 1, vmdl$param$Groups$Carbon, '*')) # Now convert to Carbon
   return(Biomass)
 }
 
-# Convert Abundance to Carbon Biomass for all species and weight classes
+#' Convert Abundance to Species-Level Carbon Biomass
+#'
+#' @title Convert abundances to carbon biomass and sum across size classes
+#' @description Converts abundance data to carbon biomass and then sums across all
+#'   size classes to provide total carbon biomass per functional group.
+#' @details This function combines carbon biomass conversion with size-class aggregation:
+#'   1. Converts abundance to wet weight biomass
+#'   2. Converts to carbon biomass using group-specific factors
+#'   3. Sums across all size classes for each functional group
+#'
+#'   Provides species-level carbon biomass useful for ecological stoichiometry
+#'   and biogeochemical cycle analyses.
+#'
+#' @param res List of abundance matrices from ZooMSS output
+#' @param vmdl ZooMSS model object containing weight vector and carbon content factors
+#'
+#' @return List of vectors with total carbon biomass per functional group (grams carbon)
+#' @export
+#'
 fZooMSS_SpeciesCarbonBiomass <- function(res, vmdl) {
   if (dim(res[[1]])[2] != length(vmdl$param$w)){print("error")}
-  Biomass <- map(res, function(x) sweep(x, 2, vmdl$param$w, '*'))  # Biomass in grams (WW)
-  Biomass <- map(Biomass, function(x) sweep(x, 1, vmdl$param$Groups$Carbon, '*')) # Now convert to Carbon
+  Biomass <- purrr::map(res, function(x) sweep(x, 2, vmdl$param$w, '*'))  # Biomass in grams (WW)
+  Biomass <- purrr::map(Biomass, function(x) sweep(x, 1, vmdl$param$Groups$Carbon, '*')) # Now convert to Carbon
   Biomass <- fZooMSS_SumSize(Biomass)
 
   return(Biomass)
 }
 
-# Summarise the biomass for each grid-cell by size-class
+#' Calculate Size-Class Biomass
+#'
+#' @title Sum biomass across functional groups for each size class
+#' @description Converts abundance to biomass and sums across all functional groups
+#'   to provide total biomass per size class per spatial cell.
+#' @details This function provides size-class-level biomass by summing across
+#'   functional groups. Useful for analyzing community size structure and
+#'   comparing size spectrum patterns between locations.
+#'
+#' @param res List of abundance matrices from ZooMSS output
+#' @param w Vector of body weights for each size class (grams)
+#'
+#' @return List of vectors with total biomass per size class (grams wet weight)
+#' @export
+#'
 fZooMSS_SizeBiomass = function(res,w) {
   if (dim(res[[1]])[2] != length(w)){print("error")}
-  Biomass <- map(res, function(x) apply(sweep(x, 2, w, '*'), 2, sum))
+  Biomass <- purrr::map(res, function(x) apply(sweep(x, 2, w, '*'), 2, sum))
   return(Biomass)
 }
 
-# Sum ZooMSS output across size bins
+#' Extract Size Range from ZooMSS Output
+#'
+#' @title Extract specific size class range from abundance matrices
+#' @description Subsets ZooMSS output to include only specified size classes,
+#'   useful for focusing analysis on particular size ranges.
+#' @details This function extracts a subset of size classes from the full
+#'   ZooMSS output matrices. Useful for analyzing specific size ranges
+#'   (e.g., microzooplankton, mesozooplankton) or excluding boundary effects
+#'   from model analysis.
+#'
+#' @param list_in List of abundance matrices from ZooMSS output
+#' @param minb Minimum size class index to extract
+#' @param maxb Maximum size class index to extract
+#'
+#' @return List of abundance matrices with only specified size classes
+#' @export
+#'
 fZooMSS_ExtractSizeRange = function(list_in, minb, maxb) {
-  out <- map(list_in, function(x) x[,minb:maxb] )
+  out <- purrr::map(list_in, function(x) x[,minb:maxb] )
   return(out)
 }
 
 
-# Function to calculate the mean of the last 50 % of the model
+#' Calculate Average Output from Model Time Series
+#'
+#' @title Calculate mean of final portion of ZooMSS time series
+#' @description Calculates the mean of the final portion (default 50%) of a time series
+#'   to obtain equilibrium values after model spin-up period.
+#' @details This function removes the initial transient period from time series data
+#'   and calculates the mean of the remaining portion, providing representative
+#'   steady-state values. Essential for obtaining equilibrium abundances, growth rates,
+#'   and other model outputs after the model has reached dynamic equilibrium.
+#'
+#' @param x 3D array with dimensions (time, groups, size_classes)
+#' @param prop Proportion of final time series to average (default: 0.5)
+#'
+#' @return 2D array with averaged values (groups x size_classes)
+#' @export
+#'
 fZooMSS_AveOutput = function(x, prop = 0.5){
   ave_x <- colMeans(x[(ceiling(dim(x)[1] - prop*(dim(x)[1])):dim(x)[1]),,], dims = 1)
   return(ave_x)
 }
 
-# Remove nonsense attributes if we are working for speed and memory efficiency.
+#' Remove Tibble Attributes
+#'
+#' @title Convert tibble to data frame for efficiency
+#' @description Removes tibble attributes and converts to a plain data frame
+#'   for improved speed and memory efficiency in computational workflows.
+#' @details This utility function strips tibble-specific attributes that can
+#'   slow down operations in tight computational loops. Used internally by
+#'   ZooMSS for performance optimization when working with large datasets.
+#'
+#' @param tibble A tibble object to convert
+#'
+#' @return Plain data frame without tibble attributes
+#' @export
+#'
 untibble <- function (tibble) {
   data.frame(unclass(tibble), check.names = FALSE, stringsAsFactors = FALSE)
 }  ## escape the nonsense
 
 
-# At the moment you need to subset the zoomss data by species or size in order to use this function.
-# I will rewrite sometime to include other variables but at the moment its only for 2D data
+#' Convert List to Tibble Format
+#'
+#' @title Convert ZooMSS list output to tibble with species names
+#' @description Converts ZooMSS list output to a tibble format with proper column
+#'   names based on functional group species names.
+#' @details This function converts aggregated ZooMSS output (typically from
+#'   fZooMSS_SumSize or similar functions) into a tibble format suitable for
+#'   analysis and visualization. Currently designed for 2D data (species x cells).
+#'
+#' @param li List of vectors/matrices from ZooMSS aggregation functions
+#' @param vmdl ZooMSS model object containing species names (param$Groups$Species)
+#'
+#' @return Tibble with columns named by species and rows representing spatial cells
+#' @export
+#'
 fZooMSS_Convert2Tibble <- function(li, vmdl){
-  df <- as_tibble(matrix(unlist(li), nrow=length(li), byrow=T), .name_repair = "unique") %>%
-    rename_with(~vmdl$param$Groups$Species)
+  df <- tibble::as_tibble(matrix(unlist(li), nrow=length(li), byrow=T), .name_repair = "unique") %>%
+    dplyr::rename_with(~vmdl$param$Groups$Species)
   return(df)
 }
 
+#' Add Environmental Data to ZooMSS Results
+#'
+#' @title Merge ZooMSS output with environmental data for spatial analysis
+#' @description Adds environmental forcing data to ZooMSS results based on spatial
+#'   cell IDs for integrated ecological analysis.
+#' @details This function joins ZooMSS biological output with environmental data
+#'   including chlorophyll, temperature, phytoplankton parameters, and geographic
+#'   coordinates. Essential for analyzing relationships between environmental
+#'   forcing and biological responses in spatial ZooMSS applications.
+#'
+#' @param Zoo ZooMSS results tibble (typically from fZooMSS_Convert2Tibble)
+#' @param venviro Environmental data frame with cell-specific environmental variables
+#'
+#' @return Tibble combining ZooMSS results with environmental data
+#' @export
+#'
 fZooMSS_AddEnviro <- function(Zoo, venviro){
   df <- Zoo %>%
-    mutate(cellID = 1:n()) %>% # Create a cellID
-    left_join(dplyr::select(venviro, cellID, chlo, sst, phyto_int, phyto_slope, phyto_max, Lat, Lon, geometry), by = "cellID") %>%
-    rename(SST = sst, Chl = chlo) %>%
-    mutate(Chl_log10 = log10(Chl))
+    dplyr::mutate(cellID = 1:n()) %>% # Create a cellID
+    dplyr::left_join(dplyr::select(venviro, cellID, chlo, sst, phyto_int, phyto_slope, phyto_max, Lat, Lon, geometry), by = "cellID") %>%
+    dplyr::rename(SST = sst, Chl = chlo) %>%
+    dplyr::mutate(Chl_log10 = log10(Chl))
   return(df)
 }
 
 
-# Return the diet matrix as a long tibble
+#' Create Diet Matrix in Long Tibble Format
+#'
+#' @title Convert diet matrix to long format for analysis and visualization
+#' @description Converts ZooMSS diet matrix from wide format to long (tidy) format
+#'   with predator-prey relationships clearly defined.
+#' @details This function transforms diet matrices into a long format suitable for
+#'   analysis and visualization of feeding relationships. The resulting tibble
+#'   contains predator-prey pairs with diet fraction values, making it easy to
+#'   analyze trophic interactions and create food web visualizations.
+#'
+#' @param mat Diet matrix from ZooMSS output (predators x prey)
+#' @param mdl ZooMSS model object containing species names for labeling
+#'
+#' @return Long tibble with columns: Predator, Prey, Diet
+#' @export
+#'
 fZooMSS_MakeDietTibble <- function(mat, mdl){
   suppressMessages(
-    out <- as_tibble(mat, .name_repair = "unique") %>%
-      rename_with(~c("Phyto_Small", "Phyto_Med", "Phyto_Large", mdl$param$Groups$Species)) %>%
-      mutate(Predator = mdl$param$Groups$Species) %>%
-      pivot_longer(cols = Phyto_Small:Fish_Large, names_to = "Prey", values_to = "Diet")
+    out <- tibble::as_tibble(mat, .name_repair = "unique") %>%
+      dplyr::rename_with(~c("Phyto_Small", "Phyto_Med", "Phyto_Large", mdl$param$Groups$Species)) %>%
+      dplyr::mutate(Predator = mdl$param$Groups$Species) %>%
+      tidyr::pivot_longer(cols = Phyto_Small:Fish_Large, names_to = "Prey", values_to = "Diet")
   )
   return(out)
 }
 
 
+#' Calculate PPMR Data for Plotting
+#'
+#' @title Calculate predator-prey mass ratio data for visualization
+#' @description Calculates predator-prey mass ratio (PPMR) values and biomass weightings
+#'   for creating PPMR distribution plots in ZooMSS analysis.
+#' @details This function computes theoretical and realized PPMR patterns by:
+#'   - Calculating size-dependent PPMR values using Wirtz 2012 equations
+#'   - Weighting by biomass to show community-level patterns
+#'   - Computing species-specific PPMR values
+#'   - Handling special cases for filter feeders (larvaceans, salps)
+#'
+#'   This is a helper function primarily used by fZooMSS_Plot_PPMR for visualization.
+#'   PPMR analysis provides insights into food web structure and predation patterns.
+#'
+#' @param dat ZooMSS results object containing abundances and model parameters
+#'
+#' @return List containing PPMR density data and species-specific values for plotting
+#' @export
+#'
 PPMR_plot = function(dat){
 
   min_size = min(dat$model$param$Groups$W0) # smallest size class
@@ -135,7 +376,7 @@ PPMR_plot = function(dat){
   }
   ave_biom = sweep(ave, 2, w, "*") # Calculate oligo biomass for zoo groups
   ave_biom = ave_biom[-which(is.na(dat$model$param$Groups$PPMRscale)),] # remove rows for fish
-  
+
   # Check for non-finite values and handle edge cases
   total_biom = sum(ave_biom)
   if (!is.finite(total_biom) || total_biom == 0) {
@@ -145,7 +386,7 @@ PPMR_plot = function(dat){
   } else {
     beta_props = ave_biom/total_biom # Calculate fraction of zoo biomass in each group, in each size class
   }
-  
+
   # Ensure beta_props values are finite for density function
   beta_props[!is.finite(beta_props)] <- 0
 
@@ -154,9 +395,9 @@ PPMR_plot = function(dat){
   out[[2]] <- beta_props
   names(out) <- c("betas", "beta_props")
 
-  temp <- density(betas, weights = beta_props)
+  temp <- stats::density(betas, weights = beta_props)
 
-  out <- tibble("x" = temp$x, "y" = temp$y, "mn_beta" = sum(beta_props*betas))
+  out <- tibble::tibble("x" = temp$x, "y" = temp$y, "mn_beta" = sum(beta_props*betas))
 
   # Calculate species-specific proportions with safety checks
   row_sums <- rowSums(ave_biom)
@@ -169,15 +410,15 @@ PPMR_plot = function(dat){
     }
   }
   spbeta_props[!is.finite(spbeta_props)] <- 0  # ensure all values are finite
-  spPPMR <- tibble("Species" = as.factor(dat$model$param$Groups$Species[-which(is.na(dat$model$param$Groups$PPMRscale))]), "Betas" = rowSums(spbeta_props*betas), "y" = NA) # Get species-specific PPMR
+  spPPMR <- tibble::tibble("Species" = as.factor(dat$model$param$Groups$Species[-which(is.na(dat$model$param$Groups$PPMRscale))]), "Betas" = rowSums(spbeta_props*betas), "y" = NA) # Get species-specific PPMR
 
   for (s in 1:length(spPPMR$Species)){
     spPPMR$y[s] <- out$y[which.min(abs(out$x - spPPMR$Betas[s]))]
   }
 
   spPPMR <- spPPMR %>%
-    mutate(y = y * 0) %>%
-    bind_rows(spPPMR)
+    dplyr::mutate(y = y * 0) %>%
+    dplyr::bind_rows(spPPMR)
 
   out2 <- list()
   out2[[1]] <- out
@@ -188,11 +429,41 @@ PPMR_plot = function(dat){
 
 
 
-## Function to calculate slope intercept and maximum size of phytoplankton spectrum, for zooplankton
-## resolved size spectrum model (Heneghan et al. in prep).
-
-# Last updated 17th September 2020
-
+#' Calculate Phytoplankton Size Spectrum Parameters
+#'
+#' @title Calculate phytoplankton abundance spectrum from chlorophyll data
+#' @description Converts chlorophyll concentration data to phytoplankton size spectrum
+#'   parameters (slope, intercept, maximum size) using established oceanographic relationships.
+#' @details This function implements the Brewin et al. (2015) algorithm to partition
+#'   chlorophyll among picophytoplankton, nanophytoplankton, and microphytoplankton size
+#'   classes, then calculates:
+#'   - Size spectrum slope and intercept parameters
+#'   - Maximum phytoplankton size based on micro proportion
+#'   - Biomass estimates for each size class
+#'
+#'   These parameters drive the dynamic phytoplankton spectrum in ZooMSS that serves
+#'   as the base of the food web. The function can work with either chlorophyll-only
+#'   data (using empirical relationships) or direct phytoplankton biomass measurements.
+#'
+#' @param df Data frame containing chlorophyll data (chlo column in mg/m³) and
+#'   optionally phytoplankton biomass (phy column in g/m³)
+#'
+#' @return Data frame with added columns:
+#'   \itemize{
+#'     \item phyto_slope: Power law slope for phytoplankton size spectrum
+#'     \item phyto_int: Log10 intercept for phytoplankton abundance
+#'     \item phyto_max: Maximum phytoplankton size (log10 grams)
+#'     \item pico_biom, nano_biom, micro_biom: Biomass in each size class
+#'   }
+#' @export
+#'
+#' @references
+#' Brewin, R.J.W., et al. (2015). A three-component model of phytoplankton size class
+#' for the Atlantic Ocean. Ecological Modelling, 306, 90-101.
+#'
+#' Marañón, E., et al. (2014). Resource supply overrides temperature as a controlling
+#' factor of marine phytoplankton growth. PLoS ONE, 9(6), e99312.
+#'
 fZooMSS_CalculatePhytoParam <- function(df){ # chlo is chlorophyll concentration in mg m^-3, phy is mean euphotic zone phyto in g wet weight m-3
 
   ## Calculate pico, nano, micro phytoplankton proportions of total chlorophyll
@@ -235,9 +506,40 @@ fZooMSS_CalculatePhytoParam <- function(df){ # chlo is chlorophyll concentration
 }
 
 
-## TROPHIC LEVEL FUNCTION, takes a 12x15 matrix of diets (predators are rows, prey are columns) from ZooMSS and calculates
-## trophic levels of predator groups.
-
+#' Calculate Trophic Levels from Diet Matrix
+#'
+#' @title Compute trophic levels for functional groups using diet composition
+#' @description Calculates trophic levels for each functional group based on their
+#'   diet composition using an iterative Gauss-Seidel algorithm.
+#' @details This function computes trophic levels by:
+#'   - Starting with phytoplankton at trophic level 1.0
+#'   - Initializing all other groups at trophic level 2.0
+#'   - Iteratively updating trophic levels based on weighted diet composition
+#'   - Continuing until convergence (difference < 0.01) or maximum iterations (100)
+#'
+#'   Trophic level calculation follows: TL = 1 + Σ(diet_fraction_i × TL_prey_i)
+#'
+#'   This provides a quantitative measure of each group's position in the food web
+#'   and is useful for analyzing ecosystem structure and energy transfer efficiency.
+#'
+#' @param diet_matrix 12x15 matrix where rows are predators (functional groups) and
+#'   columns are prey (first 3 columns are phytoplankton size classes, remaining 12 are
+#'   zooplankton/fish groups). Values represent diet fractions.
+#'
+#' @return Vector of trophic levels for each functional group (length 12)
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # After running ZooMSS model
+#' results <- fZooMSS_Model(input_params, Groups, SaveTimeSteps = FALSE)
+#' trophic_levels <- fZooMSS_TrophicLevel(results$diets)
+#'
+#' # View trophic levels by group
+#' names(trophic_levels) <- results$model$param$Groups$Species
+#' print(trophic_levels)
+#' }
+#'
 fZooMSS_TrophicLevel <- function(diet_matrix){
 
   phyto_tl <- 1 # Phyto TL is 1
