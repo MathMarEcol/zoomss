@@ -7,7 +7,7 @@
 zCalculatePhytoParam(df)
 }
 \arguments{
-\item{df}{Data frame containing chlorophyll data (chlo column in mg/m^3) and
+\item{df}{Data frame containing chlorophyll data (chl column in mg/m^3) and
 optionally phytoplankton biomass (phy column in g/m^3)}
 }
 \value{

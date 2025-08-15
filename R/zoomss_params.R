@@ -1,21 +1,21 @@
 #' Set Up ZooMSS Model Parameters
 #'
 #' @title Initialize and validate ZooMSS model parameters
-#' @description Sets up the complete parameter list for ZooMSS model runs, including 
+#' @description Sets up the complete parameter list for ZooMSS model runs, including
 #'   functional group parameters, model dimensions, and environmental forcing data.
 #' @details This function creates a comprehensive parameter object that contains:
-#'   
+#'
 #'   **Static Parameters (fixed across time steps):**
 #'   - Model dimensions (number of groups, size classes, time steps)
 #'   - Biological parameters (growth efficiency, mortality rates)
 #'   - Size class definitions and ranges for each functional group
 #'   - Phytoplankton size spectrum parameters
-#'   
-#'   **Dynamic Parameters (calculated from environmental data):**  
+#'
+#'   **Dynamic Parameters (calculated from environmental data):**
 #'   - Phytoplankton abundance time series based on chlorophyll
 #'   - Temperature effects on metabolism for zooplankton and fish
 #'   - Environmental forcing validation and interpolation
-#'   
+#'
 #'   The function validates that environmental time series data covers the full
 #'   simulation period and pre-calculates time-varying parameters to optimize
 #'   model performance during the main simulation loop.
@@ -24,7 +24,7 @@
 #'   Species, Type, W0 (log min size), Wmax (log max size), and various biological parameters
 #' @param input_params Data frame with model parameters including:
 #'   tmax (max years), dt (time step), isave (save frequency), and environmental time series
-#'   (time_step, sst, chlo) for dynamic forcing
+#'   (time_step, sst, chl) for dynamic forcing
 #'
 #' @return List containing comprehensive model parameters:
 #'   \itemize{
@@ -44,28 +44,26 @@
 #' \dontrun{
 #' # Load functional groups
 #' data(Groups)
-#' 
+#'
 #' # Create environmental time series
 #' env_data <- zCreateSimpleTimeSeries(1000, 0.01)
-#' 
+#'
 #' # Set up input parameters with environmental forcing
 #' input_params <- data.frame(
 #'   tmax = 10,
 #'   dt = 0.01,
-#'   isave = 10, 
+#'   isave = 10,
 #'   time_step = 1:1000,
 #'   sst = env_data$sst,
-#'   chlo = env_data$chlo
+#'   chl = env_data$chl
 #' )
-#' 
+#'
 #' # Generate parameter list
 #' params <- zoomss_params(Groups, input_params)
 #' }
 #'
 zoomss_params <- function(Groups, input_params){
 
-  source("zXtras.R")
-  
   param <- list(
     Groups = Groups, # Read in functional group specific parameters from file
     ngrps = dim(Groups)[1], # no. of Groups
@@ -96,46 +94,36 @@ zoomss_params <- function(Groups, input_params){
 
   # Process provided time series
   n_time_steps <- nrow(input_params)
-  
+
   # Validate that environmental data covers the full simulation
   required_time_steps <- ceiling(param$tmax / param$dt)
-  
-  # Ensure these are scalar values for comparison
-  n_time_steps_scalar <- n_time_steps[1]
-  required_time_steps_scalar <- required_time_steps[1]
-  
-  if (n_time_steps_scalar < required_time_steps_scalar) {
-    stop("Environmental time series too short! Need ", required_time_steps_scalar, 
-         " timesteps (", param$tmax, " years with dt=", param$dt, 
-         ") but only have ", n_time_steps_scalar, " timesteps (",
-         round(n_time_steps_scalar * param$dt, 2), " years)")
-  }
-  
-  cat("Environmental validation: ", n_time_steps_scalar, " timesteps cover ", 
-      round(n_time_steps_scalar * param$dt[1], 1), " years (need ", param$tmax[1], " years)\n")
-  
+
+
+  cat("Environmental validation: ", required_time_steps[1], " timesteps cover ",
+      round(required_time_steps[1] * param$dt[1], 1), " years (need ", param$tmax[1], " years)\n")
+
   # Pre-calculate phytoplankton parameters for each time step
-  
+
   # Initialize arrays to store time-varying parameters (optimize memory allocation)
   param2$phyto_int_ts <- numeric(n_time_steps)
   param2$phyto_slope_ts <- numeric(n_time_steps)
   param2$phyto_max_ts <- numeric(n_time_steps)
   param2$wMax_phyto_ts <- numeric(n_time_steps)
-  
+
   # Pre-calculate temperature effects for each time step (more efficient than in-loop)
   param2$temp_eff_zoo_ts <- matrix(NA, nrow = n_time_steps, ncol = param$num_zoo)
   param2$temp_eff_fish_ts <- matrix(NA, nrow = n_time_steps, ncol = param$num_fish)
-  
+
   # Check if phytoplankton parameters are already in input_params (expanded format)
   if (nrow(input_params) == n_time_steps && all(c("phyto_int", "phyto_slope", "phyto_max") %in% names(input_params))) {
     cat("Using pre-calculated phytoplankton parameters from input_params\n")
-    
+
     # Use pre-calculated values (most efficient path)
     param2$phyto_int_ts <- input_params$phyto_int
     param2$phyto_slope_ts <- input_params$phyto_slope
     param2$phyto_max_ts <- input_params$phyto_max
     param2$wMax_phyto_ts <- 10^input_params$phyto_max
-    
+
     # Calculate temperature effects for each time step - consistent temperature formula throughout model
     for (i in 1:n_time_steps) {
       sst_i <- input_params$sst[i]
@@ -143,34 +131,34 @@ zoomss_params <- function(Groups, input_params){
       param2$temp_eff_zoo_ts[i, ] <- temp_factor
       param2$temp_eff_fish_ts[i, ] <- temp_factor
     }
-    
+
   } else {
     cat("Warning: Calculating phytoplankton parameters from environmental time series\n")
-    
-    # Calculate phytoplankton parameters for each time step (fallback method)
+
+    # Calculate phytoplankton parameters for each time step
     for (i in 1:n_time_steps) {
       sst_i <- input_params$sst[i]
-      chlo_i <- input_params$chlo[i]
-      
+      chl_i <- input_params$chl[i]
+
       # Calculate phytoplankton parameters using the existing function
-      temp_df <- data.frame(cellID = 1, sst = sst_i, chlo = chlo_i)
+      temp_df <- data.frame(cellID = 1, sst = sst_i, chl = chl_i)
       phyto_params <- zCalculatePhytoParam(temp_df)
-      
+
       param2$phyto_int_ts[i] <- phyto_params$phyto_int
       param2$phyto_slope_ts[i] <- phyto_params$phyto_slope
       param2$phyto_max_ts[i] <- phyto_params$phyto_max
       param2$wMax_phyto_ts[i] <- 10^phyto_params$phyto_max
-      
+
       # Temperature effects (same calculation throughout model)
       temp_factor <- 2^((sst_i - 30)/10)
       param2$temp_eff_zoo_ts[i, ] <- temp_factor
       param2$temp_eff_fish_ts[i, ] <- temp_factor
     }
   }
-  
+
   # Store the maximum wMax_phyto from time series for grid creation
   param2$wMax_phyto <- max(param2$wMax_phyto_ts)
-  
+
   # Add final parameters that depend on the complete parameter set (calculate only once)
   param2$w_log10 <- round(seq(from = min(Groups$W0), to = max(Groups$Wmax), param$dx), digits = 2) # Set up log10 weight grid
   param2$w <- 10^(seq(from = min(Groups$W0), to = max(Groups$Wmax), param$dx)) # Set up weight grid
@@ -180,8 +168,8 @@ zoomss_params <- function(Groups, input_params){
 
   # Final parameter combination
   # Exclude time series vectors from input_params since they're now stored as _ts arrays in param2
-  input_params_filtered <- input_params[!names(input_params) %in% c("tmax", "dt", "isave", "time_step", "sst", "chlo", "phyto_int", "phyto_slope", "phyto_max")]
-  
+  input_params_filtered <- input_params[!names(input_params) %in% c("tmax", "dt", "isave", "time_step", "sst", "chl", "phyto_int", "phyto_slope", "phyto_max")]
+
   param_final <- c(input_params_filtered, param, param2)
   return(param_final)
 }

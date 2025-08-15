@@ -12,7 +12,7 @@ Species, Type, W0 (log min size), Wmax (log max size), and various biological pa
 
 \item{input_params}{Data frame with model parameters including:
 tmax (max years), dt (time step), isave (save frequency), and environmental time series
-(time_step, sst, chlo) for dynamic forcing}
+(time_step, sst, chl) for dynamic forcing}
 }
 \value{
 List containing comprehensive model parameters:
@@ -68,10 +68,10 @@ env_data <- zCreateSimpleTimeSeries(1000, 0.01)
 input_params <- data.frame(
   tmax = 10,
   dt = 0.01,
-  isave = 10, 
+  isave = 10,
   time_step = 1:1000,
   sst = env_data$sst,
-  chlo = env_data$chlo
+  chl = env_data$chl
 )
 
 # Generate parameter list

@@ -18,3 +18,13 @@ knitr::opts_chunk$set(
 library(zoomss)
 ```
 
+```{r}
+
+input_params <- zCreateInputs(time = 1:100,
+                              sst = 15,
+                              chl = 0.15)
+
+out <- zoomss_model(input_params)
+
+
+```

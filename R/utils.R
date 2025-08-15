@@ -420,7 +420,7 @@ zExtract_PPMR = function(dat){
 #'   as the base of the food web. The function can work with either chlorophyll-only
 #'   data (using empirical relationships) or direct phytoplankton biomass measurements.
 #'
-#' @param df Data frame containing chlorophyll data (chlo column in mg/m^3) and
+#' @param df Data frame containing chlorophyll data (chl column in mg/m^3) and
 #'   optionally phytoplankton biomass (phy column in g/m^3)
 #'
 #' @return Data frame with added columns:
@@ -439,21 +439,21 @@ zExtract_PPMR = function(dat){
 #' Maranon, E., et al. (2014). Resource supply overrides temperature as a controlling
 #' factor of marine phytoplankton growth. PLoS ONE, 9(6), e99312.
 #'
-zCalculatePhytoParam <- function(df){ # chlo is chlorophyll concentration in mg m^-3, phy is mean euphotic zone phyto in g wet weight m-3
+zCalculatePhytoParam <- function(df){ # chl is chlorophyll concentration in mg m^-3, phy is mean euphotic zone phyto in g wet weight m-3
 
   ## Calculate pico, nano, micro phytoplankton proportions of total chlorophyll
   ## BREWIN ET AL., 2015
-  pico <- (0.13*(1-exp(-0.8/0.13*df$chlo)))/df$chlo
-  nano <- (0.77*(1-exp(-0.94/0.77*df$chlo)))/df$chlo - pico
-  micro <- (df$chlo - 0.77*(1-exp(-0.94/0.77*df$chlo)))/df$chlo
+  pico <- (0.13*(1-exp(-0.8/0.13*df$chl)))/df$chl
+  nano <- (0.77*(1-exp(-0.94/0.77*df$chl)))/df$chl - pico
+  micro <- (df$chl - 0.77*(1-exp(-0.94/0.77*df$chl)))/df$chl
 
   if("phy" %in% colnames(df)){
     tot_biom <- df$phy
   } else {
     ## Convert total chlorophyll to g m^-3 total wet weight - biomass
     ## Allocate total chlorophyll to the three size classes
-    c_chl <- ((df$chlo^0.89)*(10^1.79))/df$chlo # chlo:carbon ratio, from Maranon et al. 2014
-    tot_biom_c <- c_chl*df$chlo/1000 # (convert to grams carbon)
+    c_chl <- ((df$chl^0.89)*(10^1.79))/df$chl # chl:carbon ratio, from Maranon et al. 2014
+    tot_biom_c <- c_chl*df$chl/1000 # (convert to grams carbon)
     tot_biom <- tot_biom_c*(1/0.1) # convert to grams wet weight, assuming 0.1 C:ww
   }
 
@@ -474,7 +474,7 @@ zCalculatePhytoParam <- function(df){ # chlo is chlorophyll concentration in mg 
 
   ## Calculate maximum size
   df$phyto_max <- 0.1*round((-8.4 + 2*micro)/0.1) # Maximum size depends on the proportion of micro
-  max_phyto <- rep(-7, length(df$chlo)) # Set -7 to be the max possible size for phyto
+  max_phyto <- rep(-7, length(df$chl)) # Set -7 to be the max possible size for phyto
   df$phyto_max <- pmin(max_phyto, df$phyto_max)
 
   return(df)

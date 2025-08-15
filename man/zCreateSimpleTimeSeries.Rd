@@ -8,10 +8,10 @@ zCreateSimpleTimeSeries(
   n_time_steps,
   dt,
   base_sst = 15,
-  base_chlo = 0.5,
+  base_chl = 0.5,
   seasonal = TRUE,
   sst_amplitude = 3,
-  chlo_amplitude = 0.2
+  chl_amplitude = 0.2
 )
 }
 \arguments{
@@ -21,16 +21,16 @@ zCreateSimpleTimeSeries(
 
 \item{base_sst}{Base sea surface temperature in deg C (default: 15)}
 
-\item{base_chlo}{Base chlorophyll concentration in mg/m^3 (default: 0.5)}
+\item{base_chl}{Base chlorophyll concentration in mg/m^3 (default: 0.5)}
 
 \item{seasonal}{Logical, whether to add seasonal variation (default: TRUE)}
 
 \item{sst_amplitude}{Amplitude of SST seasonal variations in deg C (default: 3)}
 
-\item{chlo_amplitude}{Amplitude of chlorophyll seasonal variations in mg/m^3 (default: 0.2)}
+\item{chl_amplitude}{Amplitude of chlorophyll seasonal variations in mg/m^3 (default: 0.2)}
 }
 \value{
-Data frame with columns: time, sst, chlo
+Data frame with columns: time, sst, chl
 }
 \description{
 Creates simple synthetic environmental time series with optional seasonal
@@ -66,7 +66,7 @@ static_data <- zCreateSimpleTimeSeries(
   dt = 0.01,
   seasonal = FALSE,
   base_sst = 20,
-  base_chlo = 1.0
+  base_chl = 1.0
 )
 
 }
