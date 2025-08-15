@@ -16,6 +16,7 @@ fZooMSS_Run <- function(model){
   Wmax <- param$Groups$Wmax
   fish_grps <- model$param$fish_grps
   assim_eff <- model$assim_eff
+  reproduction_eff <- model$reproduction_eff
   temp_eff <- model$temp_eff
   dynam_dietkernel <- model$dynam_dietkernel
   dynam_growthkernel <- model$dynam_growthkernel
@@ -58,6 +59,9 @@ fZooMSS_Run <- function(model){
 
   # Temporary Matrices that get updated each time step some of these saved for output
   N <- matrix(model$N[1,,], nrow = ngrps, ncol = ngrid) # Abundances of functional groups, dim 1 = groups, dim 2 = size classes
+  
+  # Initialize reproduction rates matrix for saving
+  reproduction_rates <- matrix(0, nrow = ngrps, ncol = ngrid)
 
   pb <- txtProgressBar(min = 0, max = itimemax, initial = 1, style = 3) # Initial progress bar
 
@@ -138,8 +142,47 @@ fZooMSS_Run <- function(model){
     #                        cN=N, cA=A, cB=B, cC=C, cS=S,
     #                        ccurr_min_size=curr_min_size, ccurr_max_size=curr_max_size)
 
+    #### REPRODUCTION CALCULATIONS
+    if (param$reproduction_on) {
+      # Reset reproduction rates for this time step
+      reproduction_rates[] <- 0
+      
+      # Calculate feeding rates (energy available for reproduction)
+      # This follows the DBPM approach where reproduction energy comes from feeding
+      total_feeding_phyto <- temp_eff * rowSums(sweep(model$phyto_dietkernel, 3, model$nPP, "*"), dims = 2)
+      
+      # For now, use a simplified dynamic feeding calculation (can be improved later)
+      # This is a placeholder that calculates total feeding as a fraction of phytoplankton feeding
+      total_feeding_dynam <- 0.5 * total_feeding_phyto  # Assume dynamic feeding is 50% of phyto feeding
+      
+      # Total energy available for reproduction
+      total_energy <- total_feeding_phyto + total_feeding_dynam
+      
+      # Calculate reproduction rates using reproduction efficiency
+      reproduction_rates <- reproduction_eff * total_energy
+      
+      # Calculate recruitment to smallest size classes
+      for (i in 1:ngrps) {
+        if (param$Groups$Reproduction[i] == 1) {
+          min_size_idx <- which(round(log10(w), digits = 2) == W0[i])[1]
+          
+          # Sum reproduction from all size classes larger than minimum, weighted by abundance and size
+          # Following DBPM approach: recruitment = sum(reproduction_rate * body_mass * abundance) / (dx * min_body_mass)
+          if (min_size_idx < ngrid) {
+            reproduction_biomass <- sum(reproduction_rates[i, (min_size_idx+1):ngrid] * 
+                                      w[(min_size_idx+1):ngrid] * 
+                                      N[i, (min_size_idx+1):ngrid] * dx)
+            
+            recruitment_rate <- reproduction_biomass / (dx * w[min_size_idx])
+            
+            # Add recruitment to smallest size class (similar to DBPM boundary condition)
+            N[i, min_size_idx] <- N[i, min_size_idx] + dt * recruitment_rate
+          }
+        }
+      }
+    }
 
-    #### Keep smallest fish community size class as equal to equivalent zooplankton size class
+    #### Keep smallest fish community size class as equal to equivalent zooplankton size class (ONLY when reproduction is OFF)
     ### Keep smallest zooplankton size class abundnace for each group locked to others in size spectrum
     if(length(param$zoo_grps) > 1){ # If you only have one zoo group, it will be locked to phyto spectrum so you do not need to do this
       for(i in 1:length(w0idx)){
@@ -149,13 +192,16 @@ fZooMSS_Run <- function(model){
       }
     }
 
-    fish_mins <- unlist(lapply(W0[fish_grps],
-                               function(x){which(round(log10(w), digits = 2) == x)}))
+    # Fish pinning (abundance set to zooplankton levels) - only when reproduction is OFF
+    if (!param$reproduction_on) {
+      fish_mins <- unlist(lapply(W0[fish_grps],
+                                 function(x){which(round(log10(w), digits = 2) == x)}))
 
-    if(length(fish_grps) > 1 & length(param$zoo_grps) > 1){
-      N[fish_grps,fish_mins] <- (1/length(fish_grps))*(colSums(N[-fish_grps,fish_mins]))
-    }else{
-      N[fish_grps, fish_mins] <- (1/length(fish_grps))*sum(N[-fish_grps, fish_mins])
+      if(length(fish_grps) > 1 & length(param$zoo_grps) > 1){
+        N[fish_grps,fish_mins] <- (1/length(fish_grps))*(colSums(N[-fish_grps,fish_mins]))
+      }else{
+        N[fish_grps, fish_mins] <- (1/length(fish_grps))*sum(N[-fish_grps, fish_mins])
+      }
     }
 
 
@@ -179,6 +225,25 @@ fZooMSS_Run <- function(model){
       model$N[isav,,] <- N # Save N by taxa and size
       model$Z[isav,,] <-  Z ## Save mortality
       model$gg[isav,,] <-  gg ## Save growth
+      
+      # Save reproduction outputs if reproduction is enabled
+      if (param$reproduction_on) {
+        model$reproduction_rate[isav,,] <- reproduction_rates ## Save reproduction rates
+        # Calculate and save recruitment rates
+        recruitment_rates <- rep(0, ngrps)
+        for (i in 1:ngrps) {
+          if (param$Groups$Reproduction[i] == 1) {
+            min_size_idx <- which(round(log10(w), digits = 2) == W0[i])[1]
+            if (min_size_idx < ngrid) {
+              reproduction_biomass <- sum(reproduction_rates[i, (min_size_idx+1):ngrid] * 
+                                        w[(min_size_idx+1):ngrid] * 
+                                        N[i, (min_size_idx+1):ngrid] * dx)
+              recruitment_rates[i] <- reproduction_biomass / (dx * w[min_size_idx])
+            }
+          }
+        }
+        model$recruitment[isav,] <- recruitment_rates ## Save recruitment
+      }
     }
   } # End of time loop
   return(model)

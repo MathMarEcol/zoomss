@@ -72,13 +72,54 @@ fZooMSS_Setup <- function(param){
     N = array(NA, dim = c(param$nsave, param$ngrps, param$ngrid)), # dynamic abundance spectrum
     Z = array(NA, dim = c(param$nsave, param$ngrps, param$ngrid)), # Total mortality
     gg = array(NA, dim = c(param$nsave, param$ngrps, param$ngrid)), # Growth
-    diet = array(NA, dim = c(param$nsave, c(param$ngrps), c(param$ngrps+3))) # diet
+    diet = array(NA, dim = c(param$nsave, c(param$ngrps), c(param$ngrps+3))), # diet
+    
+    # Reproduction storage
+    reproduction_rate = array(NA, dim = c(param$nsave, param$ngrps, param$ngrid)), # Reproduction rate
+    recruitment = array(NA, dim = c(param$nsave, param$ngrps)) # Recruitment at smallest size classes
   )
 
   # GGE for different groups
   assim_phyto <- (param$Groups$GrossGEscale) * param$cc_phyto # Phytoplankton
   # assim_dynam <- matrix(param$Groups$GrossGEscale*param$Groups$Carbon, nrow = ngrps, ncol = ngrps, byrow = TRUE) # rows are predators, columns are prey
-  model$assim_eff = matrix(param$Groups$GrossGEscale * param$Groups$Carbon, nrow = param$ngrps, ncol = length(model$param$w))
+  
+  # Calculate energy allocation between growth and reproduction
+  # When reproduction is on, energy is split between growth and reproduction based on maturity
+  if (param$reproduction_on) {
+    # Create matrices for growth and reproduction efficiency
+    growth_efficiency <- matrix(0, nrow = param$ngrps, ncol = param$ngrid)
+    reproduction_efficiency <- matrix(0, nrow = param$ngrps, ncol = param$ngrid)
+    
+    for (i in 1:param$ngrps) {
+      if (param$Groups$Reproduction[i] == 1) {
+        # For reproducing groups, split energy allocation based on maturity
+        maturity_size <- param$Groups$Wmat[i]
+        maturity_weight <- 10^maturity_size
+        
+        # Calculate maturity function (0 to 1, sigmoid function)
+        maturity_function <- 1 / (1 + exp(-5 * (log10(param$w) - maturity_size)))
+        
+        # Energy allocation: immature individuals allocate all to growth, 
+        # mature individuals split 70% growth, 30% reproduction (similar to DBPM model)
+        reproduction_fraction <- 0.3 * maturity_function
+        growth_fraction <- 1 - reproduction_fraction
+        
+        growth_efficiency[i,] <- param$Groups$GrossGEscale[i] * param$Groups$Carbon[i] * growth_fraction
+        reproduction_efficiency[i,] <- param$Groups$GrossGEscale[i] * param$Groups$Carbon[i] * reproduction_fraction
+      } else {
+        # Non-reproducing groups allocate all energy to growth
+        growth_efficiency[i,] <- param$Groups$GrossGEscale[i] * param$Groups$Carbon[i]
+        reproduction_efficiency[i,] <- 0
+      }
+    }
+    
+    model$assim_eff <- growth_efficiency
+    model$reproduction_eff <- reproduction_efficiency
+  } else {
+    # Traditional approach: all energy goes to growth
+    model$assim_eff <- matrix(param$Groups$GrossGEscale * param$Groups$Carbon, nrow = param$ngrps, ncol = length(model$param$w))
+    model$reproduction_eff <- matrix(0, nrow = param$ngrps, ncol = length(model$param$w))
+  }
 
   #### INITIAL DYNAMIC POPULATION ABUNDANCES
   a_dynam <- 10^(param$phyto_int)*(param$w[1]^(param$phyto_slope+1)) # calculate coefficient for initial dynamic spectrum, so that N(w_phyto) equals N(w_dynam) at w[1]
@@ -87,7 +128,16 @@ fZooMSS_Setup <- function(param){
   tempN <- matrix(a_dynam*(param$w)^-1, nrow = param$ngrps, ncol = param$ngrid, byrow = TRUE)
   props_z <- param$Groups$Prop[param$zoo_grps] # Zooplankton proportions
   tempN[param$zoo_grps,] <- props_z * tempN[param$zoo_grps,] # Set abundances of diff zoo groups based on smallest size class proportions
-  tempN[param$fish_grps,] <- (1/param$num_fish) * tempN[param$fish_grps,] # Set abundandances of fish groups based on smallest size class proportions
+  
+  # Fish initial abundances depend on whether reproduction is enabled
+  if (!param$reproduction_on) {
+    # Traditional pinning: set fish abundance equal to zooplankton abundance / number of fish groups
+    tempN[param$fish_grps,] <- (1/param$num_fish) * tempN[param$fish_grps,] # Set abundandances of fish groups based on smallest size class proportions
+  } else {
+    # When reproduction is on, start fish with higher abundance to allow population persistence
+    # Use 10% of the traditional pinning value to give reproduction a chance to work
+    tempN[param$fish_grps,] <- 0.1 * (1/param$num_fish) * tempN[param$fish_grps,] 
+  }
 
   # For each group, set densities at w > Winf and w < Wmin to 0
   tempN[unlist(tapply(param$w_log10, 1:length(param$w), function(wx,Winf) Winf < wx, Winf = param$Groups$Wmax))] <- 0
