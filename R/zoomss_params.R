@@ -111,7 +111,7 @@ zoomss_params <- function(Groups, input_params){
          round(n_time_steps_scalar * param$dt, 2), " years)")
   }
   
-  cat("✅ Environmental validation: ", n_time_steps_scalar, " timesteps cover ", 
+  cat("Environmental validation: ", n_time_steps_scalar, " timesteps cover ", 
       round(n_time_steps_scalar * param$dt[1], 1), " years (need ", param$tmax[1], " years)\n")
   
   # Pre-calculate phytoplankton parameters for each time step
@@ -128,7 +128,7 @@ zoomss_params <- function(Groups, input_params){
   
   # Check if phytoplankton parameters are already in input_params (expanded format)
   if (nrow(input_params) == n_time_steps && all(c("phyto_int", "phyto_slope", "phyto_max") %in% names(input_params))) {
-    cat("✅ Using pre-calculated phytoplankton parameters from input_params\n")
+    cat("Using pre-calculated phytoplankton parameters from input_params\n")
     
     # Use pre-calculated values (most efficient path)
     param2$phyto_int_ts <- input_params$phyto_int
@@ -145,7 +145,7 @@ zoomss_params <- function(Groups, input_params){
     }
     
   } else {
-    cat("⚠️  Calculating phytoplankton parameters from environmental time series\n")
+    cat("Warning: Calculating phytoplankton parameters from environmental time series\n")
     
     # Calculate phytoplankton parameters for each time step (fallback method)
     for (i in 1:n_time_steps) {

@@ -28,16 +28,16 @@
 #'
 zPlot_PPMR <- function(dat){
 
-  out <- PPMR_plot(dat)
+  out <- zExtract_PPMR(dat)
 
   gg <- ggplot2::ggplot() +
-    ggplot2::geom_line(data = out[[2]], mapping = ggplot2::aes(x = Betas, y = y, colour = Species), linewidth = 1) +
-    ggplot2::geom_line(data = out[[1]], mapping = ggplot2::aes(x = x, y = y), linewidth = 1.2) +
+    ggplot2::geom_line(data = out[[2]], mapping = ggplot2::aes(x = .data$Betas, y = .data$y, colour = .data$Species), linewidth = 1) +
+    ggplot2::geom_line(data = out[[1]], mapping = ggplot2::aes(x = .data$x, y = .data$y), linewidth = 1.2) +
     ggplot2::theme_bw() +
     ggplot2::theme(plot.margin=grid::unit(c(0,0,0,0), "mm")) +
     ggplot2::labs(x = expression('log' [10] * PPMR),
          y = "Zoop. Biomass Proportion", subtitle = "PPMR") +
-    ggplot2::geom_vline(data = out[[1]], mapping = ggplot2::aes(xintercept = mn_beta), colour = 'black') +
+    ggplot2::geom_vline(data = out[[1]], mapping = ggplot2::aes(xintercept = .data$mn_beta), colour = 'black') +
     ggplot2::scale_x_continuous(expand = c(0, 0)) +
     ggplot2::scale_y_continuous(expand = c(0, 0)) +
     ggplot2::scale_colour_manual(values = c("Flagellates" = dat$model$param$Groups$PlotColour[dat$model$param$Groups$Species=="Flagellates"],
@@ -88,11 +88,11 @@ zPlot_SizeSpectra <- function(dat) {
 
   species <- species %>%
     tibble::add_column("Weight" = dat$model$param$w) %>%
-    tidyr::pivot_longer(-Weight, names_to = "Species", values_to = "Abundance") %>%
-    dplyr::filter(Abundance > 0) %>%
-    dplyr::mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
+    tidyr::pivot_longer(-.data$Weight, names_to = "Species", values_to = "Abundance") %>%
+    dplyr::filter(.data$Abundance > 0) %>%
+    dplyr::mutate(Species = factor(.data$Species, levels = dat$model$param$Groups$Species))
 
-  gg <- ggplot2::ggplot(data = species, mapping = ggplot2::aes(x = log10(Weight), y = log10(Abundance), colour = Species)) +
+  gg <- ggplot2::ggplot(data = species, mapping = ggplot2::aes(x = log10(.data$Weight), y = log10(.data$Abundance), colour = .data$Species)) +
     ggplot2::geom_line() +
     ggplot2::geom_point() +
     ggplot2::scale_color_manual(values = dat$model$param$Groups$PlotColour) +
@@ -133,18 +133,20 @@ zPlot_SizeSpectra <- function(dat) {
 #' }
 #'
 zPlot_AbundTimeSeries <- function(dat){
+
   tspecies <- rowSums(dat$model$N, dims = 2)
   colnames(tspecies) <- dat$model$param$Groups$Species
   tspecies <- tibble::as_tibble(tspecies)
   tspecies$Time <- seq(dat$model$param$dt * dat$model$param$isave,
                        dat$model$param$tmax,
                        dat$model$param$dt * dat$model$param$isave)
-  tspecies <- tspecies %>%
-    tidyr::pivot_longer(-Time, names_to = "Species", values_to = "Abundance") %>%
-    dplyr::filter(Abundance > 0) %>%
-    dplyr::mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
 
-  gg <- ggplot2::ggplot(data = tspecies, mapping = ggplot2::aes(x = Time, y = log10(Abundance), colour = Species)) +
+  tspecies <- tspecies %>%
+    tidyr::pivot_longer(-.data$Time, names_to = "Species", values_to = "Abundance") %>%
+    dplyr::filter(.data$Abundance > 0) %>%
+    dplyr::mutate(Species = factor(.data$Species, levels = dat$model$param$Groups$Species))
+
+  gg <- ggplot2::ggplot(data = tspecies, mapping = ggplot2::aes(x = .data$Time, y = log10(.data$Abundance), colour = .data$Species)) +
     ggplot2::geom_line(linewidth = 1) +
     ggplot2::geom_point(size = 1.2) +
     ggplot2::scale_color_manual(values = dat$model$param$Groups$PlotColour) +
@@ -188,18 +190,20 @@ zPlot_AbundTimeSeries <- function(dat){
 #' }
 #'
 zPlot_GrowthTimeSeries <- function(dat){
+
   gr <- rowSums(dat$model$gg, dims = 2) / length(dat$model$param$w)
   colnames(gr) <- dat$model$param$Groups$Species
   gr <- tibble::as_tibble(gr)
   gr$Time <- seq(dat$model$param$dt * dat$model$param$isave,
                  dat$model$param$tmax,
                  dat$model$param$dt * dat$model$param$isave)
-  gr <- gr %>%
-    tidyr::pivot_longer(-Time, names_to = "Species", values_to = "Growth") %>%
-    dplyr::filter(Growth > 0) %>%
-    dplyr::mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
 
-  gg <- ggplot2::ggplot(data = gr, mapping = ggplot2::aes(x = Time, y = log10(Growth), colour = Species)) +
+  gr <- gr %>%
+    tidyr::pivot_longer(-.data$Time, names_to = "Species", values_to = "Growth") %>%
+    dplyr::filter(.data$Growth > 0) %>%
+    dplyr::mutate(Species = factor(.data$Species, levels = dat$model$param$Groups$Species))
+
+  gg <- ggplot2::ggplot(data = gr, mapping = ggplot2::aes(x = .data$Time, y = log10(.data$Growth), colour = .data$Species)) +
     ggplot2::geom_line(linewidth = 1) +
     ggplot2::geom_point(size = 1.2) +
     ggplot2::scale_color_manual(values = dat$model$param$Groups$PlotColour) +
@@ -251,11 +255,11 @@ zPlot_PredTimeSeries <- function(dat){
                 dat$model$param$tmax,
                 dat$model$param$dt * dat$model$param$isave)
   Z <- Z %>%
-    tidyr::pivot_longer(-Time, names_to = "Species", values_to = "Mortality") %>%
-    dplyr::filter(Mortality > 0) %>%
-    dplyr::mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
+    tidyr::pivot_longer(-.data$Time, names_to = "Species", values_to = "Mortality") %>%
+    dplyr::filter(.data$Mortality > 0) %>%
+    dplyr::mutate(Species = factor(.data$Species, levels = dat$model$param$Groups$Species))
 
-  gg <- ggplot2::ggplot(data = Z, mapping = ggplot2::aes(x = Time, y = Mortality, colour = Species)) +
+  gg <- ggplot2::ggplot(data = Z, mapping = ggplot2::aes(x = .data$Time, y = .data$Mortality, colour = .data$Species)) +
     ggplot2::geom_line(linewidth = 1) +
     ggplot2::geom_point(size = 1.2) +
     ggplot2::scale_color_manual(values = dat$model$param$Groups$PlotColour) +
@@ -350,14 +354,14 @@ zPlot_BiomassTimeSeries <- function(dat, stacked = FALSE, proportional = FALSE, 
 
   # Convert to long format
   biomass_long <- biomass_df %>%
-    tidyr::pivot_longer(-Time, names_to = "Species", values_to = "Biomass") %>%
-    dplyr::mutate(Species = factor(Species, levels = dat$model$param$Groups$Species))
+    tidyr::pivot_longer(-.data$Time, names_to = "Species", values_to = "Biomass") %>%
+    dplyr::mutate(Species = factor(.data$Species, levels = dat$model$param$Groups$Species))
 
   # Calculate proportions if needed for proportional stacked plot
   if (proportional && (stacked || length(unique(biomass_long$Species)) > 1)) {
     biomass_long <- biomass_long %>%
-      dplyr::group_by(Time) %>%
-      dplyr::mutate(Biomass = Biomass / sum(Biomass, na.rm = TRUE)) %>%
+      dplyr::group_by(.data$Time) %>%
+      dplyr::mutate(Biomass = .data$Biomass / sum(.data$Biomass, na.rm = TRUE)) %>%
       dplyr::ungroup()
   }
 
@@ -375,10 +379,10 @@ zPlot_BiomassTimeSeries <- function(dat, stacked = FALSE, proportional = FALSE, 
   # Create plot based on options
   if (stacked || proportional) {
     # Stacked area plot (absolute or proportional)
-    y_label <- if (proportional) "Proportion" else "Biomass (mg C/m³)"
+    y_label <- if (proportional) "Proportion" else "Biomass (mg C/m^3)"
     subtitle <- if (proportional) "Proportional Biomass Time Series" else "Stacked Biomass Time Series"
 
-    gg <- ggplot2::ggplot(data = biomass_long, mapping = ggplot2::aes(x = Time, y = Biomass, fill = Species)) +
+    gg <- ggplot2::ggplot(data = biomass_long, mapping = ggplot2::aes(x = .data$Time, y = .data$Biomass, fill = .data$Species)) +
       ggplot2::geom_area(position = "stack", alpha = 0.7) +
       ggplot2::scale_fill_manual(values = plot_colors) +
       ggplot2::theme_bw() +
@@ -388,14 +392,14 @@ zPlot_BiomassTimeSeries <- function(dat, stacked = FALSE, proportional = FALSE, 
       ggplot2::xlab("Time (Years)")
   } else {
     # Line plot (original)
-    gg <- ggplot2::ggplot(data = biomass_long, mapping = ggplot2::aes(x = Time, y = Biomass, colour = Species)) +
+    gg <- ggplot2::ggplot(data = biomass_long, mapping = ggplot2::aes(x = .data$Time, y = .data$Biomass, colour = .data$Species)) +
       ggplot2::geom_line(linewidth = 1) +
       ggplot2::geom_point(size = 1.2) +
       ggplot2::scale_color_manual(values = plot_colors) +
       ggplot2::theme_bw() +
       ggplot2::scale_x_continuous(expand = c(0, 0)) +
       ggplot2::scale_y_continuous(expand = c(0, 0)) +
-      ggplot2::labs(subtitle = "Total Biomass Time Series", y = "Biomass (mg C/m³)") +
+      ggplot2::labs(subtitle = "Total Biomass Time Series", y = "Biomass (mg C/m^3)") +
       ggplot2::xlab("Time (Years)")
   }
 
@@ -410,8 +414,8 @@ zPlot_BiomassTimeSeries <- function(dat, stacked = FALSE, proportional = FALSE, 
 #' @description Creates plots of sea surface temperature and chlorophyll time series
 #'   for visualizing environmental forcing data used in ZooMSS model runs.
 #' @details This function creates two separate plots with different y-axes scales:
-#'   - SST plot (red line) with temperature in °C
-#'   - Chlorophyll plot (green line) with concentration in mg/m³
+#'   - SST plot (red line) with temperature in deg C
+#'   - Chlorophyll plot (green line) with concentration in mg/m^3
 #'
 #'   The plots can be combined using the patchwork package if available, otherwise
 #'   separate plots are returned as a list. This helps users visualize the
@@ -425,7 +429,7 @@ zPlot_BiomassTimeSeries <- function(dat, stacked = FALSE, proportional = FALSE, 
 #' @examples
 #' # Create sample data and plot
 #' env_data <- data.frame(
-#'   time_step = 1:100,
+#'   time = 1:100,
 #'   dt = 0.01,
 #'   sst = 15 + 3*sin(2*pi*(1:100)/50),
 #'   chlo = 0.5 + 0.2*cos(2*pi*(1:100)/50)
@@ -434,13 +438,6 @@ zPlot_BiomassTimeSeries <- function(dat, stacked = FALSE, proportional = FALSE, 
 #'
 zPlotEnvironment <- function(env_data) {
 
-  if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("ggplot2 package required for plotting")
-  }
-  if (!requireNamespace("tidyr", quietly = TRUE)) {
-    stop("tidyr package required for plotting")
-  }
-
   # Convert to long format for plotting
   env_long <- tidyr::pivot_longer(env_data,
                                   cols = c("sst", "chlo"),
@@ -448,24 +445,24 @@ zPlotEnvironment <- function(env_data) {
                                   values_to = "value")
 
   # Create separate y-axes for SST and chlorophyll
-  p1 <- ggplot2::ggplot(data = subset(env_long, variable == "sst"),
-                        ggplot2::aes(x = time_step*dt, y = value)) +
+  p1 <- ggplot2::ggplot(data = dplyr::filter(env_long, .data$variable == "sst"),
+                        ggplot2::aes(x = .data$time*.data$dt, y = .data$value)) +
     ggplot2::geom_line(color = "red", linewidth = 1) +
-    ggplot2::labs(y = "SST (°C)", title = "Environmental Forcing") +
+    ggplot2::labs(y = "SST (deg C)", title = "Environmental Forcing") +
     ggplot2::theme_bw() +
     ggplot2::theme(axis.title.x = ggplot2::element_blank())
 
-  p2 <- ggplot2::ggplot(data = subset(env_long, variable == "chlo"),
-                        ggplot2::aes(x = time_step*dt, y = value)) +
+  p2 <- ggplot2::ggplot(data = dplyr::filter(env_long, .data$variable == "chlo"),
+                        ggplot2::aes(x = .data$time*.data$dt, y = .data$value)) +
     ggplot2::geom_line(color = "green", linewidth = 1) +
-    ggplot2::labs(x = "Time (years)", y = "Chlorophyll (mg/m³)") +
+    ggplot2::labs(x = "Time (years)", y = "Chlorophyll (mg/m^3)") +
     ggplot2::theme_bw()
 
   # Combine plots
   if (requireNamespace("patchwork", quietly = TRUE)) {
     return(patchwork::wrap_plots(p1, p2, ncol = 1))
   } else {
-    cat("Install gridExtra package to combine plots\n")
+    cat("Install patchwork package to combine plots\n")
     return(list(sst_plot = p1, chlo_plot = p2))
   }
 }

@@ -19,15 +19,15 @@ zCreateSimpleTimeSeries(
 
 \item{dt}{Time step size in years}
 
-\item{base_sst}{Base sea surface temperature in °C (default: 15)}
+\item{base_sst}{Base sea surface temperature in deg C (default: 15)}
 
-\item{base_chlo}{Base chlorophyll concentration in mg/m³ (default: 0.5)}
+\item{base_chlo}{Base chlorophyll concentration in mg/m^3 (default: 0.5)}
 
 \item{seasonal}{Logical, whether to add seasonal variation (default: TRUE)}
 
-\item{sst_amplitude}{Amplitude of SST seasonal variations in °C (default: 3)}
+\item{sst_amplitude}{Amplitude of SST seasonal variations in deg C (default: 3)}
 
-\item{chlo_amplitude}{Amplitude of chlorophyll seasonal variations in mg/m³ (default: 0.2)}
+\item{chlo_amplitude}{Amplitude of chlorophyll seasonal variations in mg/m^3 (default: 0.2)}
 }
 \value{
 Data frame with columns: time, sst, chlo

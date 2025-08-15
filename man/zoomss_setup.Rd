@@ -19,8 +19,8 @@ zoomss_setup(param)
 Model object containing:
 \itemize{
 \item param: Input parameters (passed through)
-\item dynam_\emph{: Dynamic feeding kernel arrays for group interactions
-\item phyto_}: Phytoplankton feeding kernel arrays
+\item dynam_xxx: Dynamic feeding kernel arrays for group interactions (where xxx = growthkernel, diffkernel, dietkernel, mortkernel)
+\item phyto_xxx: Phytoplankton feeding kernel arrays (where xxx = growthkernel, diffkernel, dietkernel)
 \item nPP: Initial phytoplankton abundance spectrum
 \item M_sb_base: Baseline senescence mortality rates
 \item fish_mort: Fishing mortality rates

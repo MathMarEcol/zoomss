@@ -45,7 +45,7 @@ jobname <- "20250813_chl0_01"  # This is the job name to save the run
 enviro_row <- 1 # Which row of the environmental data to use
 HPC <- FALSE # Is this being run on a HPC
 SaveTimeSteps <- TRUE # Should we save all time steps
-Groups <- read.csv("TestGroups.csv", stringsAsFactors = FALSE) # Load functional group information
+Groups <- read.csv("GroupInputs.csv", stringsAsFactors = FALSE) # Load functional group information
 
 if (HPC == TRUE){
   ID <- as.integer(Sys.getenv('PBS_ARRAY_INDEX'))

@@ -29,7 +29,7 @@
 #'   \item{PlotColour}{Character. Color code for plotting the functional group}
 #' }
 #'
-#' @details The TestGroups dataset defines 12 functional groups spanning from
+#' @details The GroupInputs dataset defines 12 functional groups spanning from
 #'   small microzooplankton (flagellates, ciliates) through various mesozooplankton
 #'   groups (copepods, euphausiids, chaetognaths) to gelatinous zooplankton (salps, jellyfish)
 #'   and three fish size classes. Each group is characterized by:
@@ -45,12 +45,12 @@
 #' @source Marine ecological literature and ZooMSS model development
 #' @family ZooMSS-data
 #' @examples
-#' data(TestGroups)
-#' head(TestGroups)
+#' data(GroupInputs)
+#' head(GroupInputs)
 #' 
 #' # View size ranges across groups
-#' plot(TestGroups$W0, TestGroups$Wmax, 
-#'      col = TestGroups$PlotColour,
+#' plot(GroupInputs$W0, GroupInputs$Wmax, 
+#'      col = GroupInputs$PlotColour,
 #'      xlab = "Log10 Min Weight", ylab = "Log10 Max Weight")
-#' text(TestGroups$W0, TestGroups$Wmax, TestGroups$Species, pos = 3, cex = 0.7)
-"TestGroups"
+#' text(GroupInputs$W0, GroupInputs$Wmax, GroupInputs$Species, pos = 3, cex = 0.7)
+"GroupInputs"

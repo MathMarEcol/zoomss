@@ -277,31 +277,6 @@ zConvert2Tibble <- function(li, vmdl){
   return(df)
 }
 
-#' Add Environmental Data to ZooMSS Results
-#'
-#' @title Merge ZooMSS output with environmental data for spatial analysis
-#' @description Adds environmental forcing data to ZooMSS results based on spatial
-#'   cell IDs for integrated ecological analysis.
-#' @details This function joins ZooMSS biological output with environmental data
-#'   including chlorophyll, temperature, phytoplankton parameters, and geographic
-#'   coordinates. Essential for analyzing relationships between environmental
-#'   forcing and biological responses in spatial ZooMSS applications.
-#'
-#' @param Zoo ZooMSS results tibble (typically from zConvert2Tibble)
-#' @param venviro Environmental data frame with cell-specific environmental variables
-#'
-#' @return Tibble combining ZooMSS results with environmental data
-#' @export
-#'
-zAddEnviro <- function(Zoo, venviro){
-  df <- Zoo %>%
-    dplyr::mutate(cellID = 1:n()) %>% # Create a cellID
-    dplyr::left_join(dplyr::select(venviro, cellID, chlo, sst, phyto_int, phyto_slope, phyto_max, Lat, Lon, geometry), by = "cellID") %>%
-    dplyr::rename(SST = sst, Chl = chlo) %>%
-    dplyr::mutate(Chl_log10 = log10(Chl))
-  return(df)
-}
-
 
 #' Create Diet Matrix in Long Tibble Format
 #'
@@ -324,7 +299,7 @@ zMakeDietTibble <- function(mat, mdl){
     out <- tibble::as_tibble(mat, .name_repair = "unique") %>%
       dplyr::rename_with(~c("Phyto_Small", "Phyto_Med", "Phyto_Large", mdl$param$Groups$Species)) %>%
       dplyr::mutate(Predator = mdl$param$Groups$Species) %>%
-      tidyr::pivot_longer(cols = Phyto_Small:Fish_Large, names_to = "Prey", values_to = "Diet")
+      tidyr::pivot_longer(cols = .data$Phyto_Small:.data$Fish_Large, names_to = "Prey", values_to = "Diet")
   )
   return(out)
 }
@@ -349,7 +324,7 @@ zMakeDietTibble <- function(mat, mdl){
 #' @return List containing PPMR density data and species-specific values for plotting
 #' @export
 #'
-PPMR_plot = function(dat){
+zExtract_PPMR = function(dat){
 
   min_size = min(dat$model$param$Groups$W0) # smallest size class
   max_size = max(dat$model$param$Groups$Wmax) # largest size class
@@ -417,7 +392,7 @@ PPMR_plot = function(dat){
   }
 
   spPPMR <- spPPMR %>%
-    dplyr::mutate(y = y * 0) %>%
+    dplyr::mutate(y = .data$y * 0) %>%
     dplyr::bind_rows(spPPMR)
 
   out2 <- list()
@@ -445,8 +420,8 @@ PPMR_plot = function(dat){
 #'   as the base of the food web. The function can work with either chlorophyll-only
 #'   data (using empirical relationships) or direct phytoplankton biomass measurements.
 #'
-#' @param df Data frame containing chlorophyll data (chlo column in mg/m³) and
-#'   optionally phytoplankton biomass (phy column in g/m³)
+#' @param df Data frame containing chlorophyll data (chlo column in mg/m^3) and
+#'   optionally phytoplankton biomass (phy column in g/m^3)
 #'
 #' @return Data frame with added columns:
 #'   \itemize{
@@ -461,7 +436,7 @@ PPMR_plot = function(dat){
 #' Brewin, R.J.W., et al. (2015). A three-component model of phytoplankton size class
 #' for the Atlantic Ocean. Ecological Modelling, 306, 90-101.
 #'
-#' Marañón, E., et al. (2014). Resource supply overrides temperature as a controlling
+#' Maranon, E., et al. (2014). Resource supply overrides temperature as a controlling
 #' factor of marine phytoplankton growth. PLoS ONE, 9(6), e99312.
 #'
 zCalculatePhytoParam <- function(df){ # chlo is chlorophyll concentration in mg m^-3, phy is mean euphotic zone phyto in g wet weight m-3
@@ -517,7 +492,7 @@ zCalculatePhytoParam <- function(df){ # chlo is chlorophyll concentration in mg 
 #'   - Iteratively updating trophic levels based on weighted diet composition
 #'   - Continuing until convergence (difference < 0.01) or maximum iterations (100)
 #'
-#'   Trophic level calculation follows: TL = 1 + Σ(diet_fraction_i × TL_prey_i)
+#'   Trophic level calculation follows: TL = 1 + sum(diet_fraction_i * TL_prey_i)
 #'
 #'   This provides a quantitative measure of each group's position in the food web
 #'   and is useful for analyzing ecosystem structure and energy transfer efficiency.

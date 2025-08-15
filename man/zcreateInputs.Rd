@@ -17,9 +17,9 @@ zcreateInputs(
 \arguments{
 \item{time}{Numeric vector of time values (any units, used for time_step sequence)}
 
-\item{sst}{Numeric vector of sea surface temperature values in °C}
+\item{sst}{Numeric vector of sea surface temperature values in deg C}
 
-\item{chl}{Numeric vector of chlorophyll concentration values in mg/m³}
+\item{chl}{Numeric vector of chlorophyll concentration values in mg/m^3}
 
 \item{cellID}{Optional numeric vector of cell identifiers for spatial data (default: NULL)}
 
@@ -44,8 +44,8 @@ model temporal parameters to create the input_params object required by zoomss_m
 The function performs validation checks using assertthat to ensure:
 \itemize{
 \item All input vectors are numeric and of equal length
-\item SST values are within reasonable ocean range (-2 to 35°C)
-\item Chlorophyll values are positive and within typical range (0 to 50 mg/m³)
+\item SST values are within reasonable ocean range (-2 to 35 deg C)
+\item Chlorophyll values are positive and within typical range (0 to 50 mg/m^3)
 \item Temporal parameters are positive and reasonable
 }
 

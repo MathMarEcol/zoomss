@@ -21,8 +21,8 @@ Plot Environmental Time Series
 
 This function creates two separate plots with different y-axes scales:
 \itemize{
-\item SST plot (red line) with temperature in °C
-\item Chlorophyll plot (green line) with concentration in mg/m³
+\item SST plot (red line) with temperature in deg C
+\item Chlorophyll plot (green line) with concentration in mg/m^3
 }
 
 The plots can be combined using the patchwork package if available, otherwise
@@ -32,7 +32,7 @@ environmental forcing that drives ZooMSS model dynamics.
 \examples{
 # Create sample data and plot
 env_data <- data.frame(
-  time_step = 1:100,
+  time = 1:100,
   dt = 0.01,
   sst = 15 + 3*sin(2*pi*(1:100)/50),
   chlo = 0.5 + 0.2*cos(2*pi*(1:100)/50)

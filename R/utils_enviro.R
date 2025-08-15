@@ -7,16 +7,16 @@
 #'   model temporal parameters to create the input_params object required by zoomss_model().
 #'   The function performs validation checks using assertthat to ensure:
 #'   - All input vectors are numeric and of equal length
-#'   - SST values are within reasonable ocean range (-2 to 35°C)
-#'   - Chlorophyll values are positive and within typical range (0 to 50 mg/m³)
+#'   - SST values are within reasonable ocean range (-2 to 35 deg C)
+#'   - Chlorophyll values are positive and within typical range (0 to 50 mg/m^3)
 #'   - Temporal parameters are positive and reasonable
 #'
 #'   The resulting data frame includes time_step indices, environmental data, and
 #'   model parameters needed for ZooMSS simulations.
 #'
 #' @param time Numeric vector of time values (any units, used for time_step sequence)
-#' @param sst Numeric vector of sea surface temperature values in °C
-#' @param chl Numeric vector of chlorophyll concentration values in mg/m³
+#' @param sst Numeric vector of sea surface temperature values in deg C
+#' @param chl Numeric vector of chlorophyll concentration values in mg/m^3
 #' @param cellID Optional numeric vector of cell identifiers for spatial data (default: NULL)
 #' @param dt Time step size in years (default: 0.01)
 #' @param tmax Maximum simulation time in years (default: 250)
@@ -81,9 +81,9 @@ zcreateInputs <- function(time, sst, chl,
   assertthat::assert_that(all(!is.na(sst)), msg = "sst cannot contain NA values")
   assertthat::assert_that(all(!is.na(chl)), msg = "chl cannot contain NA values")
   assertthat::assert_that(all(sst >= -2 & sst <= 35),
-                         msg = "sst values must be within ocean range (-2 to 35°C)")
+                         msg = "sst values must be within ocean range (-2 to 35 deg C)")
   assertthat::assert_that(all(chl >= 0 & chl <= 50),
-                         msg = "chl values must be within range (0 to 50 mg/m³)")
+                         msg = "chl values must be within range (0 to 50 mg/m^3)")
 
   # Create formatted data frame
   if (is.null(cellID)) {
@@ -108,12 +108,12 @@ zcreateInputs <- function(time, sst, chl,
   }
 
   # Provide summary information
-  cat("✅ ZooMSS input parameters created:\n")
+  cat("ZooMSS input parameters created:\n")
   cat("- Time steps:", nrow(formatted_data), "\n")
   cat("- SST range:", round(min(formatted_data$sst), 1), "to",
-      round(max(formatted_data$sst), 1), "°C\n")
+      round(max(formatted_data$sst), 1), "deg C\n")
   cat("- Chlorophyll range:", round(min(formatted_data$chlo), 2), "to",
-      round(max(formatted_data$chlo), 2), "mg/m³\n")
+      round(max(formatted_data$chlo), 2), "mg/m^3\n")
   cat("- Model parameters: dt =", dt, "years, tmax =", tmax, "years, isave =", isave, "steps\n")
 
   return(formatted_data)
@@ -138,11 +138,11 @@ zcreateInputs <- function(time, sst, chl,
 #'
 #' @param n_time_steps Number of time steps to generate
 #' @param dt Time step size in years
-#' @param base_sst Base sea surface temperature in °C (default: 15)
-#' @param base_chlo Base chlorophyll concentration in mg/m³ (default: 0.5)
+#' @param base_sst Base sea surface temperature in deg C (default: 15)
+#' @param base_chlo Base chlorophyll concentration in mg/m^3 (default: 0.5)
 #' @param seasonal Logical, whether to add seasonal variation (default: TRUE)
-#' @param sst_amplitude Amplitude of SST seasonal variations in °C (default: 3)
-#' @param chlo_amplitude Amplitude of chlorophyll seasonal variations in mg/m³ (default: 0.2)
+#' @param sst_amplitude Amplitude of SST seasonal variations in deg C (default: 3)
+#' @param chlo_amplitude Amplitude of chlorophyll seasonal variations in mg/m^3 (default: 0.2)
 #'
 #' @return Data frame with columns: time, sst, chlo
 #' @export

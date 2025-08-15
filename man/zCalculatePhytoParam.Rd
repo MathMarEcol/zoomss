@@ -7,8 +7,8 @@
 zCalculatePhytoParam(df)
 }
 \arguments{
-\item{df}{Data frame containing chlorophyll data (chlo column in mg/m³) and
-optionally phytoplankton biomass (phy column in g/m³)}
+\item{df}{Data frame containing chlorophyll data (chlo column in mg/m^3) and
+optionally phytoplankton biomass (phy column in g/m^3)}
 }
 \value{
 Data frame with added columns:
@@ -43,6 +43,6 @@ data (using empirical relationships) or direct phytoplankton biomass measurement
 Brewin, R.J.W., et al. (2015). A three-component model of phytoplankton size class
 for the Atlantic Ocean. Ecological Modelling, 306, 90-101.
 
-Marañón, E., et al. (2014). Resource supply overrides temperature as a controlling
+Maranon, E., et al. (2014). Resource supply overrides temperature as a controlling
 factor of marine phytoplankton growth. PLoS ONE, 9(6), e99312.
 }

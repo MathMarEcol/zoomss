@@ -24,7 +24,7 @@
 #'   Unlike static models, this version dynamically updates phytoplankton spectra 
 #'   and temperature effects at each time step based on provided environmental data.
 #'
-#' @param model Model object created by fZooMSS_Setup containing:
+#' @param model Model object created by zoomss_setup containing:
 #'   - param: Complete parameter list with environmental time series
 #'   - Feeding kernels and biological rate parameters
 #'   - Initial conditions and model structure
@@ -44,17 +44,17 @@
 #' @examples
 #' \dontrun{
 #' # Set up model parameters and structure
-#' params <- fZooMSS_Params(Groups, input_params)
-#' model <- fZooMSS_Setup(params)
+#' params <- zoomss_params(Groups, input_params)
+#' model <- zoomss_setup(params)
 #' 
 #' # Run the simulation
-#' results <- fZooMSS_Run(model)
+#' results <- zoomss_run(model)
 #' 
 #' # Access final abundances
 #' final_abundances <- results$N[dim(results$N)[1],,]
 #' }
 #'
-fZooMSS_Run <- function(model){
+zoomss_run <- function(model){
 
   # Pull out some useful parameters - just a shortcut
   param <- model$param
@@ -202,7 +202,7 @@ fZooMSS_Run <- function(model){
     S[,idx] <- N[,idx]
 
     # The original Base R code for the MvF equation
-    N <- fZooMSS_MvF_BaseR(ngrps, curr_min_size, curr_max_size,
+    N <- zoomss_mvf(ngrps, curr_min_size, curr_max_size,
                            A_iter, C_iter, N_iter, S_iter,
                             A, B, C, N, S)
 

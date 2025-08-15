@@ -35,7 +35,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' # This function is typically called internally by fZooMSS_Run
+#' # This function is typically called internally by zoomss_run
 #' # Example shows the structure of parameters needed:
 #' ngrps <- 9
 #' ngrid <- 100
@@ -50,11 +50,11 @@
 #' Nb <- matrix(0.1, nrow = ngrps, ncol = ngrid)
 #' 
 #' # Run MvF solver
-#' updated_abundances <- fZooMSS_MvF_BaseR(ngrps, curr_min_size, curr_max_size,
+#' updated_abundances <- zoomss_mvf(ngrps, curr_min_size, curr_max_size,
 #'                                        A, C, Nb, S, A, B, C, Nb, S)
 #' }
 #'
-fZooMSS_MvF_BaseR <- function(ngrps, curr_min_size, curr_max_size, A_iter, C_iter, Nb_iter, S_iter, A, B, C, Nb, S){
+zoomss_mvf <- function(ngrps, curr_min_size, curr_max_size, A_iter, C_iter, Nb_iter, S_iter, A, B, C, Nb, S){
 
   for(i in 1:ngrps){
 

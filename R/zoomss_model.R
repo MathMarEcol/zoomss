@@ -60,7 +60,7 @@ zoomss_model <- function(input_params, Groups = NULL, SaveTimeSteps){
   # Handle default Groups parameter
   if (is.null(Groups)) {
     Groups <- zGetGroups(source = "default")
-    message("ℹ Using default ZooMSS functional groups. Use zGetGroups() to customize.")
+    message("Using default ZooMSS functional groups. Use zGetGroups() to customize.")
   } else {
     # Validate user-provided Groups
     zValidateGroups(Groups)

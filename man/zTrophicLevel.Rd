@@ -29,7 +29,7 @@ This function computes trophic levels by:
 \item Continuing until convergence (difference < 0.01) or maximum iterations (100)
 }
 
-Trophic level calculation follows: TL = 1 + Σ(diet_fraction_i × TL_prey_i)
+Trophic level calculation follows: TL = 1 + sum(diet_fraction_i * TL_prey_i)
 
 This provides a quantitative measure of each group's position in the food web
 and is useful for analyzing ecosystem structure and energy transfer efficiency.
