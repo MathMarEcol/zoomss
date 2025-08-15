@@ -21,12 +21,12 @@
 #' @examples
 #' \dontrun{
 #' # After running ZooMSS model
-#' results <- fZooMSS_Model(input_params, Groups, SaveTimeSteps = FALSE)
-#' ppmr_plot <- fZooMSS_Plot_PPMR(results)
+#' results <- zoomss_model(input_params, Groups, SaveTimeSteps = FALSE)
+#' ppmr_plot <- zPlot_PPMR(results)
 #' print(ppmr_plot)
 #' }
 #'
-fZooMSS_Plot_PPMR <- function(dat){
+zPlot_PPMR <- function(dat){
 
   out <- PPMR_plot(dat)
 
@@ -75,12 +75,12 @@ fZooMSS_Plot_PPMR <- function(dat){
 #' @examples
 #' \dontrun{
 #' # After running ZooMSS model
-#' results <- fZooMSS_Model(input_params, Groups, SaveTimeSteps = FALSE)
-#' size_plot <- fZooMSS_Plot_SizeSpectra(results)
+#' results <- zoomss_model(input_params, Groups, SaveTimeSteps = FALSE)
+#' size_plot <- zPlot_SizeSpectra(results)
 #' print(size_plot)
 #' }
 #'
-fZooMSS_Plot_SizeSpectra <- function(dat) {
+zPlot_SizeSpectra <- function(dat) {
   species <- dat$abundances
 
   rownames(species) <- dat$model$param$Groups$Species
@@ -127,12 +127,12 @@ fZooMSS_Plot_SizeSpectra <- function(dat) {
 #' @examples
 #' \dontrun{
 #' # After running ZooMSS model with SaveTimeSteps = TRUE
-#' results <- fZooMSS_Model(input_params, Groups, SaveTimeSteps = TRUE)
-#' time_plot <- fZooMSS_Plot_AbundTimeSeries(results)
+#' results <- zoomss_model(input_params, Groups, SaveTimeSteps = TRUE)
+#' time_plot <- zPlot_AbundTimeSeries(results)
 #' print(time_plot)
 #' }
 #'
-fZooMSS_Plot_AbundTimeSeries <- function(dat){
+zPlot_AbundTimeSeries <- function(dat){
   tspecies <- rowSums(dat$model$N, dims = 2)
   colnames(tspecies) <- dat$model$param$Groups$Species
   tspecies <- tibble::as_tibble(tspecies)
@@ -182,12 +182,12 @@ fZooMSS_Plot_AbundTimeSeries <- function(dat){
 #' @examples
 #' \dontrun{
 #' # After running ZooMSS model with SaveTimeSteps = TRUE
-#' results <- fZooMSS_Model(input_params, Groups, SaveTimeSteps = TRUE)
-#' growth_plot <- fZooMSS_Plot_GrowthTimeSeries(results)
+#' results <- zoomss_model(input_params, Groups, SaveTimeSteps = TRUE)
+#' growth_plot <- zPlot_GrowthTimeSeries(results)
 #' print(growth_plot)
 #' }
 #'
-fZooMSS_Plot_GrowthTimeSeries <- function(dat){
+zPlot_GrowthTimeSeries <- function(dat){
   gr <- rowSums(dat$model$gg, dims = 2) / length(dat$model$param$w)
   colnames(gr) <- dat$model$param$Groups$Species
   gr <- tibble::as_tibble(gr)
@@ -237,12 +237,12 @@ fZooMSS_Plot_GrowthTimeSeries <- function(dat){
 #' @examples
 #' \dontrun{
 #' # After running ZooMSS model with SaveTimeSteps = TRUE
-#' results <- fZooMSS_Model(input_params, Groups, SaveTimeSteps = TRUE)
-#' mortality_plot <- fZooMSS_Plot_PredTimeSeries(results)
+#' results <- zoomss_model(input_params, Groups, SaveTimeSteps = TRUE)
+#' mortality_plot <- zPlot_PredTimeSeries(results)
 #' print(mortality_plot)
 #' }
 #'
-fZooMSS_Plot_PredTimeSeries <- function(dat){
+zPlot_PredTimeSeries <- function(dat){
 
   Z <- rowSums(dat$model$Z,dims = 2) / length(dat$model$param$w)
   colnames(Z) <- dat$model$param$Groups$Species
@@ -298,23 +298,23 @@ fZooMSS_Plot_PredTimeSeries <- function(dat){
 #' @examples
 #' \dontrun{
 #' # After running ZooMSS model with SaveTimeSteps = TRUE
-#' results <- fZooMSS_Model(input_params, Groups, SaveTimeSteps = TRUE)
+#' results <- zoomss_model(input_params, Groups, SaveTimeSteps = TRUE)
 #'
 #' # Basic line plot of all species
-#' biomass_plot <- fZooMSS_Plot_BiomassTimeSeries(results)
+#' biomass_plot <- zPlot_BiomassTimeSeries(results)
 #'
 #' # Stacked area plot showing total biomass
-#' stacked_plot <- fZooMSS_Plot_BiomassTimeSeries(results, stacked = TRUE)
+#' stacked_plot <- zPlot_BiomassTimeSeries(results, stacked = TRUE)
 #'
 #' # Proportional plot showing relative contributions
-#' prop_plot <- fZooMSS_Plot_BiomassTimeSeries(results, proportional = TRUE)
+#' prop_plot <- zPlot_BiomassTimeSeries(results, proportional = TRUE)
 #'
 #' # Focus on specific groups
-#' copepod_plot <- fZooMSS_Plot_BiomassTimeSeries(results,
+#' copepod_plot <- zPlot_BiomassTimeSeries(results,
 #'                                               species = c("OmniCopepods", "CarnCopepods"))
 #' }
 #'
-fZooMSS_Plot_BiomassTimeSeries <- function(dat, stacked = FALSE, proportional = FALSE, species = NULL){
+zPlot_BiomassTimeSeries <- function(dat, stacked = FALSE, proportional = FALSE, species = NULL){
   if (!("N" %in% names(dat$model))) {
     stop("Abundance data not available. Make sure SaveTimeSteps=TRUE when running the model.")
   }
@@ -430,9 +430,9 @@ fZooMSS_Plot_BiomassTimeSeries <- function(dat, stacked = FALSE, proportional = 
 #'   sst = 15 + 3*sin(2*pi*(1:100)/50),
 #'   chlo = 0.5 + 0.2*cos(2*pi*(1:100)/50)
 #' )
-#' plots <- fZooMSS_PlotEnvironment(env_data)
+#' plots <- zPlotEnvironment(env_data)
 #'
-fZooMSS_PlotEnvironment <- function(env_data) {
+zPlotEnvironment <- function(env_data) {
 
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("ggplot2 package required for plotting")

@@ -11,14 +11,14 @@ First lets load all the common data and scripts
 ```{r}
 #| message: false
 
-source("fZooMSS_Model.R") #source the model code
-source("fZooMSS_Xtras.R")
-source("fZooMSS_Plot.R")
+source("zoomss_model.R") #source the model code
+source("zXtras.R")
+source("zPlot.R")
 
 library(tidyverse)
 library(patchwork)
 
-enviro_data <- fZooMSS_CalculatePhytoParam(data.frame(cellID = 1,
+enviro_data <- zCalculatePhytoParam(data.frame(cellID = 1,
                                                       sst = 15,
                                                       chlo = 0.5))
 # Add delta time (years) and simulation length
@@ -45,7 +45,7 @@ input_params <- enviro_data[ID,]
 #| results: hide
 
 out_static$model$model_runtime <- system.time(
-  out_static <- fZooMSS_Model(input_params, Groups, SaveTimeSteps)
+  out_static <- zoomss_model(input_params, Groups, SaveTimeSteps)
 )
 
 ```
@@ -80,7 +80,7 @@ ggplot(data = enviro_dynamic) +
 ```{r}
 #| results: hide
 out_dynamic$model$model_runtime <- system.time(
-  out_dynamic <- fZooMSS_Model(input_params_dynamic, Groups, SaveTimeSteps)
+  out_dynamic <- zoomss_model(input_params_dynamic, Groups, SaveTimeSteps)
 )
 
 ```
@@ -91,7 +91,7 @@ out_dynamic$model$model_runtime <- system.time(
 
 ```{r}
 
-(fZooMSS_Plot_SizeSpectra(out_static) + fZooMSS_Plot_SizeSpectra(out_dynamic)) /
+(zPlot_SizeSpectra(out_static) + zPlot_SizeSpectra(out_dynamic)) /
   patchwork::guide_area() + patchwork::plot_layout(guides = "collect") & 
   theme(
     legend.position = "bottom",  # Move the legend to the bottom
@@ -105,7 +105,7 @@ out_dynamic$model$model_runtime <- system.time(
 
 ```{r}
 
-fZooMSS_Plot_AbundTimeSeries(out_static) / fZooMSS_Plot_AbundTimeSeries(out_dynamic) /
+zPlot_AbundTimeSeries(out_static) / zPlot_AbundTimeSeries(out_dynamic) /
 patchwork::guide_area() + patchwork::plot_layout(guides = "collect") & 
   theme(
     legend.position = "bottom",  # Move the legend to the bottom
@@ -119,7 +119,7 @@ patchwork::guide_area() + patchwork::plot_layout(guides = "collect") &
 
 ```{r}
 
-fZooMSS_Plot_GrowthTimeSeries(out_static) / fZooMSS_Plot_GrowthTimeSeries(out_dynamic) /
+zPlot_GrowthTimeSeries(out_static) / zPlot_GrowthTimeSeries(out_dynamic) /
   patchwork::guide_area() + patchwork::plot_layout(guides = "collect") & 
   theme(
     legend.position = "bottom",  # Move the legend to the bottom
@@ -157,14 +157,14 @@ ggplot(data = enviro_dynamic2) +
 ```{r}
 #| results: hide
 out_dynamic2$model$model_runtime <- system.time(
-  out_dynamic2 <- fZooMSS_Model_Dynamic(input_params, Groups, SaveTimeSteps, enviro_dynamic2)
+  out_dynamic2 <- zoomss_model_Dynamic(input_params, Groups, SaveTimeSteps, enviro_dynamic2)
 )
 
 ```
 
 
 ```{r}
-(fZooMSS_Plot_SizeSpectra(out_static) + fZooMSS_Plot_SizeSpectra(out_dynamic2)) /
+(zPlot_SizeSpectra(out_static) + zPlot_SizeSpectra(out_dynamic2)) /
   patchwork::guide_area() + patchwork::plot_layout(guides = "collect") & 
   theme(
     legend.position = "bottom",  # Move the legend to the bottom
@@ -178,7 +178,7 @@ out_dynamic2$model$model_runtime <- system.time(
 
 ```{r}
 
-fZooMSS_Plot_AbundTimeSeries(out_static) / fZooMSS_Plot_AbundTimeSeries(out_dynamic2) / patchwork::guide_area() + patchwork::plot_layout(guides = "collect") & 
+zPlot_AbundTimeSeries(out_static) / zPlot_AbundTimeSeries(out_dynamic2) / patchwork::guide_area() + patchwork::plot_layout(guides = "collect") & 
   theme(
     legend.position = "bottom",  # Move the legend to the bottom
     legend.box = "horizontal"    # Arrange legend items horizontally
@@ -212,7 +212,7 @@ ggplot(data = enviro_dynamic3) +
 #| results: hide
 
 out_dynamic3$model$model_runtime <- system.time(
-  out_dynamic3 <- fZooMSS_Model_Dynamic(input_params, Groups, SaveTimeSteps, enviro_dynamic3)
+  out_dynamic3 <- zoomss_model_Dynamic(input_params, Groups, SaveTimeSteps, enviro_dynamic3)
 )
 
 ```
@@ -220,7 +220,7 @@ out_dynamic3$model$model_runtime <- system.time(
 
 ```{r}
 
-(fZooMSS_Plot_SizeSpectra(out_dynamic) + fZooMSS_Plot_SizeSpectra(out_dynamic3)) /
+(zPlot_SizeSpectra(out_dynamic) + zPlot_SizeSpectra(out_dynamic3)) /
   patchwork::guide_area() + patchwork::plot_layout(guides = "collect") & 
   theme(
     legend.position = "bottom",  # Move the legend to the bottom
@@ -235,7 +235,7 @@ out_dynamic3$model$model_runtime <- system.time(
 
 ```{r}
 
-fZooMSS_Plot_AbundTimeSeries(out_dynamic) / fZooMSS_Plot_AbundTimeSeries(out_dynamic3) /
+zPlot_AbundTimeSeries(out_dynamic) / zPlot_AbundTimeSeries(out_dynamic3) /
   patchwork::guide_area() + patchwork::plot_layout(guides = "collect") & 
   theme(
     legend.position = "bottom",  # Move the legend to the bottom
@@ -249,7 +249,7 @@ fZooMSS_Plot_AbundTimeSeries(out_dynamic) / fZooMSS_Plot_AbundTimeSeries(out_dyn
 
 ```{r}
 
-fZooMSS_Plot_GrowthTimeSeries(out_dynamic) / fZooMSS_Plot_GrowthTimeSeries(out_dynamic3) /
+zPlot_GrowthTimeSeries(out_dynamic) / zPlot_GrowthTimeSeries(out_dynamic3) /
   patchwork::guide_area() + patchwork::plot_layout(guides = "collect") & 
   theme(
     legend.position = "bottom",  # Move the legend to the bottom
@@ -285,7 +285,7 @@ ggplot(data = enviro_dynamic4) +
 #| results: hide
 
 out_dynamic4$model$model_runtime <- system.time(
-  out_dynamic4 <- fZooMSS_Model_Dynamic(input_params, Groups, SaveTimeSteps, enviro_dynamic4)
+  out_dynamic4 <- zoomss_model_Dynamic(input_params, Groups, SaveTimeSteps, enviro_dynamic4)
 )
 
 ```
@@ -293,7 +293,7 @@ out_dynamic4$model$model_runtime <- system.time(
 
 ```{r}
 
-(fZooMSS_Plot_SizeSpectra(out_dynamic) + fZooMSS_Plot_SizeSpectra(out_dynamic4)) /
+(zPlot_SizeSpectra(out_dynamic) + zPlot_SizeSpectra(out_dynamic4)) /
   patchwork::guide_area() + patchwork::plot_layout(guides = "collect") & 
   theme(
     legend.position = "bottom",  # Move the legend to the bottom
@@ -307,7 +307,7 @@ out_dynamic4$model$model_runtime <- system.time(
 
 ```{r}
 
-fZooMSS_Plot_AbundTimeSeries(out_dynamic) / fZooMSS_Plot_AbundTimeSeries(out_dynamic4) /
+zPlot_AbundTimeSeries(out_dynamic) / zPlot_AbundTimeSeries(out_dynamic4) /
   patchwork::guide_area() + patchwork::plot_layout(guides = "collect") & 
   theme(
     legend.position = "bottom",  # Move the legend to the bottom
@@ -320,7 +320,7 @@ fZooMSS_Plot_AbundTimeSeries(out_dynamic) / fZooMSS_Plot_AbundTimeSeries(out_dyn
 
 ```{r}
 
-fZooMSS_Plot_GrowthTimeSeries(out_dynamic) / fZooMSS_Plot_GrowthTimeSeries(out_dynamic4) /
+zPlot_GrowthTimeSeries(out_dynamic) / zPlot_GrowthTimeSeries(out_dynamic4) /
   patchwork::guide_area() + patchwork::plot_layout(guides = "collect") & 
   theme(
     legend.position = "bottom",  # Move the legend to the bottom

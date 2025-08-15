@@ -46,7 +46,7 @@
 #' data(Groups)
 #' 
 #' # Create environmental time series
-#' env_data <- fZooMSS_CreateSimpleTimeSeries(1000, 0.01)
+#' env_data <- zCreateSimpleTimeSeries(1000, 0.01)
 #' 
 #' # Set up input parameters with environmental forcing
 #' input_params <- data.frame(
@@ -59,12 +59,12 @@
 #' )
 #' 
 #' # Generate parameter list
-#' params <- fZooMSS_Params(Groups, input_params)
+#' params <- zoomss_params(Groups, input_params)
 #' }
 #'
-fZooMSS_Params <- function(Groups, input_params){
+zoomss_params <- function(Groups, input_params){
 
-  source("fZooMSS_Xtras.R")
+  source("zXtras.R")
   
   param <- list(
     Groups = Groups, # Read in functional group specific parameters from file
@@ -154,7 +154,7 @@ fZooMSS_Params <- function(Groups, input_params){
       
       # Calculate phytoplankton parameters using the existing function
       temp_df <- data.frame(cellID = 1, sst = sst_i, chlo = chlo_i)
-      phyto_params <- fZooMSS_CalculatePhytoParam(temp_df)
+      phyto_params <- zCalculatePhytoParam(temp_df)
       
       param2$phyto_int_ts[i] <- phyto_params$phyto_int
       param2$phyto_slope_ts[i] <- phyto_params$phyto_slope

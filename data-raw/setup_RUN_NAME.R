@@ -4,9 +4,9 @@
 ## Environmental forcing - August 2025
 
 # Load all required functions
-source("fZooMSS_Model.R") #source the model code
-source("fZooMSS_Xtras.R") # For fZooMSS_CalculatePhytoParam and other utilities
-source("fZooMSS_Environmental_Utils.R") # For environmental time series functions
+source("zoomss_model.R") #source the model code
+source("zXtras.R") # For zCalculatePhytoParam and other utilities
+source("zEnvironmental_Utils.R") # For environmental time series functions
 
 plotting <- FALSE
 
@@ -37,7 +37,7 @@ input_params$chlo <- pmax(input_params$chlo, 0.01)
 cat("Environmental data created with", nrow(input_params), "timesteps covering",
     tmax, "years\n")
 
-fZooMSS_PlotEnvironment(input_params)
+zPlotEnvironment(input_params)
 
 
 # Setup jobname
@@ -62,7 +62,7 @@ cat("- Chlorophyll range:", round(min(input_params$chlo), 2), "to", round(max(in
 
 
 cat("Running model...\n")
-out <- fZooMSS_Model(input_params, Groups, SaveTimeSteps)
+out <- zoomss_model(input_params, Groups, SaveTimeSteps)
 cat("✅ Model run completed successfully!\n")
 
 
@@ -77,15 +77,15 @@ if (HPC == FALSE) {
 # NOTE: Plotting disabled temporarily due to PPMR plot issue - core model works perfectly
 
 if (isTRUE(plotting)){
-  source("fZooMSS_Plot.R")
+  source("zPlot.R")
 
   # Plot results
-  # (ggPPMR_dynamic <- fZooMSS_Plot_PPMR(out))
-  (ggSizeSpec <- fZooMSS_Plot_SizeSpectra(out))
-  (ggAbundTS <- fZooMSS_Plot_AbundTimeSeries(out))
-  (ggGrowthTS <- fZooMSS_Plot_GrowthTimeSeries(out))
-  (ggBiomassTS <- fZooMSS_Plot_BiomassTimeSeries(out))
-  (ggBiomassTS_stacked <- fZooMSS_Plot_BiomassTimeSeries(out, stacked = TRUE))
+  # (ggPPMR_dynamic <- zPlot_PPMR(out))
+  (ggSizeSpec <- zPlot_SizeSpectra(out))
+  (ggAbundTS <- zPlot_AbundTimeSeries(out))
+  (ggGrowthTS <- zPlot_GrowthTimeSeries(out))
+  (ggBiomassTS <- zPlot_BiomassTimeSeries(out))
+  (ggBiomassTS_stacked <- zPlot_BiomassTimeSeries(out, stacked = TRUE))
 
   cat("✅ Plots generated successfully!\n")
 }

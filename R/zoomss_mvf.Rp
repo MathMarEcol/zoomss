@@ -2,7 +2,7 @@
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-NumericMatrix fZooMSS_MvF_Rcpp(int cngrps,
+NumericMatrix zMvF_Rcpp(int cngrps,
                                NumericMatrix cN_iter,
                                NumericMatrix cA_iter,
                                NumericMatrix cC_iter,

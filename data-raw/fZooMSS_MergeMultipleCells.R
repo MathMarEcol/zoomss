@@ -28,7 +28,7 @@
 #' @examples
 #' \dontrun{
 #' # Typically run after completing multiple ZooMSS cell runs
-#' fZooMSS_MergeMultipleCells()
+#' zMergeMultipleCells()
 #' 
 #' # The function will create files like:
 #' # "Output/model_[run_name].RDS"
@@ -38,7 +38,7 @@
 #' # "Output/full_[run_name].RData"
 #' }
 #'
-fZooMSS_MergeMultipleCells <- function(){
+zMergeMultipleCells <- function(){
   run <- basename(getwd())
 
   library(tidyverse)

@@ -30,27 +30,27 @@
 #' @examples
 #' \dontrun{
 #' # Use default groups
-#' Groups <- fZooMSS_GetGroups()
+#' Groups <- zGetGroups()
 #' 
 #' # Create a template file for modification
-#' fZooMSS_GetGroups(source = "template", file = "my_groups.csv")
+#' zGetGroups(source = "template", file = "my_groups.csv")
 #' 
 #' # Load custom groups from file
-#' custom_groups <- fZooMSS_GetGroups(source = "file", file = "my_groups.csv")
+#' custom_groups <- zGetGroups(source = "file", file = "my_groups.csv")
 #' 
 #' # Modify default groups programmatically
-#' Groups <- fZooMSS_GetGroups()
+#' Groups <- zGetGroups()
 #' Groups$W0[Groups$Species == "Flagellates"] <- -12.5  # Modify minimum size
 #' }
 #'
-fZooMSS_GetGroups <- function(source = c("default", "file", "template"), file = NULL) {
+zGetGroups <- function(source = c("default", "file", "template"), file = NULL) {
   
   source <- match.arg(source)
   
   switch(source,
     "default" = {
       # Load from package data - this would reference the built-in TestGroups
-      groups <- fZooMSS_LoadDefaultGroups()
+      groups <- zLoadDefaultGroups()
       message("Using default ZooMSS functional groups (9 groups)")
       return(groups)
     },
@@ -67,7 +67,7 @@ fZooMSS_GetGroups <- function(source = c("default", "file", "template"), file = 
       message("Loaded ", nrow(groups), " functional groups from: ", file)
       
       # Validate the loaded groups
-      fZooMSS_ValidateGroups(groups)
+      zValidateGroups(groups)
       return(groups)
     },
     
@@ -77,12 +77,12 @@ fZooMSS_GetGroups <- function(source = c("default", "file", "template"), file = 
       }
       
       # Get default groups and write to file
-      default_groups <- fZooMSS_LoadDefaultGroups()
+      default_groups <- zLoadDefaultGroups()
       utils::write.csv(default_groups, file, row.names = FALSE)
       
       message("✅ Template functional groups written to: ", file)
       message("Edit this file to customize groups, then load with:")
-      message("Groups <- fZooMSS_GetGroups(source='file', file='", file, "')")
+      message("Groups <- zGetGroups(source='file', file='", file, "')")
       
       return(default_groups)
     }
@@ -93,14 +93,14 @@ fZooMSS_GetGroups <- function(source = c("default", "file", "template"), file = 
 #'
 #' @title Internal function to load default ZooMSS groups
 #' @description Loads the default functional groups from the package data or CSV file.
-#'   This is an internal function used by fZooMSS_GetGroups().
+#'   This is an internal function used by zGetGroups().
 #' @details This function handles the actual loading of default groups data,
 #'   whether from package data (if available) or from the CSV file in data-raw.
 #'
 #' @return Data frame with default functional groups
 #' @keywords internal
 #'
-fZooMSS_LoadDefaultGroups <- function() {
+zLoadDefaultGroups <- function() {
   
   # First try to load from package data
   tryCatch({
@@ -154,16 +154,16 @@ fZooMSS_LoadDefaultGroups <- function() {
 #'
 #' @examples
 #' \dontrun{
-#' Groups <- fZooMSS_GetGroups()
-#' fZooMSS_ValidateGroups(Groups)  # Should pass
+#' Groups <- zGetGroups()
+#' zValidateGroups(Groups)  # Should pass
 #' 
 #' # This would fail validation:
 #' bad_groups <- Groups
 #' bad_groups$W0 <- NULL
-#' fZooMSS_ValidateGroups(bad_groups)  # Error: missing required column
+#' zValidateGroups(bad_groups)  # Error: missing required column
 #' }
 #'
-fZooMSS_ValidateGroups <- function(groups) {
+zValidateGroups <- function(groups) {
   
   # Load assertthat for validation
   if (!requireNamespace("assertthat", quietly = TRUE)) {

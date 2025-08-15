@@ -22,9 +22,9 @@
 #'   - Environmental coupling through phytoplankton and temperature
 #'   
 #'   The function separates static calculations (done once for efficiency) from 
-#'   dynamic calculations (updated each time step in fZooMSS_Run).
+#'   dynamic calculations (updated each time step in zoomss_run).
 #'
-#' @param param Complete parameter list created by fZooMSS_Params containing:
+#' @param param Complete parameter list created by zoomss_params containing:
 #'   - Groups: Functional group definitions and biological parameters
 #'   - Model dimensions (ngrps, ngrid, time parameters)  
 #'   - Environmental forcing time series
@@ -48,16 +48,16 @@
 #' @examples
 #' \dontrun{
 #' # Create parameters for model setup
-#' params <- fZooMSS_Params(Groups, input_params)
+#' params <- zoomss_params(Groups, input_params)
 #' 
 #' # Initialize model structure
-#' model <- fZooMSS_Setup(params)
+#' model <- zoomss_setup(params)
 #' 
-#' # Model is now ready for time integration with fZooMSS_Run
-#' results <- fZooMSS_Run(model)
+#' # Model is now ready for time integration with zoomss_run
+#' results <- zoomss_run(model)
 #' }
 #'
-fZooMSS_Setup <- function(param){
+zoomss_setup <- function(param){
 
   ## Dynamic prey availability matrix: dim1 is predators, dim2 is predator size classes,
   ## dim3 is prey groups, dim 4 is prey size classes.

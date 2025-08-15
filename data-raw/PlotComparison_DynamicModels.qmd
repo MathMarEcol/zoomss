@@ -28,7 +28,7 @@ This document compares ZooMSS dynamic model outputs across different chlorophyll
 library(tidyverse)
 library(patchwork)
 
-source("fZooMSS_Plot.R")
+source("zPlot.R")
 ```
 
 # Load Model Results
@@ -57,11 +57,11 @@ out5 <- out
 Compare abundance patterns across all chlorophyll scenarios to understand how different productivity levels affect zooplankton population dynamics.
 
 ```{r abundance-comparison, fig.height=15, fig.width=12}
-(fZooMSS_Plot_AbundTimeSeries(out1) + ggtitle("Low Chlorophyll (0.01 mg m⁻³)")) /
-  (fZooMSS_Plot_AbundTimeSeries(out2) + ggtitle("Medium Chlorophyll (0.1 mg m⁻³)")) /
-  (fZooMSS_Plot_AbundTimeSeries(out3) + ggtitle("High Chlorophyll (4.0 mg m⁻³)")) /
-  (fZooMSS_Plot_AbundTimeSeries(out4) + ggtitle("Linear Increasing Chlorophyll")) /
-  (fZooMSS_Plot_AbundTimeSeries(out5) + ggtitle("Seasonal Chlorophyll Patterns"))
+(zPlot_AbundTimeSeries(out1) + ggtitle("Low Chlorophyll (0.01 mg m⁻³)")) /
+  (zPlot_AbundTimeSeries(out2) + ggtitle("Medium Chlorophyll (0.1 mg m⁻³)")) /
+  (zPlot_AbundTimeSeries(out3) + ggtitle("High Chlorophyll (4.0 mg m⁻³)")) /
+  (zPlot_AbundTimeSeries(out4) + ggtitle("Linear Increasing Chlorophyll")) /
+  (zPlot_AbundTimeSeries(out5) + ggtitle("Seasonal Chlorophyll Patterns"))
 ```
 
 # Biomass Time Series - All Species
@@ -69,11 +69,11 @@ Compare abundance patterns across all chlorophyll scenarios to understand how di
 Proportional biomass plots showing relative contribution of each species to total community biomass across scenarios.
 
 ```{r biomass-all-species, fig.height=15, fig.width=12}
-((fZooMSS_Plot_BiomassTimeSeries(out1, proportional = TRUE) + ggtitle("Low Chlorophyll (0.01 mg m⁻³)")) /
-    (fZooMSS_Plot_BiomassTimeSeries(out2, proportional = TRUE) + ggtitle("Medium Chlorophyll (0.1 mg m⁻³)")) /
-    (fZooMSS_Plot_BiomassTimeSeries(out3, proportional = TRUE) + ggtitle("High Chlorophyll (4.0 mg m⁻³)")) /
-    (fZooMSS_Plot_BiomassTimeSeries(out4, proportional = TRUE) + ggtitle("Linear Increasing Chlorophyll")) /
-    (fZooMSS_Plot_BiomassTimeSeries(out5, proportional = TRUE) + ggtitle("Seasonal Chlorophyll Patterns"))) +
+((zPlot_BiomassTimeSeries(out1, proportional = TRUE) + ggtitle("Low Chlorophyll (0.01 mg m⁻³)")) /
+    (zPlot_BiomassTimeSeries(out2, proportional = TRUE) + ggtitle("Medium Chlorophyll (0.1 mg m⁻³)")) /
+    (zPlot_BiomassTimeSeries(out3, proportional = TRUE) + ggtitle("High Chlorophyll (4.0 mg m⁻³)")) /
+    (zPlot_BiomassTimeSeries(out4, proportional = TRUE) + ggtitle("Linear Increasing Chlorophyll")) /
+    (zPlot_BiomassTimeSeries(out5, proportional = TRUE) + ggtitle("Seasonal Chlorophyll Patterns"))) +
   plot_layout(guides = 'collect')
 ```
 
@@ -86,11 +86,11 @@ Focus on major zooplankton functional groups to highlight ecological patterns an
 spp <- c("Larvaceans", "Salps", "Jellyfish", "OmniCopepods", 
          "Euphausiids", "CarnCopepods", "Chaetognaths")
 
-((fZooMSS_Plot_BiomassTimeSeries(out1, proportional = TRUE, species = spp) + ggtitle("Low Chlorophyll (0.01 mg m⁻³)")) /
-    (fZooMSS_Plot_BiomassTimeSeries(out2, proportional = TRUE, species = spp) + ggtitle("Medium Chlorophyll (0.1 mg m⁻³)")) /
-    (fZooMSS_Plot_BiomassTimeSeries(out3, proportional = TRUE, species = spp) + ggtitle("High Chlorophyll (4.0 mg m⁻³)")) /
-    (fZooMSS_Plot_BiomassTimeSeries(out4, proportional = TRUE, species = spp) + ggtitle("Linear Increasing Chlorophyll")) /
-    (fZooMSS_Plot_BiomassTimeSeries(out5, proportional = TRUE, species = spp) + ggtitle("Seasonal Chlorophyll Patterns"))) +
+((zPlot_BiomassTimeSeries(out1, proportional = TRUE, species = spp) + ggtitle("Low Chlorophyll (0.01 mg m⁻³)")) /
+    (zPlot_BiomassTimeSeries(out2, proportional = TRUE, species = spp) + ggtitle("Medium Chlorophyll (0.1 mg m⁻³)")) /
+    (zPlot_BiomassTimeSeries(out3, proportional = TRUE, species = spp) + ggtitle("High Chlorophyll (4.0 mg m⁻³)")) /
+    (zPlot_BiomassTimeSeries(out4, proportional = TRUE, species = spp) + ggtitle("Linear Increasing Chlorophyll")) /
+    (zPlot_BiomassTimeSeries(out5, proportional = TRUE, species = spp) + ggtitle("Seasonal Chlorophyll Patterns"))) +
   plot_layout(guides = 'collect')
 ```
 

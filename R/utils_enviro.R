@@ -4,7 +4,7 @@
 #' @description Creates a properly formatted input parameters data frame for ZooMSS model
 #'   simulations, combining temporal parameters with environmental time series data.
 #' @details This function combines environmental time series (SST and chlorophyll) with
-#'   model temporal parameters to create the input_params object required by fZooMSS_Model().
+#'   model temporal parameters to create the input_params object required by zoomss_model().
 #'   The function performs validation checks using assertthat to ensure:
 #'   - All input vectors are numeric and of equal length
 #'   - SST values are within reasonable ocean range (-2 to 35°C)
@@ -33,14 +33,14 @@
 #' chl_vec <- 0.5 + 0.2*cos(2*pi*time_vec/50)
 #'
 #' # Create input parameters object
-#' input_params <- fZooMSS_createInputs(time_vec, sst_vec, chl_vec,
+#' input_params <- zcreateInputs(time_vec, sst_vec, chl_vec,
 #'                                      dt = 0.01, tmax = 10, isave = 50)
 #'
 #' # Use with ZooMSS model
-#' results <- fZooMSS_Model(input_params, Groups, SaveTimeSteps = TRUE)
+#' results <- zoomss_model(input_params, Groups, SaveTimeSteps = TRUE)
 #' }
 #'
-fZooMSS_createInputs <- function(time, sst, chl,
+zcreateInputs <- function(time, sst, chl,
                                  cellID = NULL,
                                  dt = 0.01,
                                  tmax = 250,
@@ -149,14 +149,14 @@ fZooMSS_createInputs <- function(time, sst, chl,
 #'
 #' @examples
 #' # Create seasonal environmental data
-#' env_data <- fZooMSS_CreateSimpleTimeSeries(
+#' env_data <- zCreateSimpleTimeSeries(
 #'   n_time_steps = 1000,
 #'   dt = 0.01,
 #'   seasonal = TRUE
 #' )
 #'
 #' # Create static environmental conditions
-#' static_data <- fZooMSS_CreateSimpleTimeSeries(
+#' static_data <- zCreateSimpleTimeSeries(
 #'   n_time_steps = 500,
 #'   dt = 0.01,
 #'   seasonal = FALSE,
@@ -164,7 +164,7 @@ fZooMSS_createInputs <- function(time, sst, chl,
 #'   base_chlo = 1.0
 #' )
 #'
-fZooMSS_CreateSimpleTimeSeries <- function(n_time_steps, dt,
+zCreateSimpleTimeSeries <- function(n_time_steps, dt,
                                           base_sst = 15, base_chlo = 0.5,
                                           seasonal = TRUE,
                                           sst_amplitude = 3, chlo_amplitude = 0.2) {
