@@ -11,31 +11,37 @@ source("zEnvironmental_Utils.R") # For environmental time series functions
 plotting <- FALSE
 
 # Setup user defined parameters -------------------------------------------
-dt <- 0.01 # years^-1
-tmax <- 250 # years
+dt <- 0.01 # years^-1 - time step for creating time vector
+tmax <- 250 # years - total simulation time
 cellID <- 1
 isave <- 100 # Model save frequency
 base_sst <- 15
 base_chlo <- 0.01
 
-# Create expanded input_params dataframe - one row per timestep
-input_params <- data.frame(
-  cellID = cellID,
-  dt = dt,
-  tmax = tmax,
-  isave = isave,
-  time_step = seq(1, 1/dt * tmax, 1),
-  sst = base_sst,
-  chlo = base_chlo
+# Create time vector (dt and tmax only used here for time vector creation)
+time_vec <- seq(0, tmax, by = dt)
+
+# Create environmental data with the same length as time vector
+n_time_steps <- length(time_vec)
+
+# Create input_params dataframe using new time-based approach
+# Note: dt and tmax are automatically calculated from time_vec in zCreateInputs
+input_params <- zCreateInputs(
+  time = time_vec,
+  sst = rep(base_sst, n_time_steps),
+  chl = rep(base_chlo, n_time_steps),
+  cellID = rep(cellID, n_time_steps),
+  isave = isave
 )
 
-# input_params$chlo <- 0.01 + 0.00015 * input_params$time_step # Linear increasing Chlorophyll
-# input_params$chlo <- 0.5 + 0.49 * sin(2 * pi * (input_params$time_step * dt)) # Chlorophyll cycles between 0.01-0.99 mg/m³
+# Alternative: add time-varying patterns
+# input_params$chl <- 0.01 + 0.00015 * input_params$time_step # Linear increasing Chlorophyll
+# input_params$chl <- 0.5 + 0.49 * sin(2 * pi * input_params$time) # Chlorophyll cycles between 0.01-0.99 mg/m³
 
 # Ensure chlorophyll stays positive
-input_params$chlo <- pmax(input_params$chlo, 0.01)
+input_params$chl <- pmax(input_params$chl, 0.01)
 cat("Environmental data created with", nrow(input_params), "timesteps covering",
-    tmax, "years\n")
+    max(input_params$time), "years\n")
 
 zPlotEnvironment(input_params)
 

@@ -4,37 +4,41 @@
 #' @description Creates a properly formatted input parameters data frame for ZooMSS model
 #'   simulations, combining temporal parameters with environmental time series data.
 #' @details This function combines environmental time series (SST and chlorophyll) with
-#'   model temporal parameters to create the input_params object required by zoomss_model().
+#'   time data to create the input_params object required by zoomss_model().
 #'   The function performs validation checks using assertthat to ensure:
 #'   - All input vectors are numeric and of equal length
 #'   - SST values are within reasonable ocean range (-2 to 35 deg C)
 #'   - Chlorophyll values are positive and within typical range (0 to 50 mg/m^3)
-#'   - Temporal parameters are positive and reasonable
+#'   - Time values are increasing and reasonable
 #'
-#'   The resulting data frame includes time_step indices, environmental data, and
-#'   model parameters needed for ZooMSS simulations.
+#'   The time step size (dt) and maximum time (tmax) are automatically calculated 
+#'   from the time vector and passed to the model parameters. The dt is calculated
+#'   from the time step difference, and tmax is set to the maximum time value.
+#'   This replaces the previous approach where dt and tmax were input parameters.
 #'
-#' @param time Numeric vector of time values (any units, used for time_step sequence)
+#'   **Important**: The time vector must have uniform time steps. The function will
+#'   stop with an error if time steps vary by more than 0.1%, as non-uniform time
+#'   steps can lead to incorrect model results. The time series can start at any
+#'   time value (not just 0) and the model will automatically adjust.
+#'
+#' @param time Numeric vector of time values in years (must be increasing and uniform, can start at any value)
 #' @param sst Numeric vector of sea surface temperature values in deg C
 #' @param chl Numeric vector of chlorophyll concentration values in mg/m^3
 #' @param cellID Optional numeric vector of cell identifiers for spatial data (default: NULL)
-#' @param dt Time step size in years (default: 0.01)
-#' @param tmax Maximum simulation time in years (default: 250)
 #' @param isave Save frequency in time steps (default: 100)
 #'
-#' @return Data frame with columns: time_step, sst, chl, dt, tmax, isave, and cellID (if provided)
+#' @return Data frame with columns: time, time_step, sst, chl, isave, and cellID (if provided)
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #' # Create simple environmental time series
-#' time_vec <- 1:100
-#' sst_vec <- 15 + 3*sin(2*pi*time_vec/50)
-#' chl_vec <- 0.5 + 0.2*cos(2*pi*time_vec/50)
+#' time_vec <- seq(0, 10, 0.01)  # 10 years with 0.01 year time steps
+#' sst_vec <- 15 + 3*sin(2*pi*time_vec/1)  # annual cycle
+#' chl_vec <- 0.5 + 0.2*cos(2*pi*time_vec/1)  # annual cycle
 #'
 #' # Create input parameters object
-#' input_params <- zCreateInputs(time_vec, sst_vec, chl_vec,
-#'                                      dt = 0.01, tmax = 10, isave = 50)
+#' input_params <- zCreateInputs(time_vec, sst_vec, chl_vec, isave = 50)
 #'
 #' # Use with ZooMSS model
 #' results <- zoomss_model(input_params, Groups, SaveTimeSteps = TRUE)
@@ -44,7 +48,6 @@ zCreateInputs <- function(time,
                           sst,
                           chl,
                           cellID = NULL,
-                          dt = 0.01,
                           isave = 100) {
 
   # Load assertthat package for validation
@@ -57,13 +60,14 @@ zCreateInputs <- function(time,
   assertthat::assert_that(is.numeric(sst), msg = "sst must be numeric")
   assertthat::assert_that(is.numeric(chl), msg = "chl must be numeric")
 
-  # Validate equal lengths if  length of sst and chl > 1
-  if (length(sst) > 1 & length(chl) > 1){
+  # Validate equal lengths if length of sst and chl > 1
+  if (length(sst) > 1 && length(chl) > 1){
     assertthat::assert_that(length(time) == length(sst),
                             msg = "time and sst must have the same length")
     assertthat::assert_that(length(time) == length(chl),
                             msg = "time and chl must have the same length")
   }
+  
   # Validate cellID if provided
   if (!is.null(cellID)) {
     assertthat::assert_that(is.numeric(cellID), msg = "cellID must be numeric")
@@ -71,11 +75,28 @@ zCreateInputs <- function(time,
                             msg = "cellID must have the same length as time")
   }
 
+  # Validate time vector properties
+  assertthat::assert_that(length(time) > 1, msg = "time must have at least 2 values")
+  assertthat::assert_that(all(!is.na(time)), msg = "time cannot contain NA values")
+  assertthat::assert_that(all(diff(time) > 0), msg = "time values must be increasing")
+  
+  # Calculate dt and tmax from time vector
+  dt_values <- diff(time)
+  dt <- dt_values[1]  # Use first time step as dt
+  
+  # Check if time steps are uniform - ERROR if not consistent
+  max_dt_diff <- max(abs(dt_values - dt))
+  if (max_dt_diff > dt * 0.001) {  # Allow only 0.1% variation (much stricter)
+    stop("Time steps are not uniform. Maximum deviation: ", round(max_dt_diff, 6), 
+         " (", round(100 * max_dt_diff / dt, 2), "% of dt). ",
+         "ZooMSS requires uniform time steps for accurate results.")
+  }
+  
+  tmax <- max(time)  # Maximum time value (not duration)
+  
   # Validate temporal parameters
-  assertthat::assert_that(is.numeric(dt) && length(dt) == 1 && dt > 0,
-                          msg = "dt must be a positive number")
-  assertthat::assert_that(is.numeric(tmax) && length(tmax) == 1 && tmax > 0,
-                          msg = "tmax must be a positive number")
+  assertthat::assert_that(dt > 0, msg = "calculated dt must be positive")
+  # Note: tmax can be any value (positive, negative, or zero) as it's the final time point
   assertthat::assert_that(is.numeric(isave) && length(isave) == 1 && isave > 0,
                           msg = "isave must be a positive number")
 
@@ -90,33 +111,43 @@ zCreateInputs <- function(time,
   # Create formatted data frame
   if (is.null(cellID)) {
     formatted_data <- data.frame(
+      time = time,
       time_step = seq_along(time),
       sst = sst,
       chl = chl,
-      dt = dt,
-      tmax = tmax,
       isave = isave
     )
   } else {
     formatted_data <- data.frame(
+      time = time,
       time_step = seq_along(time),
       sst = sst,
       chl = chl,
       cellID = cellID,
-      dt = dt,
-      tmax = tmax,
       isave = isave
     )
   }
 
   # Provide summary information
+  n_time_points <- nrow(formatted_data)
+  n_time_steps <- n_time_points - 1
+  
   cat("ZooMSS input parameters created:\n")
-  cat("- Time steps:", nrow(formatted_data), "\n")
+  cat("- Time points:", n_time_points, "(time values provided)\n")
+  cat("- Time steps:", n_time_steps, "(intervals to simulate)\n")
+  cat("- Time range:", round(min(formatted_data$time), 3), "to",
+      round(max(formatted_data$time), 3), "years\n")
   cat("- SST range:", round(min(formatted_data$sst), 1), "to",
       round(max(formatted_data$sst), 1), "deg C\n")
   cat("- Chlorophyll range:", round(min(formatted_data$chl), 2), "to",
       round(max(formatted_data$chl), 2), "mg/m^3\n")
-  cat("- Model parameters: dt =", dt, "years, tmax =", tmax, "years, isave =", isave, "steps\n")
+  cat("- Model parameters: dt =", round(dt, 4), "years, tmax =", round(tmax, 3), "years, isave =", isave, "steps\n")
+  
+  # Helpful reminder about time vector interpretation
+  if (length(time) > 1 && all(diff(time) == 1) && min(time) %% 1 == 0 && max(time) %% 1 == 0) {
+    cat("- Note: Time vector", min(time), ":", max(time), "creates", n_time_steps, 
+        "time steps (intervals) from", length(time), "time points.\n")
+  }
 
   return(formatted_data)
 }

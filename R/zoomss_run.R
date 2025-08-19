@@ -87,7 +87,7 @@ zoomss_run <- function(model){
 
   idx_iter <- 2:ngrid
   idx <- 2:(ngrid-1)
-  itimemax  <- param$tmax / dt  #max index of time array (both are scalars)
+  itimemax  <- param$itimemax  # Number of time steps in environmental data
 
   if(length(param$zoo_grps) > 1){ # If there's only one zoo group, then you do not need w0idx. All this stuff gives you info about all zoo groups except the smallest zoo group.
     w0idx <- which(W0 > min(W0) & is.na(param$Groups$Prop) == FALSE)
