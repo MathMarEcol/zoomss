@@ -99,7 +99,8 @@ zoomss_model <- function(input_params, Groups = NULL, SaveTimeSteps = TRUE){
                  "model" = model_output) # Save whole model
   }
   if (SaveTimeSteps == FALSE){
-    reduce_output <- list(param = model_output$param) # Create a new list so we can have identical structure of model$param
+    # Create a new list so we can have identical structure of model$param
+    reduce_output <- list(param = model_output$param)
     results <- list("abundances" = ave_abundances, # Save mean abundance
                    "diets" = ave_diets,  # Save mean diets
                    "growth" = ave_growth,  # Save mean growth

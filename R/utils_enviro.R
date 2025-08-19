@@ -11,15 +11,6 @@
 #'   - Chlorophyll values are positive and within typical range (0 to 50 mg/m^3)
 #'   - Time values are increasing and reasonable
 #'
-#'   The time step size (dt) and maximum time (tmax) are automatically calculated 
-#'   from the time vector and passed to the model parameters. The dt is calculated
-#'   from the time step difference, and tmax is set to the maximum time value.
-#'   This replaces the previous approach where dt and tmax were input parameters.
-#'
-#'   **Important**: The time vector must have uniform time steps. The function will
-#'   stop with an error if time steps vary by more than 0.1%, as non-uniform time
-#'   steps can lead to incorrect model results. The time series can start at any
-#'   time value (not just 0) and the model will automatically adjust.
 #'
 #' @param time Numeric vector of time values in years (must be increasing and uniform, can start at any value)
 #' @param sst Numeric vector of sea surface temperature values in deg C
@@ -48,7 +39,7 @@ zCreateInputs <- function(time,
                           sst,
                           chl,
                           cellID = NULL,
-                          isave = 100) {
+                          isave = 10) {
 
   # Load assertthat package for validation
   if (!requireNamespace("assertthat", quietly = TRUE)) {
@@ -67,7 +58,7 @@ zCreateInputs <- function(time,
     assertthat::assert_that(length(time) == length(chl),
                             msg = "time and chl must have the same length")
   }
-  
+
   # Validate cellID if provided
   if (!is.null(cellID)) {
     assertthat::assert_that(is.numeric(cellID), msg = "cellID must be numeric")
@@ -79,21 +70,21 @@ zCreateInputs <- function(time,
   assertthat::assert_that(length(time) > 1, msg = "time must have at least 2 values")
   assertthat::assert_that(all(!is.na(time)), msg = "time cannot contain NA values")
   assertthat::assert_that(all(diff(time) > 0), msg = "time values must be increasing")
-  
+
   # Calculate dt and tmax from time vector
   dt_values <- diff(time)
   dt <- dt_values[1]  # Use first time step as dt
-  
+
   # Check if time steps are uniform - ERROR if not consistent
   max_dt_diff <- max(abs(dt_values - dt))
   if (max_dt_diff > dt * 0.001) {  # Allow only 0.1% variation (much stricter)
-    stop("Time steps are not uniform. Maximum deviation: ", round(max_dt_diff, 6), 
+    stop("Time steps are not uniform. Maximum deviation: ", round(max_dt_diff, 6),
          " (", round(100 * max_dt_diff / dt, 2), "% of dt). ",
          "ZooMSS requires uniform time steps for accurate results.")
   }
-  
+
   tmax <- max(time)  # Maximum time value (not duration)
-  
+
   # Validate temporal parameters
   assertthat::assert_that(dt > 0, msg = "calculated dt must be positive")
   # Note: tmax can be any value (positive, negative, or zero) as it's the final time point
@@ -131,7 +122,7 @@ zCreateInputs <- function(time,
   # Provide summary information
   n_time_points <- nrow(formatted_data)
   n_time_steps <- n_time_points - 1
-  
+
   cat("ZooMSS input parameters created:\n")
   cat("- Time points:", n_time_points, "(time values provided)\n")
   cat("- Time steps:", n_time_steps, "(intervals to simulate)\n")
@@ -142,10 +133,10 @@ zCreateInputs <- function(time,
   cat("- Chlorophyll range:", round(min(formatted_data$chl), 2), "to",
       round(max(formatted_data$chl), 2), "mg/m^3\n")
   cat("- Model parameters: dt =", round(dt, 4), "years, tmax =", round(tmax, 3), "years, isave =", isave, "steps\n")
-  
+
   # Helpful reminder about time vector interpretation
   if (length(time) > 1 && all(diff(time) == 1) && min(time) %% 1 == 0 && max(time) %% 1 == 0) {
-    cat("- Note: Time vector", min(time), ":", max(time), "creates", n_time_steps, 
+    cat("- Note: Time vector", min(time), ":", max(time), "creates", n_time_steps,
         "time steps (intervals) from", length(time), "time points.\n")
   }
 
@@ -197,10 +188,13 @@ zCreateInputs <- function(time,
 #'   base_chl = 1.0
 #' )
 #'
-zCreateSimpleTimeSeries <- function(n_time_steps, dt,
-                                    base_sst = 15, base_chl = 0.5,
+zCreateSimpleTimeSeries <- function(n_time_steps,
+                                    dt,
+                                    base_sst = 15,
+                                    base_chl = 0.5,
                                     seasonal = TRUE,
-                                    sst_amplitude = 3, chl_amplitude = 0.2) {
+                                    sst_amplitude = 3,
+                                    chl_amplitude = 0.2) {
 
   # Create time vector
   time_years <- seq(0, (n_time_steps-1) * dt, by = dt)

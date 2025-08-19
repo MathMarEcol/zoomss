@@ -20,11 +20,24 @@ library(zoomss)
 
 ```{r}
 
-input_params <- zCreateInputs(time = 0:100,
+input_params <- zCreateInputs(time = seq(0, 100, by = 0.01) ,
                               sst = 15,
-                              chl = 0.15)
+                              chl = 0.15,
+                              isave = 10) # Save ~ monthly
 
 out <- zoomss_model(input_params)
 
+
+```
+```{r}
+
+zPlot_AbundTimeSeries(out)
+
+```
+
+
+```{r}
+
+zPlot_BiomassTimeSeries(out)
 
 ```

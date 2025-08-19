@@ -8,9 +8,10 @@ zoomss_model(input_params, Groups = NULL, SaveTimeSteps = TRUE)
 }
 \arguments{
 \item{input_params}{Data frame containing model parameters and environmental time series.
-Must include columns: tmax (simulation length), dt (time step), isave (save frequency),
-and environmental data (time_step, sst, chlo) if running with environmental forcing.
-Can be created using zCreateInputs().}
+Must include columns: time (time vector in years), sst (sea surface temperature),
+chl (chlorophyll), and isave (save frequency). Can optionally include cellID for
+spatial data. The time step (dt) and maximum time (tmax) are automatically calculated
+from the time vector. Can be created using zCreateInputs().}
 
 \item{Groups}{Data frame defining functional groups with their biological parameters.
 Must include columns defining species characteristics, size ranges, and feeding parameters.
@@ -56,8 +57,7 @@ running ZooMSS simulations with environmental forcing.
 \dontrun{
 # Basic usage with default groups
 env_data <- zCreateSimpleTimeSeries(1000, 0.01)
-input_params <- zCreateInputs(1:1000, env_data$sst, env_data$chlo,
-                                     dt = 0.01, tmax = 10, isave = 50)
+input_params <- zCreateInputs(env_data$time, env_data$sst, env_data$chl, isave = 50)
 results <- zoomss_model(input_params, SaveTimeSteps = FALSE)
 
 # Using custom groups

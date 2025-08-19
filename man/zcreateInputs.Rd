@@ -4,18 +4,10 @@
 \alias{zCreateInputs}
 \title{Create input parameters data frame for ZooMSS model runs}
 \usage{
-zCreateInputs(
-  time,
-  sst,
-  chl,
-  cellID = NULL,
-  dt = 0.01,
-  tmax = 250,
-  isave = 100
-)
+zCreateInputs(time, sst, chl, cellID = NULL, isave = 10)
 }
 \arguments{
-\item{time}{Numeric vector of time values (any units, used for time_step sequence)}
+\item{time}{Numeric vector of time values in years (must be increasing and uniform, can start at any value)}
 
 \item{sst}{Numeric vector of sea surface temperature values in deg C}
 
@@ -23,14 +15,10 @@ zCreateInputs(
 
 \item{cellID}{Optional numeric vector of cell identifiers for spatial data (default: NULL)}
 
-\item{dt}{Time step size in years (default: 0.01)}
-
-\item{tmax}{Maximum simulation time in years (default: 250)}
-
 \item{isave}{Save frequency in time steps (default: 100)}
 }
 \value{
-Data frame with columns: time_step, sst, chl, dt, tmax, isave, and cellID (if provided)
+Data frame with columns: time, time_step, sst, chl, isave, and cellID (if provided)
 }
 \description{
 Creates a properly formatted input parameters data frame for ZooMSS model
@@ -40,28 +28,24 @@ simulations, combining temporal parameters with environmental time series data.
 Create ZooMSS Input Parameters Object
 
 This function combines environmental time series (SST and chlorophyll) with
-model temporal parameters to create the input_params object required by zoomss_model().
+time data to create the input_params object required by zoomss_model().
 The function performs validation checks using assertthat to ensure:
 \itemize{
 \item All input vectors are numeric and of equal length
 \item SST values are within reasonable ocean range (-2 to 35 deg C)
 \item Chlorophyll values are positive and within typical range (0 to 50 mg/m^3)
-\item Temporal parameters are positive and reasonable
+\item Time values are increasing and reasonable
 }
-
-The resulting data frame includes time_step indices, environmental data, and
-model parameters needed for ZooMSS simulations.
 }
 \examples{
 \dontrun{
 # Create simple environmental time series
-time_vec <- 1:100
-sst_vec <- 15 + 3*sin(2*pi*time_vec/50)
-chl_vec <- 0.5 + 0.2*cos(2*pi*time_vec/50)
+time_vec <- seq(0, 10, 0.01)  # 10 years with 0.01 year time steps
+sst_vec <- 15 + 3*sin(2*pi*time_vec/1)  # annual cycle
+chl_vec <- 0.5 + 0.2*cos(2*pi*time_vec/1)  # annual cycle
 
 # Create input parameters object
-input_params <- zCreateInputs(time_vec, sst_vec, chl_vec,
-                                     dt = 0.01, tmax = 10, isave = 50)
+input_params <- zCreateInputs(time_vec, sst_vec, chl_vec, isave = 50)
 
 # Use with ZooMSS model
 results <- zoomss_model(input_params, Groups, SaveTimeSteps = TRUE)

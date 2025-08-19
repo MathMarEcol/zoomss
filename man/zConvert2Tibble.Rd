@@ -22,6 +22,6 @@ names based on functional group species names.
 Convert List to Tibble Format
 
 This function converts aggregated ZooMSS output (typically from
-zSumSize or similar functions) into a tibble format suitable for
+zExtractSizeSum or similar functions) into a tibble format suitable for
 analysis and visualization. Currently designed for 2D data (species x cells).
 }

@@ -11,8 +11,9 @@ zoomss_params(Groups, input_params)
 Species, Type, W0 (log min size), Wmax (log max size), and various biological parameters}
 
 \item{input_params}{Data frame with model parameters including:
-tmax (max years), dt (time step), isave (save frequency), and environmental time series
-(time_step, sst, chl) for dynamic forcing}
+time (time vector in years), sst (sea surface temperature), chl (chlorophyll),
+and isave (save frequency). The time vector can start at any value and the
+model automatically calculates dt (time step) and tmax (maximum time).}
 }
 \value{
 List containing comprehensive model parameters:

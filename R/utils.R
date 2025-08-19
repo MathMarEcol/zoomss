@@ -1,18 +1,3 @@
-#' ZooMSS Utility Functions for Analysis and Post-Processing
-#'
-#' @title Collection of helper functions for analyzing ZooMSS model outputs
-#' @description This file contains utility functions for processing, analyzing, and
-#'   transforming ZooMSS model outputs for visualization and interpretation.
-#' @details The utility functions in this file provide tools for:
-#'   - Converting between abundance and biomass
-#'   - Aggregating results across size classes or functional groups
-#'   - Calculating ecological metrics (trophic levels, PPMR)
-#'   - Processing environmental data for model input
-#'   - Data format conversions for analysis workflows
-#'
-#'   These functions are essential for the ZooMSS analysis pipeline and help users
-#'   work with model outputs in different formats depending on their research needs.
-
 #' Sum ZooMSS Output Across Size Bins
 #'
 #' @title Aggregate ZooMSS abundances across all size classes
@@ -31,10 +16,10 @@
 #' \dontrun{
 #' # After running ZooMSS model
 #' results <- zoomss_model(input_params, Groups, SaveTimeSteps = FALSE)
-#' total_abundances <- zSumSize(results$abundances)
+#' total_abundances <- zExtractSizeSum(results$abundances)
 #' }
 #'
-zSumSize = function(list_in) {
+zExtractSizeSum = function(list_in) {
   out <- purrr::map(list_in, function(x) apply(x, 1, sum)) # Sum ZooMSS output across the size bins
   return(out)
 }
@@ -53,7 +38,7 @@ zSumSize = function(list_in) {
 #' @return List of vectors with total abundance per size class
 #' @export
 #'
-zSumSpecies = function(list_in) {
+zExtractSpeciesSum = function(list_in) {
   out <- purrr::map(list_in, function(x) apply(x, 2, sum)) # Sum ZooMSS output across the species bins
   return(out)
 }
@@ -73,7 +58,7 @@ zSumSpecies = function(list_in) {
 #' @return List of vectors with total biomass per functional group (grams wet weight)
 #' @export
 #'
-zSpeciesBiomass = function(res, vmdl) {
+zExtractBiomassSpecies = function(res, vmdl) {
   # if (dim(res[[1]])[2] != length(mdl$param$w)){print("error")}
   Biomass <- purrr::map(res, function(x) apply(sweep(x, 2, vmdl$param$w, '*'), 1, sum))
   return(Biomass)
@@ -93,7 +78,7 @@ zSpeciesBiomass = function(res, vmdl) {
 #' @return Vector of total abundance values (one per spatial cell)
 #' @export
 #'
-zSumAll = function(list_in) {
+zExtractAllSum = function(list_in) {
   out <- unlist(purrr::map(list_in, function(x) sum(x))) # Sum ZooMSS output across the species bins
   return(out)
 }
@@ -167,7 +152,7 @@ zSpeciesCarbonBiomass <- function(res, vmdl) {
   if (dim(res[[1]])[2] != length(vmdl$param$w)){print("error")}
   Biomass <- purrr::map(res, function(x) sweep(x, 2, vmdl$param$w, '*'))  # Biomass in grams (WW)
   Biomass <- purrr::map(Biomass, function(x) sweep(x, 1, vmdl$param$Groups$Carbon, '*')) # Now convert to Carbon
-  Biomass <- zSumSize(Biomass)
+  Biomass <- zExtractSizeSum(Biomass)
 
   return(Biomass)
 }
@@ -187,7 +172,7 @@ zSpeciesCarbonBiomass <- function(res, vmdl) {
 #' @return List of vectors with total biomass per size class (grams wet weight)
 #' @export
 #'
-zSizeBiomass = function(res,w) {
+zExtractBiomassSize = function(res,w) {
   if (dim(res[[1]])[2] != length(w)){print("error")}
   Biomass <- purrr::map(res, function(x) apply(sweep(x, 2, w, '*'), 2, sum))
   return(Biomass)
@@ -262,7 +247,7 @@ untibble <- function (tibble) {
 #' @description Converts ZooMSS list output to a tibble format with proper column
 #'   names based on functional group species names.
 #' @details This function converts aggregated ZooMSS output (typically from
-#'   zSumSize or similar functions) into a tibble format suitable for
+#'   zExtractSizeSum or similar functions) into a tibble format suitable for
 #'   analysis and visualization. Currently designed for 2D data (species x cells).
 #'
 #' @param li List of vectors/matrices from ZooMSS aggregation functions
@@ -508,14 +493,14 @@ zCalculatePhytoParam <- function(df){ # chl is chlorophyll concentration in mg m
 #' \dontrun{
 #' # After running ZooMSS model
 #' results <- zoomss_model(input_params, Groups, SaveTimeSteps = FALSE)
-#' trophic_levels <- zTrophicLevel(results$diets)
+#' trophic_levels <- zExtractTrophicLevels(results$diets)
 #'
 #' # View trophic levels by group
 #' names(trophic_levels) <- results$model$param$Groups$Species
 #' print(trophic_levels)
 #' }
 #'
-zTrophicLevel <- function(diet_matrix){
+zExtractTrophicLevels <- function(diet_matrix){
 
   phyto_tl <- 1 # Phyto TL is 1
   start_dynam_tl <- rep(2,12) # Start TL - start at 2 for all zoo and fish groups
