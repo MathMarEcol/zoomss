@@ -37,7 +37,7 @@
 #'     \item diet: Diet composition time series
 #'     \item Z: Mortality rate time series
 #'     \item w: Size class weights (g)
-#'     \item Additional time series if SaveTimeSteps enabled
+#'     \item Additional time series data and model results
 #'   }
 #' @export
 #'
@@ -87,7 +87,7 @@ zoomss_run <- function(model){
 
   idx_iter <- 2:ngrid
   idx <- 2:(ngrid-1)
-  itimemax  <- param$itimemax  # Number of time steps in environmental data
+  itimemax  <- param$itimemax  # Number of time points to simulate
 
   if(length(param$zoo_grps) > 1){ # If there's only one zoo group, then you do not need w0idx. All this stuff gives you info about all zoo groups except the smallest zoo group.
     w0idx <- which(W0 > min(W0) & is.na(param$Groups$Prop) == FALSE)
@@ -226,8 +226,11 @@ zoomss_run <- function(model){
     }
 
 
-    # Save results:
-    if((itime %% param$isave) == 0){
+    # Save results (at regular intervals AND always at the final time step):
+    # Save output at regular intervals only
+    save_this_step <- (itime %% param$isave) == 0
+    
+    if(save_this_step){
       isav <- itime/param$isave
 
       ## Phytoplankton diet - calculate using CURRENT dynamic conditions

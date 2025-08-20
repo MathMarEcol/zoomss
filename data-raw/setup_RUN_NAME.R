@@ -5,7 +5,7 @@
 
 # Load all required functions
 source("zoomss_model.R") #source the model code
-source("zXtras.R") # For zCalculatePhytoParam and other utilities
+source("zXtras.R") # For calculatePhytoParam and other utilities
 source("zEnvironmental_Utils.R") # For environmental time series functions
 
 plotting <- FALSE
@@ -25,8 +25,8 @@ time_vec <- seq(0, tmax, by = dt)
 n_time_steps <- length(time_vec)
 
 # Create input_params dataframe using new time-based approach
-# Note: dt and tmax are automatically calculated from time_vec in zCreateInputs
-input_params <- zCreateInputs(
+# Note: dt and tmax are automatically calculated from time_vec in createInputParams
+input_params <- createInputParams(
   time = time_vec,
   sst = rep(base_sst, n_time_steps),
   chl = rep(base_chlo, n_time_steps),
@@ -43,14 +43,13 @@ input_params$chl <- pmax(input_params$chl, 0.01)
 cat("Environmental data created with", nrow(input_params), "timesteps covering",
     max(input_params$time), "years\n")
 
-zPlotEnvironment(input_params)
+plotEnvironment(input_params)
 
 
 # Setup jobname
 jobname <- "20250813_chl0_01"  # This is the job name to save the run
 enviro_row <- 1 # Which row of the environmental data to use
 HPC <- FALSE # Is this being run on a HPC
-SaveTimeSteps <- TRUE # Should we save all time steps
 Groups <- read.csv("GroupInputs.csv", stringsAsFactors = FALSE) # Load functional group information
 
 if (HPC == TRUE){
@@ -68,7 +67,7 @@ cat("- Chlorophyll range:", round(min(input_params$chlo), 2), "to", round(max(in
 
 
 cat("Running model...\n")
-out <- zoomss_model(input_params, Groups, SaveTimeSteps)
+out <- zoomss_model(input_params, Groups)
 cat("✅ Model run completed successfully!\n")
 
 
@@ -86,8 +85,8 @@ if (isTRUE(plotting)){
   source("zPlot.R")
 
   # Plot results
-  # (ggPPMR_dynamic <- zPlot_PPMR(out))
-  (ggSizeSpec <- zPlot_SizeSpectra(out))
+  # (ggPPMR_dynamic <- plotPPMR(out))
+  (ggSizeSpec <- plotSizeSpectra(out))
   (ggAbundTS <- zPlot_AbundTimeSeries(out))
   (ggGrowthTS <- zPlot_GrowthTimeSeries(out))
   (ggBiomassTS <- zPlot_BiomassTimeSeries(out))

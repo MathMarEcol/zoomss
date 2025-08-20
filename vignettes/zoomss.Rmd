@@ -8,6 +8,7 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -18,26 +19,71 @@ knitr::opts_chunk$set(
 library(zoomss)
 ```
 
+
+## How to run ZooMSS using `R`
+
+### Input Files
+
+ZooMSS requires two input files:
+
+1. **GroupInputs.csv** - Contains all taxa-specific parameter values, including size ranges and functional group properties.
+
+2. **Environmental data** - A data frame with time series of environmental conditions:
+   - For time-varying conditions: Time series with `time_step`, `sst`, and `chlo` columns
+   - For constant conditions: Single values replicated across all time steps
+
+### Running the Model
+
+### Environmental Data Structure
+
+Provide environmental time series as a data frame with:
+- `time_step`: Sequential time step number (1, 2, 3, ...)
+- `sst`: Sea surface temperature (°C)
+- `chl`: Chlorophyll concentration (mg/m³)
+
+The model processes all environmental conditions dynamically, whether they vary through time or remain constant.
+
+### Plotting
+
+The model includes several built-in plotting functions for analysis and visualization:
+
+#### Basic Plots
+* `plotTimeSeries(dat, by = "biomass")` - Plot biomass time series with optional species selection and proportional stacking
+* `plotSizeSpectra(dat)` - Plot overall species-resolved size spectra  
+* `plotPPMR(dat)` - Plot predator-prey mass ratios
+
+#### Time Series Analysis
+* `plotTimeSeries(dat, by = "abundance")` - Plot abundance time series
+* `plotTimeSeries(dat, by = "growth")` - Plot growth rate time series
+* `plotTimeSeries(dat, by = "mortality")` - Plot predation mortality time series
+
+where `dat` is the model output list.
+
+## Performance and Computational Considerations
+
+
 ```{r}
-
-input_params <- zCreateInputs(time = seq(0, 100, by = 0.01) ,
-                              sst = 15,
-                              chl = 0.15,
-                              isave = 10) # Save ~ monthly
-
-out <- zoomss_model(input_params)
+# devtools::load_all()
+# input_params <- createInputParams(time = seq(0, 10, by = 0.01) ,
+#                               sst = 15,
+#                               chl = 0.15,
+#                               isave = 10) # Save ~ monthly
+# 
+# out <- zoomss_model(input_params)
 
 
 ```
+
+
 ```{r}
 
-zPlot_AbundTimeSeries(out)
+# zPlot_AbundTimeSeries(out)
 
 ```
 
 
 ```{r}
 
-zPlot_BiomassTimeSeries(out)
+# zPlot_BiomassTimeSeries(out)
 
 ```

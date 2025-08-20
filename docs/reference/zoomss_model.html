@@ -18,7 +18,7 @@ model simulation from parameter setup through model execution to output processi
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">zoomss</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.1</span>
+        <span class="version label label-info" data-toggle="tooltip" data-placement="bottom" title="">0.0.1</span>
       </span>
     </div>
 
@@ -49,7 +49,7 @@ model simulation from parameter setup through model execution to output processi
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">zoomss_model</span><span class="op">(</span><span class="va">input_params</span>, Groups <span class="op">=</span> <span class="cn">NULL</span>, SaveTimeSteps <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">zoomss_model</span><span class="op">(</span><span class="va">input_params</span>, Groups <span class="op">=</span> <span class="cn">NULL</span>, isave <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -59,22 +59,19 @@ model simulation from parameter setup through model execution to output processi
 <dl><dt id="arg-input-params">input_params<a class="anchor" aria-label="anchor" href="#arg-input-params"></a></dt>
 <dd><p>Data frame containing model parameters and environmental time series.
 Must include columns: time (time vector in years), sst (sea surface temperature),
-chl (chlorophyll), and isave (save frequency). Can optionally include cellID for
-spatial data. The time step (dt) and maximum time (tmax) are automatically calculated
-from the time vector. Can be created using zCreateInputs().</p></dd>
+and chl (chlorophyll). Can optionally include cellID for spatial data. The time step (dt)
+and maximum time (tmax) are automatically calculated from the time vector. Can be created using createInputParams().</p></dd>
 
 
 <dt id="arg-groups">Groups<a class="anchor" aria-label="anchor" href="#arg-groups"></a></dt>
 <dd><p>Data frame defining functional groups with their biological parameters.
 Must include columns defining species characteristics, size ranges, and feeding parameters.
 If NULL, uses default ZooMSS functional groups. Can be obtained/customized using
-zGetGroups().</p></dd>
+getGroups().</p></dd>
 
 
-<dt id="arg-savetimesteps">SaveTimeSteps<a class="anchor" aria-label="anchor" href="#arg-savetimesteps"></a></dt>
-<dd><p>Logical indicating whether to save full time series (TRUE) or
-just model parameters (FALSE). TRUE saves complete model output including time series
-of abundance and biomass.</p></dd>
+<dt id="arg-isave">isave<a class="anchor" aria-label="anchor" href="#arg-isave"></a></dt>
+<dd><p>Save frequency in time steps (default: 50)</p></dd>
 
 </dl></div>
     <div id="value">
@@ -83,7 +80,7 @@ of abundance and biomass.</p></dd>
 <li><p>diets: Average diet compositions across functional groups</p></li>
 <li><p>growth: Average growth rates for each group and size class</p></li>
 <li><p>mortality: Average mortality rates</p></li>
-<li><p>model: Complete model output (if SaveTimeSteps=TRUE) or just parameters (if FALSE)</p></li>
+<li><p>model: Complete model output including time series data and parameters</p></li>
 </ul></div>
     <div id="details">
     <h2>Details</h2>
@@ -94,8 +91,7 @@ of abundance and biomass.</p></dd>
 <li><p>Runs the model forward in time with dynamic environmental forcing</p></li>
 <li><p>Processes outputs by averaging the final 50% of the simulation</p></li>
 <li><p>Returns organized results including abundances, diets, growth, and mortality</p></li>
-</ol><p>The function can optionally save full time series data or just averaged results
-depending on the SaveTimeSteps parameter. This is the primary entry point for
+</ol><p>This is the primary entry point for
 running ZooMSS simulations with environmental forcing.</p>
     </div>
 
@@ -103,18 +99,18 @@ running ZooMSS simulations with environmental forcing.</p>
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="co"># Basic usage with default groups</span></span></span>
-<span class="r-in"><span><span class="va">env_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="zCreateSimpleTimeSeries.html">zCreateSimpleTimeSeries</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">0.01</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">input_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="zCreateInputs.html">zCreateInputs</a></span><span class="op">(</span><span class="va">env_data</span><span class="op">$</span><span class="va">time</span>, <span class="va">env_data</span><span class="op">$</span><span class="va">sst</span>, <span class="va">env_data</span><span class="op">$</span><span class="va">chl</span>, isave <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">zoomss_model</span><span class="op">(</span><span class="va">input_params</span>, SaveTimeSteps <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">env_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="createEnviroData.html">createEnviroData</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">0.01</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">input_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="createInputParams.html">createInputParams</a></span><span class="op">(</span><span class="va">env_data</span><span class="op">$</span><span class="va">time</span>, <span class="va">env_data</span><span class="op">$</span><span class="va">sst</span>, <span class="va">env_data</span><span class="op">$</span><span class="va">chl</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">zoomss_model</span><span class="op">(</span><span class="va">input_params</span>, isave <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Using custom groups</span></span></span>
-<span class="r-in"><span><span class="va">Groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="zGetGroups.html">zGetGroups</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># Get default groups</span></span></span>
+<span class="r-in"><span><span class="va">Groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="getGroups.html">getGroups</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># Get default groups</span></span></span>
 <span class="r-in"><span><span class="va">Groups</span><span class="op">$</span><span class="va">W0</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fl">12.5</span>          <span class="co"># Modify a parameter</span></span></span>
-<span class="r-in"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">zoomss_model</span><span class="op">(</span><span class="va">input_params</span>, <span class="va">Groups</span>, SaveTimeSteps <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">zoomss_model</span><span class="op">(</span><span class="va">input_params</span>, <span class="va">Groups</span>, isave <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Loading groups from file</span></span></span>
-<span class="r-in"><span><span class="va">custom_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="zGetGroups.html">zGetGroups</a></span><span class="op">(</span>source <span class="op">=</span> <span class="st">"file"</span>, file <span class="op">=</span> <span class="st">"my_groups.csv"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">zoomss_model</span><span class="op">(</span><span class="va">input_params</span>, <span class="va">custom_groups</span>, SaveTimeSteps <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">custom_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="getGroups.html">getGroups</a></span><span class="op">(</span>source <span class="op">=</span> <span class="st">"file"</span>, file <span class="op">=</span> <span class="st">"my_groups.csv"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">zoomss_model</span><span class="op">(</span><span class="va">input_params</span>, <span class="va">custom_groups</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

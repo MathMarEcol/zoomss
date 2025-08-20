@@ -16,9 +16,8 @@
 #' @param sst Numeric vector of sea surface temperature values in deg C
 #' @param chl Numeric vector of chlorophyll concentration values in mg/m^3
 #' @param cellID Optional numeric vector of cell identifiers for spatial data (default: NULL)
-#' @param isave Save frequency in time steps (default: 100)
 #'
-#' @return Data frame with columns: time, time_step, sst, chl, isave, and cellID (if provided)
+#' @return Data frame with columns: time, time_step, sst, chl, and cellID (if provided)
 #' @export
 #'
 #' @examples
@@ -29,17 +28,16 @@
 #' chl_vec <- 0.5 + 0.2*cos(2*pi*time_vec/1)  # annual cycle
 #'
 #' # Create input parameters object
-#' input_params <- zCreateInputs(time_vec, sst_vec, chl_vec, isave = 50)
+#' input_params <- createInputParams(time_vec, sst_vec, chl_vec)
 #'
 #' # Use with ZooMSS model
-#' results <- zoomss_model(input_params, Groups, SaveTimeSteps = TRUE)
+#' results <- zoomss_model(input_params, Groups, isave = 50)
 #' }
 #'
-zCreateInputs <- function(time,
+createInputParams <- function(time,
                           sst,
                           chl,
-                          cellID = NULL,
-                          isave = 10) {
+                          cellID = NULL) {
 
   # Load assertthat package for validation
   if (!requireNamespace("assertthat", quietly = TRUE)) {
@@ -88,8 +86,6 @@ zCreateInputs <- function(time,
   # Validate temporal parameters
   assertthat::assert_that(dt > 0, msg = "calculated dt must be positive")
   # Note: tmax can be any value (positive, negative, or zero) as it's the final time point
-  assertthat::assert_that(is.numeric(isave) && length(isave) == 1 && isave > 0,
-                          msg = "isave must be a positive number")
 
   # Validate environmental data ranges
   assertthat::assert_that(all(!is.na(sst)), msg = "sst cannot contain NA values")
@@ -105,8 +101,7 @@ zCreateInputs <- function(time,
       time = time,
       time_step = seq_along(time),
       sst = sst,
-      chl = chl,
-      isave = isave
+      chl = chl
     )
   } else {
     formatted_data <- data.frame(
@@ -114,8 +109,7 @@ zCreateInputs <- function(time,
       time_step = seq_along(time),
       sst = sst,
       chl = chl,
-      cellID = cellID,
-      isave = isave
+      cellID = cellID
     )
   }
 
@@ -128,11 +122,11 @@ zCreateInputs <- function(time,
   cat("- Time steps:", n_time_steps, "(intervals to simulate)\n")
   cat("- Time range:", round(min(formatted_data$time), 3), "to",
       round(max(formatted_data$time), 3), "years\n")
+  cat("- dt =", round(dt, 4), "years\n")
   cat("- SST range:", round(min(formatted_data$sst), 1), "to",
       round(max(formatted_data$sst), 1), "deg C\n")
   cat("- Chlorophyll range:", round(min(formatted_data$chl), 2), "to",
       round(max(formatted_data$chl), 2), "mg/m^3\n")
-  cat("- Model parameters: dt =", round(dt, 4), "years, tmax =", round(tmax, 3), "years, isave =", isave, "steps\n")
 
   # Helpful reminder about time vector interpretation
   if (length(time) > 1 && all(diff(time) == 1) && min(time) %% 1 == 0 && max(time) %% 1 == 0) {
@@ -144,7 +138,7 @@ zCreateInputs <- function(time,
 }
 
 
-#' Create Simple Environmental Time Series for Testing
+#' Create Environmental Time Series
 #'
 #' @title Generate synthetic environmental data for ZooMSS testing
 #' @description Creates simple synthetic environmental time series with optional seasonal
@@ -160,7 +154,7 @@ zCreateInputs <- function(time,
 #'   The seasonal option creates SST and chlorophyll cycles that are out of phase,
 #'   mimicking typical ocean patterns where chlorophyll peaks when SST is lower.
 #'
-#' @param n_time_steps Number of time steps to generate
+#' @param n_years Number of years to generate
 #' @param dt Time step size in years
 #' @param base_sst Base sea surface temperature in deg C (default: 15)
 #' @param base_chl Base chlorophyll concentration in mg/m^3 (default: 0.5)
@@ -173,22 +167,22 @@ zCreateInputs <- function(time,
 #'
 #' @examples
 #' # Create seasonal environmental data
-#' env_data <- zCreateSimpleTimeSeries(
-#'   n_time_steps = 1000,
+#' env_data <- createEnviroData(
+#'   n_years = 10,
 #'   dt = 0.01,
 #'   seasonal = TRUE
 #' )
 #'
 #' # Create static environmental conditions
-#' static_data <- zCreateSimpleTimeSeries(
-#'   n_time_steps = 500,
+#' static_data <- createEnviroData(
+#'   n_years = 5,
 #'   dt = 0.01,
 #'   seasonal = FALSE,
 #'   base_sst = 20,
 #'   base_chl = 1.0
 #' )
 #'
-zCreateSimpleTimeSeries <- function(n_time_steps,
+createEnviroData <- function(n_years,
                                     dt,
                                     base_sst = 15,
                                     base_chl = 0.5,
@@ -197,7 +191,7 @@ zCreateSimpleTimeSeries <- function(n_time_steps,
                                     chl_amplitude = 0.2) {
 
   # Create time vector
-  time_years <- seq(0, (n_time_steps-1) * dt, by = dt)
+  time_years <- seq(0, n_years, by = dt)
 
   if (seasonal) {
     # Seasonal patterns (peaks in different seasons)
@@ -205,8 +199,8 @@ zCreateSimpleTimeSeries <- function(n_time_steps,
     chl_values <- base_chl + chl_amplitude * sin(2 * pi * time_years + pi)  # Inverse to SST
   } else {
     # Static values
-    sst_values <- rep(base_sst, n_time_steps)
-    chl_values <- rep(base_chl, n_time_steps)
+    sst_values <- rep(base_sst, length(time_years))
+    chl_values <- rep(base_chl, length(time_years))
   }
 
   return(data.frame(

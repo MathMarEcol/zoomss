@@ -125,7 +125,7 @@ zoomss_setup <- function(param){
   model$N[1,,] <- tempN
 
   # Fishing mortality (yr^-1)
-  for(g in 1:12){
+  for(g in 1:param$ngrps){
     model$fish_mort[g,match(param$Groups$Fmort_W0[g], param$w_log10):match(param$Groups$Fmort_Wmax[g], param$w_log10)] <- param$Groups$Fmort[g]
   }
 

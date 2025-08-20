@@ -23,9 +23,9 @@
 #' @param Groups Data frame containing functional group definitions with columns:
 #'   Species, Type, W0 (log min size), Wmax (log max size), and various biological parameters
 #' @param input_params Data frame with model parameters including:
-#'   time (time vector in years), sst (sea surface temperature), chl (chlorophyll),
-#'   and isave (save frequency). The time vector can start at any value and the
-#'   model automatically calculates dt (time step) and tmax (maximum time).
+#'   time (time vector in years), sst (sea surface temperature), and chl (chlorophyll).
+#'   The time vector can start at any value and the model automatically calculates dt (time step) and tmax (maximum time).
+#' @param isave Save frequency in time steps (default: 50)
 #'
 #' @return List containing comprehensive model parameters:
 #'   \itemize{
@@ -47,42 +47,30 @@
 #' data(Groups)
 #'
 #' # Create environmental time series
-#' env_data <- zCreateSimpleTimeSeries(1000, 0.01)
-#'
-#' # Set up input parameters with environmental forcing
-#' input_params <- data.frame(
-#'   tmax = 10,
-#'   dt = 0.01,
-#'   isave = 10,
-#'   time_step = 1:1000,
-#'   sst = env_data$sst,
-#'   chl = env_data$chl
-#' )
+#' env_data <- createEnviroData(10, 0.01)
+#' input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
 #'
 #' # Generate parameter list
-#' params <- zoomss_params(Groups, input_params)
+#' params <- zoomss_params(Groups, input_params, isave = 50)
 #' }
 #'
-zoomss_params <- function(Groups, input_params){
+zoomss_params <- function(Groups, input_params, isave){
 
   # Calculate dt and tmax from time column in input_params
   time_values <- input_params$time
   dt_calc <- time_values[2] - time_values[1]  # Use first time step difference
   tmax_calc <- max(time_values)  # Maximum time value (not duration)
-  
+
   # Check if time steps are uniform - ERROR if not consistent
   if (length(time_values) > 2) {
     dt_diffs <- diff(time_values)
     max_diff <- max(abs(dt_diffs - dt_calc))
     if (max_diff > dt_calc * 0.001) {  # Allow only 0.1% variation
-      stop("Time steps are not uniform in input_params. Maximum deviation: ", 
+      stop("Time steps are not uniform in input_params. Maximum deviation: ",
            round(max_diff, 6), " (", round(100 * max_diff / dt_calc, 2), "% of dt). ",
            "ZooMSS requires uniform time steps for accurate results.")
     }
   }
-  
-  cat("Time parameters calculated from time column: dt =", round(dt_calc, 4), 
-      "years, tmax =", round(tmax_calc, 3), "years\n")
 
   param <- list(
     Groups = Groups, # Read in functional group specific parameters from file
@@ -103,7 +91,7 @@ zoomss_params <- function(Groups, input_params){
     num_zoo = sum(Groups$Type == "Zooplankton"), # How many zooplankton
     num_fish = sum(Groups$Type == "Fish"), # How many fish
     cc_phyto = 0.1, # Carbon content of phytoplankton size classes
-    isave = input_params$isave[1] # how often to save results every 'isave' time steps - use scalar value
+    isave = isave # how often to save results every 'isave' time steps
   )
 
   # Process provided time series
@@ -111,18 +99,10 @@ zoomss_params <- function(Groups, input_params){
 
   ## Add additional parameters which are based on the parameter set
   param2 <- list(
-    nsave  = max(1, ceiling((n_time_steps - 1)/(param$isave))), # Number of time slots to save - based on actual time steps
-    ntime = n_time_steps - 1, # Total number of time steps (intervals between time points)
-    itimemax = n_time_steps - 1 # Number of iterations for time loop (number of intervals, not points)
+    nsave  = max(1, floor(n_time_steps / param$isave)), # Number of time slots to save (regular intervals only, minimum 1)
+    ntime = n_time_steps, # Total number of time steps to simulate
+    itimemax = n_time_steps # Number of iterations for time loop (one for each time point)
   )
-  # Validate that environmental data is available
-  min_time <- min(input_params$time)
-  simulation_duration <- param$tmax - min_time
-
-  cat("Environmental validation: ", n_time_steps, " timesteps provided, covering time ", 
-      round(min_time, 3), " to ", round(param$tmax, 3), " years (", 
-      round(simulation_duration, 3), " year duration)\n")
-
   # Pre-calculate phytoplankton parameters for each time step
 
   # Initialize arrays to store time-varying parameters (optimize memory allocation)
@@ -154,7 +134,7 @@ zoomss_params <- function(Groups, input_params){
     }
 
   } else {
-    cat("Warning: Calculating phytoplankton parameters from environmental time series\n")
+    cat("Calculating phytoplankton parameters from environmental time series\n")
 
     # Calculate phytoplankton parameters for each time step
     for (i in 1:n_time_steps) {
@@ -163,7 +143,7 @@ zoomss_params <- function(Groups, input_params){
 
       # Calculate phytoplankton parameters using the existing function
       temp_df <- data.frame(cellID = 1, sst = sst_i, chl = chl_i)
-      phyto_params <- zCalculatePhytoParam(temp_df)
+      phyto_params <- calculatePhytoParam(temp_df)
 
       param2$phyto_int_ts[i] <- phyto_params$phyto_int
       param2$phyto_slope_ts[i] <- phyto_params$phyto_slope

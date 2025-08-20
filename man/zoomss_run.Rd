@@ -23,7 +23,7 @@ List containing complete model output:
 \item diet: Diet composition time series
 \item Z: Mortality rate time series
 \item w: Size class weights (g)
-\item Additional time series if SaveTimeSteps enabled
+\item Additional time series data and model results
 }
 }
 \description{

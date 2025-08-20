@@ -1,4 +1,4 @@
-#' Plot Predator-Prey Mass Ratio (PPMR) Distribution
+#' Plot Predator-Prey Mass Ratio (PPMR)
 #'
 #' @title Visualize predator-prey mass ratio patterns in ZooMSS results
 #' @description Creates a plot showing the distribution of predator-prey mass ratios (PPMR)
@@ -13,7 +13,8 @@
 #'   predators and their prey, providing insight into food web structure and
 #'   energy transfer efficiency in marine ecosystems.
 #'
-#' @param dat ZooMSS results object containing model outputs and parameters
+#' @param mdl ZooMSS results object containing model outputs and parameters
+#' @param idx The time index to plot
 #'
 #' @return ggplot object showing PPMR distribution with species-specific overlays
 #' @export
@@ -21,16 +22,18 @@
 #' @examples
 #' \dontrun{
 #' # After running ZooMSS model
-#' results <- zoomss_model(input_params, Groups, SaveTimeSteps = FALSE)
-#' ppmr_plot <- zPlot_PPMR(results)
+#' results <- zoomss_model(input_params, Groups)
+#' ppmr_plot <- plotPPMR(results)
 #' print(ppmr_plot)
 #' }
 #'
-zPlot_PPMR <- function(dat){
+plotPPMR <- function(mdl, idx){
 
-  out <- zExtract_PPMR(dat)
+  out <- extractPPMR(mdl)
 
-  gg <- ggplot2::ggplot() +
+  out <- out[[idx]] # Subset to the required timestep
+
+  ggplot2::ggplot() +
     ggplot2::geom_line(data = out[[2]], mapping = ggplot2::aes(x = .data$Betas, y = .data$y, colour = .data$Species), linewidth = 1) +
     ggplot2::geom_line(data = out[[1]], mapping = ggplot2::aes(x = .data$x, y = .data$y), linewidth = 1.2) +
     ggplot2::theme_bw() +
@@ -40,15 +43,15 @@ zPlot_PPMR <- function(dat){
     ggplot2::geom_vline(data = out[[1]], mapping = ggplot2::aes(xintercept = .data$mn_beta), colour = 'black') +
     ggplot2::scale_x_continuous(expand = c(0, 0)) +
     ggplot2::scale_y_continuous(expand = c(0, 0)) +
-    ggplot2::scale_colour_manual(values = c("Flagellates" = dat$model$param$Groups$PlotColour[dat$model$param$Groups$Species=="Flagellates"],
-                                   "Ciliates" = dat$model$param$Groups$PlotColour[dat$model$param$Groups$Species=="Ciliates"],
-                                   "Larvaceans" = dat$model$param$Groups$PlotColour[dat$model$param$Groups$Species=="Larvaceans"],
-                                   "Salps" = dat$model$param$Groups$PlotColour[dat$model$param$Groups$Species=="Salps"],
-                                   "Jellyfish" = dat$model$param$Groups$PlotColour[dat$model$param$Groups$Species=="Jellyfish"],
-                                   "CarnCopepods" = dat$model$param$Groups$PlotColour[dat$model$param$Groups$Species=="CarnCopepods"],
-                                   "Chaetognaths" = dat$model$param$Groups$PlotColour[dat$model$param$Groups$Species=="Chaetognaths"],
-                                   "Euphausiids" = dat$model$param$Groups$PlotColour[dat$model$param$Groups$Species=="Euphausiids"],
-                                   "OmniCopepods" = dat$model$param$Groups$PlotColour[dat$model$param$Groups$Species=="OmniCopepods"]))
+    ggplot2::scale_colour_manual(values = c("Flagellates" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Flagellates"],
+                                   "Ciliates" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Ciliates"],
+                                   "Larvaceans" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Larvaceans"],
+                                   "Salps" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Salps"],
+                                   "Jellyfish" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Jellyfish"],
+                                   "CarnCopepods" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="CarnCopepods"],
+                                   "Chaetognaths" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Chaetognaths"],
+                                   "Euphausiids" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Euphausiids"],
+                                   "OmniCopepods" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="OmniCopepods"]))
 }
 
 #' Plot Size Spectra for ZooMSS Results
@@ -67,7 +70,8 @@ zPlot_PPMR <- function(dat){
 #'   assess model realism and identify dominant size classes within each
 #'   functional group.
 #'
-#' @param dat ZooMSS results object containing model outputs and parameters
+#' @param mdl ZooMSS results object containing model outputs and parameters
+#' @param n_years The number of years (from the end) over which to average the size spectra
 #'
 #' @return ggplot object showing log abundance vs log body weight by species
 #' @export
@@ -75,314 +79,180 @@ zPlot_PPMR <- function(dat){
 #' @examples
 #' \dontrun{
 #' # After running ZooMSS model
-#' results <- zoomss_model(input_params, Groups, SaveTimeSteps = FALSE)
-#' size_plot <- zPlot_SizeSpectra(results)
+#' results <- zoomss_model(input_params, Groups)
+#' size_plot <- plotSizeSpectra(results)
 #' print(size_plot)
 #' }
 #'
-zPlot_SizeSpectra <- function(dat) {
-  species <- dat$abundances
+plotSizeSpectra <- function(mdl, n_years) {
 
-  rownames(species) <- dat$model$param$Groups$Species
+  species <- averageTimeSeries(mdl, "N", n_years = n_years)
+
+  rownames(species) <- mdl$param$Groups$Species
   species <- tibble::as_tibble(t(species))
 
   species <- species %>%
-    tibble::add_column("Weight" = dat$model$param$w) %>%
-    tidyr::pivot_longer(-.data$Weight, names_to = "Species", values_to = "Abundance") %>%
+    tibble::add_column("Weight" = mdl$param$w) %>%
+    tidyr::pivot_longer(-"Weight", names_to = "Species", values_to = "Abundance") %>%
     dplyr::filter(.data$Abundance > 0) %>%
-    dplyr::mutate(Species = factor(.data$Species, levels = dat$model$param$Groups$Species))
+    dplyr::mutate(Species = factor(.data$Species, levels = mdl$param$Groups$Species))
 
   gg <- ggplot2::ggplot(data = species, mapping = ggplot2::aes(x = log10(.data$Weight), y = log10(.data$Abundance), colour = .data$Species)) +
     ggplot2::geom_line() +
     ggplot2::geom_point() +
-    ggplot2::scale_color_manual(values = dat$model$param$Groups$PlotColour) +
+    ggplot2::scale_color_manual(values = mdl$param$Groups$PlotColour) +
     ggplot2::theme_bw() +
     ggplot2::labs(subtitle = "Abundance Spectrum")
 
   return(gg)
 }
 
-#' Plot Abundance Time Series
+#' Plot Time Series Data for ZooMSS Results
 #'
-#' @title Visualize abundance changes over time for each functional group
-#' @description Creates time series plots showing how total abundance of each functional
-#'   group changes throughout the ZooMSS simulation period.
-#' @details This function creates time series visualization by:
-#'   - Summing abundances across all size classes for each functional group
-#'   - Converting to long format for ggplot visualization
-#'   - Plotting log-transformed abundance over time
-#'   - Using species-specific colors and filtering out zero abundances
+#' @title Unified function to visualize time series changes for different metrics
+#' @description Creates time series plots showing how abundance, biomass, mortality, or growth
+#'   rates of functional groups change throughout the ZooMSS simulation period.
+#' @details This function creates time series visualizations by:
+#'   - **Abundance**: Summing abundances across size classes, log-transformed y-axis
+#'   - **Biomass**: Calculating biomass (abundance × weight), with optional stacking and proportional scaling
+#'   - **Mortality**: Averaging predation mortality rates across size classes
+#'   - **Growth**: Averaging growth rates across size classes, log-transformed y-axis
 #'
-#'   Time series plots help identify:
+#'   All plots use species-specific colors and filter out zero values. Time series plots help identify:
 #'   - Equilibration time for model runs
-#'   - Seasonal or cyclical patterns in abundance
-#'   - Relative abundance patterns between functional groups
+#'   - Seasonal or cyclical patterns in ecological metrics
+#'   - Relative patterns between functional groups
 #'   - Model stability and convergence behavior
 #'
-#' @param dat ZooMSS results object containing model outputs with time series data
+#' @param mdl ZooMSS results object containing model outputs with time series data
+#' @param by Character string specifying the metric to plot. Options: "abundance", "biomass", "mortality", "growth" (default: "abundance")
+#' @param stacked Logical, whether to create stacked area plot for biomass (default: FALSE, only applies to biomass)
+#' @param proportional Logical, whether to show proportions for biomass (default: FALSE, only applies to biomass)
+#' @param species Character vector of species names to include. If NULL, all species included (default: NULL, applies to all metrics)
 #'
-#' @return ggplot object showing abundance time series by species
+#' @return ggplot object showing the requested time series by species
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' # After running ZooMSS model with SaveTimeSteps = TRUE
-#' results <- zoomss_model(input_params, Groups, SaveTimeSteps = TRUE)
-#' time_plot <- zPlot_AbundTimeSeries(results)
-#' print(time_plot)
+#' # After running ZooMSS model
+#' results <- zoomss_model(input_params, Groups)
+#'
+#' # Plot different metrics
+#' abundance_plot <- plotTimeSeries(results, by = "abundance")
+#' biomass_plot <- plotTimeSeries(results, by = "biomass")
+#' mortality_plot <- plotTimeSeries(results, by = "mortality")
+#' growth_plot <- plotTimeSeries(results, by = "growth")
+#'
+#' # Biomass with special options
+#' stacked_plot <- plotTimeSeries(results, by = "biomass", stacked = TRUE)
+#' prop_plot <- plotTimeSeries(results, by = "biomass", proportional = TRUE)
+#'
+#' # Focus on specific species (works for all metrics)
+#' copepod_plot <- plotTimeSeries(results, by = "biomass",
+#'                               species = c("OmniCopepods", "CarnCopepods"))
+#' abundance_copepods <- plotTimeSeries(results, by = "abundance",
+#'                                     species = c("OmniCopepods", "CarnCopepods"))
+#' mortality_copepods <- plotTimeSeries(results, by = "mortality",
+#'                                     species = c("OmniCopepods", "CarnCopepods"))
+#' growth_copepods <- plotTimeSeries(results, by = "growth",
+#'                                  species = c("OmniCopepods", "CarnCopepods"))
 #' }
 #'
-zPlot_AbundTimeSeries <- function(dat){
+plotTimeSeries <- function(mdl, by = "abundance", stacked = FALSE, proportional = FALSE, species = NULL) {
 
-  tspecies <- rowSums(dat$model$N, dims = 2)
-  colnames(tspecies) <- dat$model$param$Groups$Species
-  tspecies <- tibble::as_tibble(tspecies)
-  tspecies$Time <- seq(dat$model$param$dt * dat$model$param$isave,
-                       dat$model$param$tmax,
-                       dat$model$param$dt * dat$model$param$isave)
+  # Validate inputs
+  by <- match.arg(by, choices = c("abundance", "biomass", "mortality", "growth"))
 
-  tspecies <- tspecies %>%
-    tidyr::pivot_longer(-.data$Time, names_to = "Species", values_to = "Abundance") %>%
-    dplyr::filter(.data$Abundance > 0) %>%
-    dplyr::mutate(Species = factor(.data$Species, levels = dat$model$param$Groups$Species))
-
-  gg <- ggplot2::ggplot(data = tspecies, mapping = ggplot2::aes(x = .data$Time, y = log10(.data$Abundance), colour = .data$Species)) +
-    ggplot2::geom_line(linewidth = 1) +
-    ggplot2::geom_point(size = 1.2) +
-    ggplot2::scale_color_manual(values = dat$model$param$Groups$PlotColour) +
-    ggplot2::theme_bw() +
-    ggplot2::scale_x_continuous(expand = c(0, 0)) +
-    ggplot2::scale_y_continuous(expand = c(0, 0)) +
-    ggplot2::labs(subtitle = "Abundance") +
-    ggplot2::xlab("Time (Years)")
-
-  return(gg)
-}
-
-#' Plot Growth Rate Time Series
-#'
-#' @title Visualize growth rate changes over time for each functional group
-#' @description Creates time series plots showing how average growth rates of each functional
-#'   group change throughout the ZooMSS simulation period.
-#' @details This function creates growth rate time series by:
-#'   - Averaging growth rates across all size classes for each functional group
-#'   - Converting to long format for ggplot visualization
-#'   - Plotting log-transformed growth rates over time
-#'   - Using species-specific colors and filtering out zero values
-#'
-#'   Growth rate time series help assess:
-#'   - Environmental effects on organism growth
-#'   - Seasonal patterns in productivity
-#'   - Differences in growth potential between functional groups
-#'   - Model response to changing environmental conditions
-#'
-#' @param dat ZooMSS results object containing model outputs with time series data
-#'
-#' @return ggplot object showing growth rate time series by species
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' # After running ZooMSS model with SaveTimeSteps = TRUE
-#' results <- zoomss_model(input_params, Groups, SaveTimeSteps = TRUE)
-#' growth_plot <- zPlot_GrowthTimeSeries(results)
-#' print(growth_plot)
-#' }
-#'
-zPlot_GrowthTimeSeries <- function(dat){
-
-  gr <- rowSums(dat$model$gg, dims = 2) / length(dat$model$param$w)
-  colnames(gr) <- dat$model$param$Groups$Species
-  gr <- tibble::as_tibble(gr)
-  gr$Time <- seq(dat$model$param$dt * dat$model$param$isave,
-                 dat$model$param$tmax,
-                 dat$model$param$dt * dat$model$param$isave)
-
-  gr <- gr %>%
-    tidyr::pivot_longer(-.data$Time, names_to = "Species", values_to = "Growth") %>%
-    dplyr::filter(.data$Growth > 0) %>%
-    dplyr::mutate(Species = factor(.data$Species, levels = dat$model$param$Groups$Species))
-
-  gg <- ggplot2::ggplot(data = gr, mapping = ggplot2::aes(x = .data$Time, y = log10(.data$Growth), colour = .data$Species)) +
-    ggplot2::geom_line(linewidth = 1) +
-    ggplot2::geom_point(size = 1.2) +
-    ggplot2::scale_color_manual(values = dat$model$param$Groups$PlotColour) +
-    ggplot2::theme_bw() +
-    ggplot2::scale_x_continuous(expand = c(0, 0)) +
-    ggplot2::scale_y_continuous(expand = c(0, 0)) +
-    ggplot2::labs(subtitle = "Growth Rate") +
-    ggplot2::xlab("Time (Years)")
-
-  return(gg)
-}
-
-#' Plot Predation Mortality Time Series
-#'
-#' @title Visualize predation mortality changes over time for each functional group
-#' @description Creates time series plots showing how average predation mortality rates of each
-#'   functional group change throughout the ZooMSS simulation period.
-#' @details This function creates predation mortality time series by:
-#'   - Averaging predation mortality rates across all size classes for each functional group
-#'   - Converting to long format for ggplot visualization
-#'   - Plotting mortality rates over time without log transformation
-#'   - Using species-specific colors and filtering out zero values
-#'
-#'   Predation mortality time series help assess:
-#'   - Predation pressure on different functional groups over time
-#'   - Seasonal or temporal patterns in predation intensity
-#'   - Relative vulnerability of functional groups to predation
-#'   - Model dynamics and predator-prey interactions
-#'
-#' @param dat ZooMSS results object containing model outputs with time series data
-#'
-#' @return ggplot object showing predation mortality time series by species
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' # After running ZooMSS model with SaveTimeSteps = TRUE
-#' results <- zoomss_model(input_params, Groups, SaveTimeSteps = TRUE)
-#' mortality_plot <- zPlot_PredTimeSeries(results)
-#' print(mortality_plot)
-#' }
-#'
-zPlot_PredTimeSeries <- function(dat){
-
-  Z <- rowSums(dat$model$Z,dims = 2) / length(dat$model$param$w)
-  colnames(Z) <- dat$model$param$Groups$Species
-  Z <- tibble::as_tibble(Z)
-  Z$Time <- seq(dat$model$param$dt * dat$model$param$isave,
-                dat$model$param$tmax,
-                dat$model$param$dt * dat$model$param$isave)
-  Z <- Z %>%
-    tidyr::pivot_longer(-.data$Time, names_to = "Species", values_to = "Mortality") %>%
-    dplyr::filter(.data$Mortality > 0) %>%
-    dplyr::mutate(Species = factor(.data$Species, levels = dat$model$param$Groups$Species))
-
-  gg <- ggplot2::ggplot(data = Z, mapping = ggplot2::aes(x = .data$Time, y = .data$Mortality, colour = .data$Species)) +
-    ggplot2::geom_line(linewidth = 1) +
-    ggplot2::geom_point(size = 1.2) +
-    ggplot2::scale_color_manual(values = dat$model$param$Groups$PlotColour) +
-    ggplot2::theme_bw() +
-    ggplot2::scale_x_continuous(expand = c(0, 0)) +
-    ggplot2::scale_y_continuous(expand = c(0, 0)) +
-    ggplot2::labs(subtitle = "Mortality Rate") +
-    ggplot2::xlab("Time (Years)")
-
-  return(gg)
-}
-
-#' Plot Biomass Time Series
-#'
-#' @title Visualize biomass changes over time with multiple display options
-#' @description Creates flexible time series plots showing how total biomass of functional
-#'   groups changes throughout the ZooMSS simulation, with options for line plots,
-#'   stacked area plots, and proportional displays.
-#' @details This function creates biomass time series visualization with multiple options:
-#'   - **Line plots**: Individual species biomass trajectories over time
-#'   - **Stacked plots**: Cumulative biomass showing total ecosystem biomass
-#'   - **Proportional plots**: Relative biomass contributions (0-1 scale)
-#'   - **Species filtering**: Focus on specific functional groups
-#'
-#'   The function calculates biomass by multiplying abundance by body weights and
-#'   summing across size classes for each functional group. Different plot types help
-#'   visualize different aspects of ecosystem dynamics:
-#'   - Line plots show individual group patterns and relative magnitudes
-#'   - Stacked plots show total ecosystem biomass and contributions
-#'   - Proportional plots highlight shifts in community composition
-#'
-#' @param dat ZooMSS results object containing model outputs with time series data
-#' @param stacked Logical, whether to create stacked area plot instead of line plot (default: FALSE)
-#' @param proportional Logical, whether to show proportions instead of absolute values (default: FALSE)
-#' @param species Character vector of species names to include in plot. If NULL, all species included (default: NULL)
-#'
-#' @return ggplot object showing biomass time series by species
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' # After running ZooMSS model with SaveTimeSteps = TRUE
-#' results <- zoomss_model(input_params, Groups, SaveTimeSteps = TRUE)
-#'
-#' # Basic line plot of all species
-#' biomass_plot <- zPlot_BiomassTimeSeries(results)
-#'
-#' # Stacked area plot showing total biomass
-#' stacked_plot <- zPlot_BiomassTimeSeries(results, stacked = TRUE)
-#'
-#' # Proportional plot showing relative contributions
-#' prop_plot <- zPlot_BiomassTimeSeries(results, proportional = TRUE)
-#'
-#' # Focus on specific groups
-#' copepod_plot <- zPlot_BiomassTimeSeries(results,
-#'                                               species = c("OmniCopepods", "CarnCopepods"))
-#' }
-#'
-zPlot_BiomassTimeSeries <- function(dat, stacked = FALSE, proportional = FALSE, species = NULL){
-  if (!("N" %in% names(dat$model))) {
-    stop("Abundance data not available. Make sure SaveTimeSteps=TRUE when running the model.")
+  if (!("N" %in% names(mdl))) {
+    stop("Time series data not available. Model may not have been run correctly.")
   }
 
-  # Calculate biomass from abundance and weights
-  # dat$model$N dims: [time, groups, sizes]
-  # dat$model$param$w: weights for each size class
-  # Result: sum across size classes for each group at each time step -> [time, groups]
-  biomass <- rowSums(sweep(dat$model$N, 3, dat$model$param$w, "*"), dims = 2)
-  time_steps <- seq_len(nrow(biomass))
-  time_years <- time_steps * dat$model$param$dt * dat$model$param$isave
+  # Calculate data based on requested metric
+  if (by == "abundance") {
+    # Sum abundances across size classes for each group
+    data_matrix <- rowSums(mdl$N, dims = 2)
+    value_name <- "Abundance"
+    y_label <- "log10(Abundance)"
+    subtitle <- "Abundance"
+    log_transform <- TRUE
 
-  # Create long format dataframe
-  biomass_df <- as.data.frame(biomass)
-  colnames(biomass_df) <- dat$model$param$Groups$Species
-  biomass_df$Time <- time_years
+  } else if (by == "biomass") {
+    # Calculate biomass (abundance × weight) and sum across size classes
+    data_matrix <- rowSums(sweep(mdl$N, 3, mdl$param$w, "*"), dims = 2)
+    value_name <- "Biomass"
+    y_label <- "Biomass (mg C/m^3)"
+    subtitle <- "Total Biomass Time Series"
+    log_transform <- FALSE
 
-  # Filter species if specified
+  } else if (by == "mortality") {
+    # Average predation mortality rates across size classes
+    data_matrix <- rowSums(mdl$Z, dims = 2) / length(mdl$param$w)
+    value_name <- "Mortality"
+    y_label <- "Mortality Rate"
+    subtitle <- "Mortality Rate"
+    log_transform <- FALSE
+
+  } else if (by == "growth") {
+    # Average growth rates across size classes
+    data_matrix <- rowSums(mdl$gg, dims = 2) / length(mdl$param$w)
+    value_name <- "Growth"
+    y_label <- "log10(Growth Rate)"
+    subtitle <- "Growth Rate"
+    log_transform <- TRUE
+  }
+
+  # Set up data frame
+  colnames(data_matrix) <- mdl$param$Groups$Species
+  data_df <- tibble::as_tibble(data_matrix)
+  data_df$Time <- mdl$param$time
+
+  # Filter species if specified (applies to all plot types)
   if (!is.null(species)) {
-    # Check if specified species exist
-    missing_species <- species[!species %in% dat$model$param$Groups$Species]
+    missing_species <- species[!species %in% mdl$param$Groups$Species]
     if (length(missing_species) > 0) {
       warning("Species not found in data: ", paste(missing_species, collapse = ", "))
     }
-    # Keep only specified species that exist
-    valid_species <- species[species %in% dat$model$param$Groups$Species]
+    valid_species <- species[species %in% mdl$param$Groups$Species]
     if (length(valid_species) == 0) {
-      stop("No valid species specified. Available species: ", paste(dat$model$param$Groups$Species, collapse = ", "))
+      stop("No valid species specified. Available species: ", paste(mdl$param$Groups$Species, collapse = ", "))
     }
-    # Select only specified species columns plus Time
-    biomass_df <- biomass_df[, c("Time", valid_species)]
+    data_df <- data_df[, c("Time", valid_species)]
   }
 
   # Convert to long format
-  biomass_long <- biomass_df %>%
-    tidyr::pivot_longer(-.data$Time, names_to = "Species", values_to = "Biomass") %>%
-    dplyr::mutate(Species = factor(.data$Species, levels = dat$model$param$Groups$Species))
+  data_long <- data_df %>%
+    tidyr::pivot_longer(-"Time", names_to = "Species", values_to = value_name) %>%
+    dplyr::filter(!!rlang::sym(value_name) > 0) %>%
+    dplyr::mutate(Species = factor(.data$Species, levels = mdl$param$Groups$Species))
 
-  # Calculate proportions if needed for proportional stacked plot
-  if (proportional && (stacked || length(unique(biomass_long$Species)) > 1)) {
-    biomass_long <- biomass_long %>%
+  # Handle proportional scaling for biomass
+  if (by == "biomass" && proportional && (stacked || length(unique(data_long$Species)) > 1)) {
+    data_long <- data_long %>%
       dplyr::group_by(.data$Time) %>%
-      dplyr::mutate(Biomass = .data$Biomass / sum(.data$Biomass, na.rm = TRUE)) %>%
+      dplyr::mutate(!!rlang::sym(value_name) := !!rlang::sym(value_name) / sum(!!rlang::sym(value_name), na.rm = TRUE)) %>%
       dplyr::ungroup()
+    y_label <- "Proportion"
+    subtitle <- "Proportional Biomass Time Series"
   }
 
-  # Get colors for selected species
+  # Get colors for plotting
   if (!is.null(species)) {
-    # Get indices of selected species
-    species_indices <- match(intersect(species, dat$model$param$Groups$Species), dat$model$param$Groups$Species)
-    plot_colors <- dat$model$param$Groups$PlotColour[species_indices]
-    names(plot_colors) <- dat$model$param$Groups$Species[species_indices]
+    species_indices <- match(intersect(species, mdl$param$Groups$Species), mdl$param$Groups$Species)
+    plot_colors <- mdl$param$Groups$PlotColour[species_indices]
+    names(plot_colors) <- mdl$param$Groups$Species[species_indices]
   } else {
-    plot_colors <- dat$model$param$Groups$PlotColour
-    names(plot_colors) <- dat$model$param$Groups$Species
+    plot_colors <- mdl$param$Groups$PlotColour
+    names(plot_colors) <- mdl$param$Groups$Species
   }
 
   # Create plot based on options
-  if (stacked || proportional) {
-    # Stacked area plot (absolute or proportional)
-    y_label <- if (proportional) "Proportion" else "Biomass (mg C/m^3)"
-    subtitle <- if (proportional) "Proportional Biomass Time Series" else "Stacked Biomass Time Series"
+  if (by == "biomass" && (stacked || proportional)) {
+    # Stacked area plot for biomass
+    if (proportional) subtitle <- "Proportional Biomass Time Series"
+    else if (stacked) subtitle <- "Stacked Biomass Time Series"
 
-    gg <- ggplot2::ggplot(data = biomass_long, mapping = ggplot2::aes(x = .data$Time, y = .data$Biomass, fill = .data$Species)) +
+    gg <- ggplot2::ggplot(data = data_long, mapping = ggplot2::aes(x = .data$Time, y = !!rlang::sym(value_name), fill = .data$Species)) +
       ggplot2::geom_area(position = "stack", alpha = 0.7) +
       ggplot2::scale_fill_manual(values = plot_colors) +
       ggplot2::theme_bw() +
@@ -391,20 +261,26 @@ zPlot_BiomassTimeSeries <- function(dat, stacked = FALSE, proportional = FALSE, 
       ggplot2::labs(subtitle = subtitle, y = y_label) +
       ggplot2::xlab("Time (Years)")
   } else {
-    # Line plot (original)
-    gg <- ggplot2::ggplot(data = biomass_long, mapping = ggplot2::aes(x = .data$Time, y = .data$Biomass, colour = .data$Species)) +
+    # Line plot (standard for all types)
+    y_aes <- if (log_transform) ggplot2::aes(y = log10(!!rlang::sym(value_name))) else ggplot2::aes(y = !!rlang::sym(value_name))
+
+    gg <- ggplot2::ggplot(data = data_long, mapping = ggplot2::aes(x = .data$Time, colour = .data$Species)) +
+      y_aes +
       ggplot2::geom_line(linewidth = 1) +
       ggplot2::geom_point(size = 1.2) +
       ggplot2::scale_color_manual(values = plot_colors) +
       ggplot2::theme_bw() +
       ggplot2::scale_x_continuous(expand = c(0, 0)) +
       ggplot2::scale_y_continuous(expand = c(0, 0)) +
-      ggplot2::labs(subtitle = "Total Biomass Time Series", y = "Biomass (mg C/m^3)") +
+      ggplot2::labs(subtitle = subtitle, y = y_label) +
       ggplot2::xlab("Time (Years)")
   }
 
   return(gg)
 }
+
+
+
 
 
 
@@ -421,7 +297,7 @@ zPlot_BiomassTimeSeries <- function(dat, stacked = FALSE, proportional = FALSE, 
 #'   separate plots are returned as a list. This helps users visualize the
 #'   environmental forcing that drives ZooMSS model dynamics.
 #'
-#' @param env_data Environmental data frame with time, sst, chlo columns
+#' @param env_data Environmental data frame with time, sst, chl columns
 #'
 #' @return ggplot object (if patchwork available) or list of two ggplot objects
 #' @export
@@ -432,28 +308,28 @@ zPlot_BiomassTimeSeries <- function(dat, stacked = FALSE, proportional = FALSE, 
 #'   time = 1:100,
 #'   dt = 0.01,
 #'   sst = 15 + 3*sin(2*pi*(1:100)/50),
-#'   chlo = 0.5 + 0.2*cos(2*pi*(1:100)/50)
+#'   chl = 0.5 + 0.2*cos(2*pi*(1:100)/50)
 #' )
-#' plots <- zPlotEnvironment(env_data)
+#' plots <- plotEnvironment(env_data)
 #'
-zPlotEnvironment <- function(env_data) {
+plotEnvironment <- function(env_data) {
 
   # Convert to long format for plotting
   env_long <- tidyr::pivot_longer(env_data,
-                                  cols = c("sst", "chlo"),
+                                  cols = c("sst", "chl"),
                                   names_to = "variable",
                                   values_to = "value")
 
   # Create separate y-axes for SST and chlorophyll
   p1 <- ggplot2::ggplot(data = dplyr::filter(env_long, .data$variable == "sst"),
-                        ggplot2::aes(x = .data$time*.data$dt, y = .data$value)) +
+                        ggplot2::aes(x = .data$time, y = .data$value)) +
     ggplot2::geom_line(color = "red", linewidth = 1) +
     ggplot2::labs(y = "SST (deg C)", title = "Environmental Forcing") +
     ggplot2::theme_bw() +
     ggplot2::theme(axis.title.x = ggplot2::element_blank())
 
-  p2 <- ggplot2::ggplot(data = dplyr::filter(env_long, .data$variable == "chlo"),
-                        ggplot2::aes(x = .data$time*.data$dt, y = .data$value)) +
+  p2 <- ggplot2::ggplot(data = dplyr::filter(env_long, .data$variable == "chl"),
+                        ggplot2::aes(x = .data$time, y = .data$value)) +
     ggplot2::geom_line(color = "green", linewidth = 1) +
     ggplot2::labs(x = "Time (years)", y = "Chlorophyll (mg/m^3)") +
     ggplot2::theme_bw()
@@ -463,7 +339,7 @@ zPlotEnvironment <- function(env_data) {
     return(patchwork::wrap_plots(p1, p2, ncol = 1))
   } else {
     cat("Install patchwork package to combine plots\n")
-    return(list(sst_plot = p1, chlo_plot = p2))
+    return(list(sst_plot = p1, chl_plot = p2))
   }
 }
 

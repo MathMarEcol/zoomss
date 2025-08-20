@@ -1,10 +1,21 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# zoomss
+# ZooMSS
+
+<!-- # planktonr <a href='https://github.com/MathMarEcol/zoomss'><img src='man/figures/planktonr.png' align="right" width="139px" /></a> -->
 
 <!-- badges: start -->
 
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![Windows](https://github.com/MathMarEcol/zoomss/actions/workflows/Windows.yaml/badge.svg)](https://github.com/MathMarEcol/zoomss/actions/workflows/Windows.yaml)
+[![Ubuntu](https://github.com/MathMarEcol/zoomss/actions/workflows/Ubuntu.yaml/badge.svg)](https://github.com/MathMarEcol/zoomss/actions/workflows/Ubuntu.yaml)
+[![MacOS](https://github.com/MathMarEcol/zoomss/actions/workflows/MacOS.yaml/badge.svg)](https://github.com/MathMarEcol/zoomss/actions/workflows/MacOS.yaml)
+[![issues -
+zoomss](https://img.shields.io/github/issues/MathMarEcol/zoomss)](https://github.com/MathMarEcol/zoomss/issues)
+[![Codecov test
+coverage](https://codecov.io/gh/MathMarEcol/zoomss/graph/badge.svg)](https://app.codecov.io/gh/MathMarEcol/zoomss)
 <!-- badges: end -->
 
 ## Installation
@@ -52,90 +63,6 @@ al., 2011; Hirata et al., 2011). Abundances of the zooplankton and fish
 communities are driven by size-dependent processes of growth and
 mortality, with the temporal dynamics of each functional group governed
 by separate second-order McKendrick-von Foerster equations.
-
-## How to run ZooMSS using `R`
-
-### Input Files
-
-ZooMSS requires two input files:
-
-1.  **GroupInputs.csv** - Contains all taxa-specific parameter values,
-    including size ranges and functional group properties.
-
-2.  **Environmental data** - A data frame with time series of
-    environmental conditions:
-
-    - For time-varying conditions: Time series with `time_step`, `sst`,
-      and `chlo` columns
-    - For constant conditions: Single values replicated across all time
-      steps
-
-### Running the Model
-
-#### Constant Environmental Conditions
-
-For studies with unchanging environmental conditions:
-
-``` r
-# Create constant environmental conditions
-enviro_data <- data.frame(
-  time_step = 1:5000,
-  sst = rep(15, 5000),  # Constant temperature
-  chlo = rep(0.5, 5000) # Constant chlorophyll
-)
-
-# Include in your setup parameters
-input_params <- cbind(base_params, enviro_data)
-source("setup_RUN_NAME.R")
-```
-
-#### Time-varying Environmental Conditions
-
-For dynamic environmental studies:
-
-``` r
-# Create time-varying environmental conditions
-enviro_data <- data.frame(
-  time_step = 1:5000,
-  sst = 15 + 4 * sin(2 * pi * (1:5000) / 365),  # Seasonal cycle
-  chlo = 0.5 + 0.3 * cos(2 * pi * (1:5000) / 365)
-)
-
-# Include in your setup parameters
-input_params <- cbind(base_params, enviro_data)
-```
-
-### Environmental Data Structure
-
-Provide environmental time series as a data frame with: - `time_step`:
-Sequential time step number (1, 2, 3, …) - `sst`: Sea surface
-temperature (°C) - `chlo`: Chlorophyll concentration (mg/m³)
-
-The model processes all environmental conditions dynamically, whether
-they vary through time or remain constant.
-
-### Plotting
-
-The model includes several built-in plotting functions for analysis and
-visualization:
-
-#### Basic Plots
-
-- `zPlot_BiomassTimeSeries(dat)` - Plot biomass time series with
-  optional species selection and proportional stacking
-- `zPlot_SizeSpectra(dat)` - Plot overall species-resolved size
-  spectra  
-- `zPlot_PPMR(dat)` - Plot predator-prey mass ratios
-
-#### Time Series Analysis (when SaveTimeSteps = TRUE)
-
-- `zPlot_AbundTimeSeries(dat)` - Plot abundance time series
-- `zPlot_GrowthTimeSeries(dat)` - Plot growth rate time series
-- `zPlot_PredTimeSeries(dat)` - Plot predation time series
-
-where `dat` is the model output list.
-
-## Performance and Computational Considerations
 
 ## Publications
 

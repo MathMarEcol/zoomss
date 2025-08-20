@@ -4,23 +4,20 @@
 \alias{zoomss_model}
 \title{Main ZooMSS model function for complete simulations}
 \usage{
-zoomss_model(input_params, Groups = NULL, SaveTimeSteps = TRUE)
+zoomss_model(input_params, Groups = NULL, isave = 10)
 }
 \arguments{
 \item{input_params}{Data frame containing model parameters and environmental time series.
 Must include columns: time (time vector in years), sst (sea surface temperature),
-chl (chlorophyll), and isave (save frequency). Can optionally include cellID for
-spatial data. The time step (dt) and maximum time (tmax) are automatically calculated
-from the time vector. Can be created using zCreateInputs().}
+and chl (chlorophyll). Can optionally include cellID for spatial data. The time step (dt)
+and maximum time (tmax) are automatically calculated from the time vector. Can be created using createInputParams().}
 
 \item{Groups}{Data frame defining functional groups with their biological parameters.
 Must include columns defining species characteristics, size ranges, and feeding parameters.
 If NULL, uses default ZooMSS functional groups. Can be obtained/customized using
-zGetGroups().}
+getGroups().}
 
-\item{SaveTimeSteps}{Logical indicating whether to save full time series (TRUE) or
-just model parameters (FALSE). TRUE saves complete model output including time series
-of abundance and biomass.}
+\item{isave}{Save frequency in time steps (default: 50)}
 }
 \value{
 List containing:
@@ -29,7 +26,7 @@ List containing:
 \item diets: Average diet compositions across functional groups
 \item growth: Average growth rates for each group and size class
 \item mortality: Average mortality rates
-\item model: Complete model output (if SaveTimeSteps=TRUE) or just parameters (if FALSE)
+\item model: Complete model output including time series data and parameters
 }
 }
 \description{
@@ -49,25 +46,24 @@ This function coordinates the entire ZooMSS modeling workflow:
 \item Returns organized results including abundances, diets, growth, and mortality
 }
 
-The function can optionally save full time series data or just averaged results
-depending on the SaveTimeSteps parameter. This is the primary entry point for
+This is the primary entry point for
 running ZooMSS simulations with environmental forcing.
 }
 \examples{
 \dontrun{
 # Basic usage with default groups
-env_data <- zCreateSimpleTimeSeries(1000, 0.01)
-input_params <- zCreateInputs(env_data$time, env_data$sst, env_data$chl, isave = 50)
-results <- zoomss_model(input_params, SaveTimeSteps = FALSE)
+env_data <- createEnviroData(10, 0.01)
+input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
+results <- zoomss_model(input_params, isave = 50)
 
 # Using custom groups
-Groups <- zGetGroups()  # Get default groups
+Groups <- getGroups()  # Get default groups
 Groups$W0[1] <- -12.5          # Modify a parameter
-results <- zoomss_model(input_params, Groups, SaveTimeSteps = FALSE)
+results <- zoomss_model(input_params, Groups, isave = 100)
 
 # Loading groups from file
-custom_groups <- zGetGroups(source = "file", file = "my_groups.csv")
-results <- zoomss_model(input_params, custom_groups, SaveTimeSteps = TRUE)
+custom_groups <- getGroups(source = "file", file = "my_groups.csv")
+results <- zoomss_model(input_params, custom_groups)
 }
 
 }

@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">zoomss</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.1</span>
+        <span class="version label label-info" data-toggle="tooltip" data-placement="bottom" title="">0.0.1</span>
       </span>
     </div>
 
@@ -70,35 +70,100 @@
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">zoomss</span><span class="op">)</span></span></code></pre></div>
+<div class="section level2">
+<h2 id="how-to-run-zoomss-using-r">How to run ZooMSS using <code>R</code><a class="anchor" aria-label="anchor" href="#how-to-run-zoomss-using-r"></a>
+</h2>
+<div class="section level3">
+<h3 id="input-files">Input Files<a class="anchor" aria-label="anchor" href="#input-files"></a>
+</h3>
+<p>ZooMSS requires two input files:</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>GroupInputs.csv</strong> - Contains all taxa-specific
+parameter values, including size ranges and functional group
+properties.</p></li>
+<li>
+<p><strong>Environmental data</strong> - A data frame with time
+series of environmental conditions:</p>
+<ul>
+<li>For time-varying conditions: Time series with
+<code>time_step</code>, <code>sst</code>, and <code>chlo</code>
+columns</li>
+<li>For constant conditions: Single values replicated across all time
+steps</li>
+</ul>
+</li>
+</ol>
+</div>
+<div class="section level3">
+<h3 id="running-the-model">Running the Model<a class="anchor" aria-label="anchor" href="#running-the-model"></a>
+</h3>
+</div>
+<div class="section level3">
+<h3 id="environmental-data-structure">Environmental Data Structure<a class="anchor" aria-label="anchor" href="#environmental-data-structure"></a>
+</h3>
+<p>Provide environmental time series as a data frame with: -
+<code>time_step</code>: Sequential time step number (1, 2, 3, …) -
+<code>sst</code>: Sea surface temperature (°C) - <code>chl</code>:
+Chlorophyll concentration (mg/m³)</p>
+<p>The model processes all environmental conditions dynamically, whether
+they vary through time or remain constant.</p>
+</div>
+<div class="section level3">
+<h3 id="plotting">Plotting<a class="anchor" aria-label="anchor" href="#plotting"></a>
+</h3>
+<p>The model includes several built-in plotting functions for analysis
+and visualization:</p>
+<div class="section level4">
+<h4 id="basic-plots">Basic Plots<a class="anchor" aria-label="anchor" href="#basic-plots"></a>
+</h4>
+<ul>
+<li>
+<code>plotTimeSeries(dat, by = "biomass")</code> - Plot biomass time
+series with optional species selection and proportional stacking</li>
+<li>
+<code>plotSizeSpectra(dat)</code> - Plot overall species-resolved
+size spectra<br>
+</li>
+<li>
+<code>plotPPMR(dat)</code> - Plot predator-prey mass ratios</li>
+</ul>
+</div>
+<div class="section level4">
+<h4 id="time-series-analysis">Time Series Analysis<a class="anchor" aria-label="anchor" href="#time-series-analysis"></a>
+</h4>
+<ul>
+<li>
+<code>plotTimeSeries(dat, by = "abundance")</code> - Plot abundance
+time series</li>
+<li>
+<code>plotTimeSeries(dat, by = "growth")</code> - Plot growth rate
+time series</li>
+<li>
+<code>plotTimeSeries(dat, by = "mortality")</code> - Plot predation
+mortality time series</li>
+</ul>
+<p>where <code>dat</code> is the model output list.</p>
+</div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="performance-and-computational-considerations">Performance and Computational Considerations<a class="anchor" aria-label="anchor" href="#performance-and-computational-considerations"></a>
+</h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="va">input_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/zCreateInputs.html">zCreateInputs</a></span><span class="op">(</span>time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">100</span>, by <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span> ,</span>
-<span>                              sst <span class="op">=</span> <span class="fl">15</span>,</span>
-<span>                              chl <span class="op">=</span> <span class="fl">0.15</span>,</span>
-<span>                              isave <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> <span class="co"># Save ~ monthly</span></span>
-<span><span class="co">#&gt; ZooMSS input parameters created:</span></span>
-<span><span class="co">#&gt; - Time points: 10001 (time values provided)</span></span>
-<span><span class="co">#&gt; - Time steps: 10000 (intervals to simulate)</span></span>
-<span><span class="co">#&gt; - Time range: 0 to 100 years</span></span>
-<span><span class="co">#&gt; - SST range: 15 to 15 deg C</span></span>
-<span><span class="co">#&gt; - Chlorophyll range: 0.15 to 0.15 mg/m^3</span></span>
-<span><span class="co">#&gt; - Model parameters: dt = 0.01 years, tmax = 100 years, isave = 10 steps</span></span>
-<span></span>
-<span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/zoomss_model.html">zoomss_model</a></span><span class="op">(</span><span class="va">input_params</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Loaded default functional groups from package data</span></span>
-<span><span class="co">#&gt; Using default ZooMSS functional groups (9 groups)</span></span>
-<span><span class="co">#&gt; Using default ZooMSS functional groups. Use zGetGroups() to customize.</span></span>
-<span><span class="co">#&gt; Time parameters calculated from time column: dt = 0.01 years, tmax = 100 years</span></span>
-<span><span class="co">#&gt; Environmental validation:  10001  timesteps provided, covering time  0  to  100  years ( 100  year duration)</span></span>
-<span><span class="co">#&gt; Warning: Calculating phytoplankton parameters from environmental time series</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># devtools::load_all()</span></span>
+<span><span class="co"># input_params &lt;- createInputParams(time = seq(0, 10, by = 0.01) ,</span></span>
+<span><span class="co">#                               sst = 15,</span></span>
+<span><span class="co">#                               chl = 0.15,</span></span>
+<span><span class="co">#                               isave = 10) # Save ~ monthly</span></span>
+<span><span class="co"># </span></span>
+<span><span class="co"># out &lt;- zoomss_model(input_params)</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="fu"><a href="../reference/zPlot_AbundTimeSeries.html">zPlot_AbundTimeSeries</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></code></pre></div>
-<p><img src="zoomss_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
+<span><span class="co"># zPlot_AbundTimeSeries(out)</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="fu"><a href="../reference/zPlot_BiomassTimeSeries.html">zPlot_BiomassTimeSeries</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></code></pre></div>
-<p><img src="zoomss_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
+<span><span class="co"># zPlot_BiomassTimeSeries(out)</span></span></code></pre></div>
+</div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

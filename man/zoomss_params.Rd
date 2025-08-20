@@ -4,16 +4,17 @@
 \alias{zoomss_params}
 \title{Initialize and validate ZooMSS model parameters}
 \usage{
-zoomss_params(Groups, input_params)
+zoomss_params(Groups, input_params, isave)
 }
 \arguments{
 \item{Groups}{Data frame containing functional group definitions with columns:
 Species, Type, W0 (log min size), Wmax (log max size), and various biological parameters}
 
 \item{input_params}{Data frame with model parameters including:
-time (time vector in years), sst (sea surface temperature), chl (chlorophyll),
-and isave (save frequency). The time vector can start at any value and the
-model automatically calculates dt (time step) and tmax (maximum time).}
+time (time vector in years), sst (sea surface temperature), and chl (chlorophyll).
+The time vector can start at any value and the model automatically calculates dt (time step) and tmax (maximum time).}
+
+\item{isave}{Save frequency in time steps (default: 50)}
 }
 \value{
 List containing comprehensive model parameters:
@@ -63,20 +64,11 @@ model performance during the main simulation loop.
 data(Groups)
 
 # Create environmental time series
-env_data <- zCreateSimpleTimeSeries(1000, 0.01)
-
-# Set up input parameters with environmental forcing
-input_params <- data.frame(
-  tmax = 10,
-  dt = 0.01,
-  isave = 10,
-  time_step = 1:1000,
-  sst = env_data$sst,
-  chl = env_data$chl
-)
+env_data <- createEnviroData(10, 0.01)
+input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
 
 # Generate parameter list
-params <- zoomss_params(Groups, input_params)
+params <- zoomss_params(Groups, input_params, isave = 50)
 }
 
 }

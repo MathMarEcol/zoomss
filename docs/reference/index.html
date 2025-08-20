@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">zoomss</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.1</span>
+        <span class="version label label-info" data-toggle="tooltip" data-placement="bottom" title="">0.0.1</span>
       </span>
     </div>
 
@@ -41,122 +41,38 @@
     </div>
 
     <table class="ref-index"><colgroup><col class="alias"><col class="title"></colgroup><tbody><tr><th colspan="2">
-          <h2 id="all-functions">All functions <a href="#all-functions" class="anchor" aria-hidden="true"></a></h2>
-          <p class="section-desc"></p>
+          <h2 id="data">Data <a href="#data" class="anchor" aria-hidden="true"></a></h2>
+          <p class="section-desc"></p><p>Data related functions and datasets</p>
         </th>
       </tr></tbody><tbody><tr><td>
           <p><code><a href="GroupInputs.html">GroupInputs</a></code> </p>
         </td>
         <td><p>Default functional groups for the ZooMSS model</p></td>
       </tr><tr><td>
-          <p><code><a href="untibble.html">untibble()</a></code> </p>
-        </td>
-        <td><p>Convert tibble to data frame for efficiency</p></td>
-      </tr><tr><td>
-          <p><code><a href="zAveOutput.html">zAveOutput()</a></code> </p>
-        </td>
-        <td><p>Calculate mean of final portion of ZooMSS time series</p></td>
-      </tr><tr><td>
-          <p><code><a href="zBiomass.html">zBiomass()</a></code> </p>
-        </td>
-        <td><p>Convert ZooMSS abundance matrices to biomass by multiplying by body weights</p></td>
-      </tr><tr><td>
-          <p><code><a href="zCalculatePhytoParam.html">zCalculatePhytoParam()</a></code> </p>
-        </td>
-        <td><p>Calculate phytoplankton abundance spectrum from chlorophyll data</p></td>
-      </tr><tr><td>
-          <p><code><a href="zCarbonBiomass.html">zCarbonBiomass()</a></code> </p>
-        </td>
-        <td><p>Convert ZooMSS abundances to carbon biomass across all size classes</p></td>
-      </tr><tr><td>
-          <p><code><a href="zConvert2Tibble.html">zConvert2Tibble()</a></code> </p>
-        </td>
-        <td><p>Convert ZooMSS list output to tibble with species names</p></td>
-      </tr><tr><td>
-          <p><code><a href="zCreateInputs.html">zCreateInputs()</a></code> </p>
-        </td>
-        <td><p>Create input parameters data frame for ZooMSS model runs</p></td>
-      </tr><tr><td>
-          <p><code><a href="zCreateSimpleTimeSeries.html">zCreateSimpleTimeSeries()</a></code> </p>
-        </td>
-        <td><p>Generate synthetic environmental data for ZooMSS testing</p></td>
-      </tr><tr><td>
-          <p><code><a href="zExtractSizeRange.html">zExtractSizeRange()</a></code> </p>
-        </td>
-        <td><p>Extract specific size class range from abundance matrices</p></td>
-      </tr><tr><td>
-          <p><code><a href="zExtract_PPMR.html">zExtract_PPMR()</a></code> </p>
-        </td>
-        <td><p>Calculate predator-prey mass ratio data for visualization</p></td>
-      </tr><tr><td>
-          <p><code><a href="zGetGroups.html">zGetGroups()</a></code> </p>
+          <p><code><a href="getGroups.html">getGroups()</a></code> </p>
         </td>
         <td><p>Load default or custom functional groups for ZooMSS model</p></td>
       </tr><tr><td>
-          <p><code><a href="zMakeDietTibble.html">zMakeDietTibble()</a></code> </p>
+          <p><code><a href="calculatePhytoParam.html">calculatePhytoParam()</a></code> </p>
         </td>
-        <td><p>Convert diet matrix to long format for analysis and visualization</p></td>
+        <td><p>Calculate phytoplankton abundance spectrum from chlorophyll data</p></td>
       </tr><tr><td>
-          <p><code><a href="zPlotEnvironment.html">zPlotEnvironment()</a></code> </p>
+          <p><code><a href="createEnviroData.html">createEnviroData()</a></code> </p>
         </td>
-        <td><p>Plot environmental forcing data</p></td>
+        <td><p>Generate synthetic environmental data for ZooMSS testing</p></td>
       </tr><tr><td>
-          <p><code><a href="zPlot_AbundTimeSeries.html">zPlot_AbundTimeSeries()</a></code> </p>
+          <p><code><a href="createInputParams.html">createInputParams()</a></code> </p>
         </td>
-        <td><p>Visualize abundance changes over time for each functional group</p></td>
+        <td><p>Create input parameters data frame for ZooMSS model runs</p></td>
       </tr><tr><td>
-          <p><code><a href="zPlot_BiomassTimeSeries.html">zPlot_BiomassTimeSeries()</a></code> </p>
-        </td>
-        <td><p>Visualize biomass changes over time with multiple display options</p></td>
-      </tr><tr><td>
-          <p><code><a href="zPlot_GrowthTimeSeries.html">zPlot_GrowthTimeSeries()</a></code> </p>
-        </td>
-        <td><p>Visualize growth rate changes over time for each functional group</p></td>
-      </tr><tr><td>
-          <p><code><a href="zPlot_PPMR.html">zPlot_PPMR()</a></code> </p>
-        </td>
-        <td><p>Visualize predator-prey mass ratio patterns in ZooMSS results</p></td>
-      </tr><tr><td>
-          <p><code><a href="zPlot_PredTimeSeries.html">zPlot_PredTimeSeries()</a></code> </p>
-        </td>
-        <td><p>Visualize predation mortality changes over time for each functional group</p></td>
-      </tr><tr><td>
-          <p><code><a href="zPlot_SizeSpectra.html">zPlot_SizeSpectra()</a></code> </p>
-        </td>
-        <td><p>Visualize abundance size spectra across functional groups</p></td>
-      </tr><tr><td>
-          <p><code><a href="zSizeBiomass.html">zExtractBiomassSize()</a></code> </p>
-        </td>
-        <td><p>Sum biomass across functional groups for each size class</p></td>
-      </tr><tr><td>
-          <p><code><a href="zExtractBiomassSpecies.html">zExtractBiomassSpecies()</a></code> </p>
-        </td>
-        <td><p>Sum biomass across size classes for each functional group</p></td>
-      </tr><tr><td>
-          <p><code><a href="zSpeciesCarbonBiomass.html">zSpeciesCarbonBiomass()</a></code> </p>
-        </td>
-        <td><p>Convert abundances to carbon biomass and sum across size classes</p></td>
-      </tr><tr><td>
-          <p><code><a href="zSumAll.html">zExtractAllSum()</a></code> </p>
-        </td>
-        <td><p>Sum abundances across all groups and size classes</p></td>
-      </tr><tr><td>
-          <p><code><a href="zSumSize.html">zExtractSizeSum()</a></code> </p>
-        </td>
-        <td><p>Collection of helper functions for analyzing ZooMSS model outputs</p></td>
-      </tr><tr><td>
-          <p><code><a href="zSumSpecies.html">zExtractSpeciesSum()</a></code> </p>
-        </td>
-        <td><p>Aggregate ZooMSS abundances across all functional groups</p></td>
-      </tr><tr><td>
-          <p><code><a href="zTrophicLevel.html">zExtractTrophicLevels()</a></code> </p>
-        </td>
-        <td><p>Compute trophic levels for functional groups using diet composition</p></td>
-      </tr><tr><td>
-          <p><code><a href="zValidateGroups.html">zValidateGroups()</a></code> </p>
+          <p><code><a href="validateGroups.html">validateGroups()</a></code> </p>
         </td>
         <td><p>Validate ZooMSS functional groups data structure and values</p></td>
-      </tr><tr><td>
+      </tr></tbody><tbody><tr><th colspan="2">
+          <h2 id="model-runs">Model Runs <a href="#model-runs" class="anchor" aria-hidden="true"></a></h2>
+          <p class="section-desc"></p><p>Functions for running the model</p>
+        </th>
+      </tr></tbody><tbody><tr><td>
           <p><code><a href="zoomss_model.html">zoomss_model()</a></code> </p>
         </td>
         <td><p>Main ZooMSS model function for complete simulations</p></td>
@@ -176,6 +92,74 @@
           <p><code><a href="zoomss_setup.html">zoomss_setup()</a></code> </p>
         </td>
         <td><p>Initialize ZooMSS model components and calculate feeding interactions</p></td>
+      </tr></tbody><tbody><tr><th colspan="2">
+          <h2 id="plotting">Plotting <a href="#plotting" class="anchor" aria-hidden="true"></a></h2>
+          <p class="section-desc"></p><p>Functions for plotting.</p>
+        </th>
+      </tr></tbody><tbody><tr><td>
+          <p><code><a href="plotEnvironment.html">plotEnvironment()</a></code> </p>
+        </td>
+        <td><p>Plot environmental forcing data</p></td>
+      </tr><tr><td>
+          <p><code><a href="plotPPMR.html">plotPPMR()</a></code> </p>
+        </td>
+        <td><p>Visualize predator-prey mass ratio patterns in ZooMSS results</p></td>
+      </tr><tr><td>
+          <p><code><a href="plotSizeSpectra.html">plotSizeSpectra()</a></code> </p>
+        </td>
+        <td><p>Visualize abundance size spectra across functional groups</p></td>
+      </tr><tr><td>
+          <p><code><a href="plotTimeSeries.html">plotTimeSeries()</a></code> </p>
+        </td>
+        <td><p>Unified function to visualize time series changes for different metrics</p></td>
+      </tr></tbody><tbody><tr><th colspan="2">
+          <h2 id="data-wrangling">Data wrangling <a href="#data-wrangling" class="anchor" aria-hidden="true"></a></h2>
+          <p class="section-desc"></p><p>Helper functions to convert units and data format</p>
+        </th>
+      </tr></tbody><tbody><tr><td>
+          <p><code><a href="averageTimeSeries.html">averageTimeSeries()</a></code> </p>
+        </td>
+        <td><p>Calculate mean of final portion of ZooMSS time series</p></td>
+      </tr><tr><td>
+          <p><code><a href="extractPPMR.html">extractPPMR()</a></code> </p>
+        </td>
+        <td><p>Calculate predator-prey mass ratio data for visualization</p></td>
+      </tr><tr><td>
+          <p><code><a href="extractSizeRange.html">extractSizeRange()</a></code> </p>
+        </td>
+        <td><p>Extract specific size class range from model variable</p></td>
+      </tr><tr><td>
+          <p><code><a href="extractTrophicLevels.html">extractTrophicLevels()</a></code> </p>
+        </td>
+        <td><p>Compute trophic levels for functional groups using diet composition</p></td>
+      </tr><tr><td>
+          <p><code><a href="getBiomass.html">getBiomass()</a></code> </p>
+        </td>
+        <td><p>Convert ZooMSS abundance matrices to biomass by multiplying by body weights</p></td>
+      </tr><tr><td>
+          <p><code><a href="getGroups.html">getGroups()</a></code> </p>
+        </td>
+        <td><p>Load default or custom functional groups for ZooMSS model</p></td>
+      </tr><tr><td>
+          <p><code><a href="reduceAll.html">reduceAll()</a></code> </p>
+        </td>
+        <td><p>Sum abundances across all groups and size classes</p></td>
+      </tr><tr><td>
+          <p><code><a href="reduceSize.html">reduceSize()</a></code> </p>
+        </td>
+        <td><p>Aggregate ZooMSS abundances across all size classes</p></td>
+      </tr><tr><td>
+          <p><code><a href="reduceSpecies.html">reduceSpecies()</a></code> </p>
+        </td>
+        <td><p>Aggregate ZooMSS abundances across all functional groups</p></td>
+      </tr></tbody><tbody><tr><th colspan="2">
+          <h2 id="private-functions">Private functions <a href="#private-functions" class="anchor" aria-hidden="true"></a></h2>
+          <p class="section-desc"></p><p>Functions to be unexported</p>
+        </th>
+      </tr></tbody><tbody><tr><td>
+          <p><code><a href="untibble.html">untibble()</a></code> </p>
+        </td>
+        <td><p>Convert tibble to data frame for efficiency</p></td>
       </tr></tbody></table></div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

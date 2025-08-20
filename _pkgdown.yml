@@ -1,0 +1,48 @@
+url: https://MathMarEcol.github.io/zoomss
+articles:
+# - title: Articles
+#   navbar: ~
+#   contents:
+#   - EssentialOceanVariables
+#   - Microbes
+#   - Phytoplankton
+#   - Zooplankton
+#   - LarvalFish
+#   - Biogeochemistry
+development:
+  destination:
+  version_label: info
+  version_tooltip: The package is in the early stages of development. Use with caution.
+reference:
+- title: Data
+  desc: Data related functions and datasets
+- contents:
+  - GroupInputs
+  - getGroups
+  - calculatePhytoParam
+  - createEnviroData
+  - createInputParams
+  - validateGroups
+
+- title: Model Runs
+  desc: Functions for running the model
+- contents:
+  - starts_with("zoomss_")
+
+- title: Plotting
+  desc: Functions for plotting.
+- contents:
+  - starts_with("plot")
+
+- title: Data wrangling
+  desc: Helper functions to convert units and data format
+- contents:
+  - starts_with("average")
+  - starts_with("extract")
+  - starts_with("get")
+  - starts_with("reduce")
+
+- title: Private functions
+  desc: Functions to be unexported
+- contents:
+  - untibble
