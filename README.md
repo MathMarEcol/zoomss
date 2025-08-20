@@ -10,7 +10,7 @@
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![Windows](https://github.com/MathMarEcol/zoomss/actions/workflows/Windows.yaml/badge.svg)](https://github.com/MathMarEcol/zoomss/actions/workflows/Windows.yaml)
-[![Ubuntu](https://github.com/MathMarEcol/zoomss/actions/workflows/Ubuntu.yaml/badge.svg)](https://github.com/MathMarEcol/zoomss/actions/workflows/Ubuntu.yaml)
+[![Linux](https://github.com/MathMarEcol/zoomss/actions/workflows/Linux.yaml/badge.svg)](https://github.com/MathMarEcol/zoomss/actions/workflows/Linux.yaml)
 [![MacOS](https://github.com/MathMarEcol/zoomss/actions/workflows/MacOS.yaml/badge.svg)](https://github.com/MathMarEcol/zoomss/actions/workflows/MacOS.yaml)
 [![issues -
 zoomss](https://img.shields.io/github/issues/MathMarEcol/zoomss)](https://github.com/MathMarEcol/zoomss/issues)
