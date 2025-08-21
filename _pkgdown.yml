@@ -1,6 +1,7 @@
 url: https://MathMarEcol.github.io/zoomss
 development:
-  destination:
+  mode: devel
+  destination: docs
   version_label: info
   version_tooltip: The package is in the early stages of development. Use with caution.
 reference:
@@ -34,5 +35,10 @@ reference:
   - untibble
 navbar:
   structure:
-    right: [github]
-
+    right: [github, search]
+template:
+  bootstrap: 5
+  bootswatch: lumen #cerulean materia sandstone zephyr yeti
+  bslib:
+    toc: true
+    toc-expand: 3

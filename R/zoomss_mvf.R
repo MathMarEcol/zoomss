@@ -31,7 +31,6 @@
 #' @param S Matrix of source terms
 #'
 #' @return Updated abundance matrix (Nb) with new size-class distributions
-#' @export
 #'
 #' @examples
 #' \dontrun{

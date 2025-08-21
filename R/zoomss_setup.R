@@ -44,7 +44,6 @@
 #'     \item time: Time array for storing time values (initialized as NA)
 #'     \item Additional model structure components
 #'   }
-#' @export
 #'
 #' @examples
 #' \dontrun{

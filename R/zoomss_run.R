@@ -40,7 +40,6 @@
 #'     \item w: Size class weights (g)
 #'     \item Additional time series data and model results
 #'   }
-#' @export
 #'
 #' @examples
 #' \dontrun{

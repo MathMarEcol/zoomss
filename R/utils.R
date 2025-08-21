@@ -317,7 +317,6 @@ averageTimeSeries = function(mdl, var, n_years = 10){
 #' @param tibble A tibble or data frame object to convert
 #'
 #' @return Plain data frame without tibble attributes
-#' @export
 #'
 untibble <- function (tibble) {
   data.frame(unclass(tibble), check.names = FALSE, stringsAsFactors = FALSE)

@@ -1,6 +1,5 @@
 ---
 title: "Getting started with ZooMSS"
-output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{zoomss}
   %\VignetteEngine{knitr::rmarkdown}
@@ -15,22 +14,20 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r message=FALSE, warning=FALSE}
 library(zoomss)
+library(ggplot2)
 ```
 
-
-## How to run ZooMSS
-
-### Input Data
+## Input Data
 
 ZooMSS requires two sets of input data:
 
-1. **Group** - Contains all taxa-specific parameter values, including size ranges and functional group properties.
+1. **Groups** - Contains all taxa-specific parameter values for each model group, including size ranges and functional group properties.
 
 2. **Environmental data** - A Time-series dataframe with time series of environmental conditions  with `time`, `sst`, and `chl` columns.
 
-### Running the default Model
+## Running the default Model
 
 Get the default published `Groups` dataframe using:
 
@@ -47,18 +44,25 @@ env_data <- createInputParams(time = seq(0, 100, by = 0.1) ,
 
 ```
 
+We can look at the environment data and check everything is ok with: 
+
+```{r}
+plotEnvironment(env_data)
+```
+
+
 Now we run ZooMSS and save every `isave` timestep to reduce storage requirements. 
 ```{r}
 mdl <- zoomss_model(input_params = env_data, Groups = Groups, isave = 2)
 
 ```
 
-### Plotting
+## Plotting
 
 The model includes several built-in plotting functions for analysis and visualization.
 
 
-#### Time Series Analysis
+### Time Series Analysis
 
 These plots display total abundance and mean growth/mortality across all size classes through time.
 
@@ -69,8 +73,7 @@ p1 <- plotTimeSeries(mdl, by = "abundance") # Plot abundance time series
 p2 <- plotTimeSeries(mdl, by = "growth") # Plot growth rate time series
 p3 <- plotTimeSeries(mdl, by = "mortality") # Plot predation mortality time series
 
-p1/p2/p3
-
+wrap_plots(p1, p2, p3, nrow = 3, guides = "collect")
 
 ```
 
@@ -78,21 +81,23 @@ p1/p2/p3
 We can also plot total biomass through time.
 
 ```{r}
-p1 <- plotTimeSeries(mdl, by = "biomass") # Plot biomass 
-p2 <- plotTimeSeries(mdl, by = "biomass", stacked = TRUE) # Plot stacked biomass 
-p3 <- plotTimeSeries(mdl, by = "biomass", stacked = TRUE, proportion = TRUE) # Plot proportional stacked biomass 
+p4 <- plotTimeSeries(mdl, by = "biomass") + theme(legend.position = "none") # Plot biomass 
+p5 <- plotTimeSeries(mdl, by = "biomass", stacked = TRUE) # Plot stacked biomass 
+p6 <- plotTimeSeries(mdl, by = "biomass", stacked = TRUE, proportion = TRUE) # Plot proportional stacked biomass 
 
+wrap_plots(p4, p5, p6, nrow = 3, guides = "collect")
 
 ```
-#### Static Plots
+
+
+### Static Plots for a given model time point
 
 Plot mean species-resolved size spectra for the final `n_years`.
 ```{r}
 plotSizeSpectra(mdl, n_years = 10)
-
 ```
 
 Plot predator-prey mass ratios for the `idx` timestep
-```{r}
+```{r message=FALSE, warning=FALSE}
 plotPPMR(mdl, idx = 500) # Plot final timestep
 ```

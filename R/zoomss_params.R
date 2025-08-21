@@ -39,7 +39,6 @@
 #'     \item temp_eff_zoo_ts, temp_eff_fish_ts: Time series of temperature effects
 #'     \item Additional biological and physical parameters
 #'   }
-#' @export
 #'
 #' @examples
 #' \dontrun{
