@@ -20,70 +20,79 @@ library(zoomss)
 ```
 
 
-## How to run ZooMSS using `R`
+## How to run ZooMSS
 
-### Input Files
+### Input Data
 
-ZooMSS requires two input files:
+ZooMSS requires two sets of input data:
 
-1. **GroupInputs.csv** - Contains all taxa-specific parameter values, including size ranges and functional group properties.
+1. **Group** - Contains all taxa-specific parameter values, including size ranges and functional group properties.
 
-2. **Environmental data** - A data frame with time series of environmental conditions:
-   - For time-varying conditions: Time series with `time_step`, `sst`, and `chlo` columns
-   - For constant conditions: Single values replicated across all time steps
+2. **Environmental data** - A Time-series dataframe with time series of environmental conditions  with `time`, `sst`, and `chl` columns.
 
-### Running the Model
+### Running the default Model
 
-### Environmental Data Structure
+Get the default published `Groups` dataframe using:
 
-Provide environmental time series as a data frame with:
-- `time_step`: Sequential time step number (1, 2, 3, ...)
-- `sst`: Sea surface temperature (°C)
-- `chl`: Chlorophyll concentration (mg/m³)
+```{r}
+Groups <- getGroups()
+```
 
-The model processes all environmental conditions dynamically, whether they vary through time or remain constant.
+Now create an environmental data time-series using the helper function. This time-series uses a constant sea surface temperature (`sst`) and chlorophyll *a*  (`chl`) with a 0.1 yr-1 timestep (`dt`). 
+
+```{r}
+env_data <- createInputParams(time = seq(0, 100, by = 0.1) ,
+                              sst = 15,
+                              chl = 0.15)
+
+```
+
+Now we run ZooMSS and save every `isave` timestep to reduce storage requirements. 
+```{r}
+mdl <- zoomss_model(input_params = env_data, Groups = Groups, isave = 2)
+
+```
 
 ### Plotting
 
-The model includes several built-in plotting functions for analysis and visualization:
+The model includes several built-in plotting functions for analysis and visualization.
 
-#### Basic Plots
-* `plotTimeSeries(dat, by = "biomass")` - Plot biomass time series with optional species selection and proportional stacking
-* `plotSizeSpectra(dat)` - Plot overall species-resolved size spectra  
-* `plotPPMR(dat)` - Plot predator-prey mass ratios
 
 #### Time Series Analysis
-* `plotTimeSeries(dat, by = "abundance")` - Plot abundance time series
-* `plotTimeSeries(dat, by = "growth")` - Plot growth rate time series
-* `plotTimeSeries(dat, by = "mortality")` - Plot predation mortality time series
 
-where `dat` is the model output list.
-
-## Performance and Computational Considerations
-
+These plots display total abundance and mean growth/mortality across all size classes through time.
 
 ```{r}
-# devtools::load_all()
-# input_params <- createInputParams(time = seq(0, 10, by = 0.01) ,
-#                               sst = 15,
-#                               chl = 0.15,
-#                               isave = 10) # Save ~ monthly
-# 
-# out <- zoomss_model(input_params)
+
+library(patchwork)
+p1 <- plotTimeSeries(mdl, by = "abundance") # Plot abundance time series
+p2 <- plotTimeSeries(mdl, by = "growth") # Plot growth rate time series
+p3 <- plotTimeSeries(mdl, by = "mortality") # Plot predation mortality time series
+
+p1/p2/p3
 
 
 ```
 
 
-```{r}
+We can also plot total biomass through time.
 
-# zPlot_AbundTimeSeries(out)
+```{r}
+p1 <- plotTimeSeries(mdl, by = "biomass") # Plot biomass 
+p2 <- plotTimeSeries(mdl, by = "biomass", stacked = TRUE) # Plot stacked biomass 
+p3 <- plotTimeSeries(mdl, by = "biomass", stacked = TRUE, proportion = TRUE) # Plot proportional stacked biomass 
+
+
+```
+#### Static Plots
+
+Plot mean species-resolved size spectra for the final `n_years`.
+```{r}
+plotSizeSpectra(mdl, n_years = 10)
 
 ```
 
-
+Plot predator-prey mass ratios for the `idx` timestep
 ```{r}
-
-# zPlot_BiomassTimeSeries(out)
-
+plotPPMR(mdl, idx = 500) # Plot final timestep
 ```

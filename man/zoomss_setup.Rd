@@ -27,6 +27,7 @@ Model object containing:
 \item assim_eff: Assimilation efficiency matrix
 \item temp_eff: Temperature effect matrix (initialized)
 \item N: Initial abundance arrays
+\item time: Time array for storing time values (initialized as NA)
 \item Additional model structure components
 }
 }

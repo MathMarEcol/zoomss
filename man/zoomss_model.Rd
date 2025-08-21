@@ -4,7 +4,7 @@
 \alias{zoomss_model}
 \title{Main ZooMSS model function for complete simulations}
 \usage{
-zoomss_model(input_params, Groups = NULL, isave = 10)
+zoomss_model(input_params, Groups = NULL, isave = 1)
 }
 \arguments{
 \item{input_params}{Data frame containing model parameters and environmental time series.
@@ -17,16 +17,18 @@ Must include columns defining species characteristics, size ranges, and feeding 
 If NULL, uses default ZooMSS functional groups. Can be obtained/customized using
 getGroups().}
 
-\item{isave}{Save frequency in time steps (default: 50)}
+\item{isave}{Save frequency in time steps (default: 10)}
 }
 \value{
-List containing:
+Complete ZooMSS model results object containing:
 \itemize{
-\item abundances: Average abundances across the final 50\% of simulation
-\item diets: Average diet compositions across functional groups
-\item growth: Average growth rates for each group and size class
-\item mortality: Average mortality rates
-\item model: Complete model output including time series data and parameters
+\item param: Model parameters and environmental forcing data
+\item N: Abundance time series (time x groups x size classes)
+\item gg: Growth rate time series
+\item Z: Mortality rate time series
+\item diet: Diet composition time series
+\item time: Time values corresponding to saved results (accounting for isave)
+\item Additional model structure and kernel data
 }
 }
 \description{

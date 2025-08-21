@@ -22,6 +22,7 @@ List containing complete model output:
 \item gg: Growth rate time series
 \item diet: Diet composition time series
 \item Z: Mortality rate time series
+\item time: Time values corresponding to saved results (accounting for isave)
 \item w: Size class weights (g)
 \item Additional time series data and model results
 }

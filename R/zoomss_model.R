@@ -22,15 +22,17 @@
 #'   Must include columns defining species characteristics, size ranges, and feeding parameters.
 #'   If NULL, uses default ZooMSS functional groups. Can be obtained/customized using
 #'   getGroups().
-#' @param isave Save frequency in time steps (default: 50)
+#' @param isave Save frequency in time steps (default: 10)
 #'
-#' @return List containing:
+#' @return Complete ZooMSS model results object containing:
 #'   \itemize{
-#'     \item abundances: Average abundances across the final 50% of simulation
-#'     \item diets: Average diet compositions across functional groups
-#'     \item growth: Average growth rates for each group and size class
-#'     \item mortality: Average mortality rates
-#'     \item model: Complete model output including time series data and parameters
+#'     \item param: Model parameters and environmental forcing data
+#'     \item N: Abundance time series (time x groups x size classes)
+#'     \item gg: Growth rate time series
+#'     \item Z: Mortality rate time series
+#'     \item diet: Diet composition time series
+#'     \item time: Time values corresponding to saved results (accounting for isave)
+#'     \item Additional model structure and kernel data
 #'   }
 #' @export
 #'
@@ -51,7 +53,7 @@
 #' results <- zoomss_model(input_params, custom_groups)
 #' }
 #'
-zoomss_model <- function(input_params, Groups = NULL, isave = 10){
+zoomss_model <- function(input_params, Groups = NULL, isave = 1){
 
   # Handle default Groups parameter
   if (is.null(Groups)) {

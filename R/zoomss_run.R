@@ -36,6 +36,7 @@
 #'     \item gg: Growth rate time series 
 #'     \item diet: Diet composition time series
 #'     \item Z: Mortality rate time series
+#'     \item time: Time values corresponding to saved results (accounting for isave)
 #'     \item w: Size class weights (g)
 #'     \item Additional time series data and model results
 #'   }
@@ -257,6 +258,9 @@ zoomss_run <- function(model){
       model$N[isav,,] <- N # Save N by taxa and size
       model$Z[isav,,] <-  Z ## Save mortality
       model$gg[isav,,] <-  gg ## Save growth
+      
+      # Save current time accounting for isave interval
+      model$time[isav] <- param$time[itime]
     }
   } # End of time loop
   return(model)

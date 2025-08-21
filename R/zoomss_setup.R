@@ -41,6 +41,7 @@
 #'     \item assim_eff: Assimilation efficiency matrix
 #'     \item temp_eff: Temperature effect matrix (initialized)
 #'     \item N: Initial abundance arrays
+#'     \item time: Time array for storing time values (initialized as NA)
 #'     \item Additional model structure components
 #'   }
 #' @export
@@ -100,7 +101,8 @@ zoomss_setup <- function(param){
     N = array(NA, dim = c(param$nsave, param$ngrps, param$ngrid)), # dynamic abundance spectrum
     Z = array(NA, dim = c(param$nsave, param$ngrps, param$ngrid)), # Total mortality  
     gg = array(NA, dim = c(param$nsave, param$ngrps, param$ngrid)), # Growth
-    diet = array(NA, dim = c(param$nsave, c(param$ngrps), c(param$ngrps+3))) # diet
+    diet = array(NA, dim = c(param$nsave, c(param$ngrps), c(param$ngrps+3))), # diet
+    time = array(NA, dim = c(param$nsave)) # time values corresponding to saved results
   )
 
   # Set phyto_theta for carnivores

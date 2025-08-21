@@ -7,7 +7,7 @@
 untibble(tibble)
 }
 \arguments{
-\item{tibble}{A tibble object to convert}
+\item{tibble}{A tibble or data frame object to convert}
 }
 \value{
 Plain data frame without tibble attributes

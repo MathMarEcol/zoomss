@@ -32,7 +32,7 @@
 #' @details The GroupInputs dataset defines 12 functional groups spanning from
 #'   small microzooplankton (flagellates, ciliates) through various mesozooplankton
 #'   groups (copepods, euphausiids, chaetognaths) to gelatinous zooplankton (salps, jellyfish)
-#'   and three fish size classes. Each group is characterized by:
+#'   and three fish size classes (small, medium, large). Each group is characterized by:
 #'   
 #'   - **Size ranges**: W0 to Wmax define the body size spectrum
 #'   - **Feeding behavior**: Different strategies for resource acquisition

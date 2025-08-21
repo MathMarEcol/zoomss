@@ -11,7 +11,7 @@ averageTimeSeries(mdl, var, n_years = 10)
 
 \item{var}{Character string specifying which variable to extract and average (e.g., "N", "Growth", "Mort")}
 
-\item{n_years}{Number of years from the end of the time series to average (default: 5)}
+\item{n_years}{Number of years from the end of the time series to average (default: 10)}
 }
 \value{
 2D array with averaged values (groups x size_classes)
@@ -36,8 +36,8 @@ results <- zoomss_model(input_params, Groups)
 # Average final 3 years of abundance data
 avg_abundance <- averageTimeSeries(results, "N", n_years = 3)
 
-# Average final 5 years of growth data (default)
-avg_growth <- averageTimeSeries(results, "Growth")
+# Average final 10 years of growth data (default)
+avg_growth <- averageTimeSeries(results, "gg")
 }
 
 }

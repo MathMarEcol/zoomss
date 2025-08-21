@@ -238,7 +238,7 @@ extractSizeRange = function(mdl, var, min_size, max_size) {
 #'
 #' @param mdl ZooMSS model results object containing model parameters and output arrays
 #' @param var Character string specifying which variable to extract and average (e.g., "N", "Growth", "Mort")
-#' @param n_years Number of years from the end of the time series to average (default: 5)
+#' @param n_years Number of years from the end of the time series to average (default: 10)
 #'
 #' @return 2D array with averaged values (groups x size_classes)
 #' @export
@@ -251,8 +251,8 @@ extractSizeRange = function(mdl, var, min_size, max_size) {
 #' # Average final 3 years of abundance data
 #' avg_abundance <- averageTimeSeries(results, "N", n_years = 3)
 #'
-#' # Average final 5 years of growth data (default)
-#' avg_growth <- averageTimeSeries(results, "Growth")
+#' # Average final 10 years of growth data (default)
+#' avg_growth <- averageTimeSeries(results, "gg")
 #' }
 #'
 averageTimeSeries = function(mdl, var, n_years = 10){
@@ -314,7 +314,7 @@ averageTimeSeries = function(mdl, var, n_years = 10){
 #'   slow down operations in tight computational loops. Used internally by
 #'   ZooMSS for performance optimization when working with large datasets.
 #'
-#' @param tibble A tibble object to convert
+#' @param tibble A tibble or data frame object to convert
 #'
 #' @return Plain data frame without tibble attributes
 #' @export

@@ -9,7 +9,7 @@ getGroups(source = "default", file = NULL)
 \arguments{
 \item{source}{Character string specifying data source. Options:
 \itemize{
-\item "default": Use built-in ZooMSS functional groups
+\item "default": Use built-in ZooMSS functional groups (default)
 \item "file": Load groups from a CSV file
 \item "template": Export default groups to a file for modification
 }}
@@ -30,13 +30,14 @@ Get Default ZooMSS Functional Groups
 
 This function provides flexible access to functional groups data:
 \itemize{
-\item \strong{Default groups}: Returns the standard ZooMSS functional groups (9 groups)
+\item \strong{Default groups}: Returns the standard ZooMSS functional groups (12 groups)
 \item \strong{Custom file}: Loads and validates groups from a user-provided CSV file
 \item \strong{Template creation}: Exports default groups to a file for user modification
 }
 
 The default groups include: Flagellates, Ciliates, Larvaceans, OmniCopepods,
-CarnCopepods, Euphausiids, Chaetognaths, Salps, and Jellyfish.
+CarnCopepods, Euphausiids, Chaetognaths, Salps, Jellyfish, and three Fish groups
+(Small, Medium, Large).
 
 All groups data is validated to ensure it contains required columns and
 reasonable parameter values for successful model runs.

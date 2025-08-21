@@ -205,7 +205,7 @@ plotTimeSeries <- function(mdl, by = "abundance", stacked = FALSE, proportional 
   # Set up data frame
   colnames(data_matrix) <- mdl$param$Groups$Species
   data_df <- tibble::as_tibble(data_matrix)
-  data_df$Time <- mdl$param$time
+  data_df$Time <- mdl$time
 
   # Filter species if specified (applies to all plot types)
   if (!is.null(species)) {
@@ -252,7 +252,10 @@ plotTimeSeries <- function(mdl, by = "abundance", stacked = FALSE, proportional 
     if (proportional) subtitle <- "Proportional Biomass Time Series"
     else if (stacked) subtitle <- "Stacked Biomass Time Series"
 
-    gg <- ggplot2::ggplot(data = data_long, mapping = ggplot2::aes(x = .data$Time, y = !!rlang::sym(value_name), fill = .data$Species)) +
+    gg <- ggplot2::ggplot(data = data_long,
+                          mapping = ggplot2::aes(x = .data$Time,
+                                                 y = !!rlang::sym(value_name),
+                                                 fill = .data$Species)) +
       ggplot2::geom_area(position = "stack", alpha = 0.7) +
       ggplot2::scale_fill_manual(values = plot_colors) +
       ggplot2::theme_bw() +
