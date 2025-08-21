@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# ZooMSS
+# Zooplankton Model of Size Spectrum (ZooMSS)
 
 <!-- # planktonr <a href='https://github.com/MathMarEcol/zoomss'><img src='man/figures/planktonr.png' align="right" width="139px" /></a> -->
 
@@ -17,18 +17,6 @@ zoomss](https://img.shields.io/github/issues/MathMarEcol/zoomss)](https://github
 [![Codecov test
 coverage](https://codecov.io/gh/MathMarEcol/zoomss/graph/badge.svg)](https://app.codecov.io/gh/MathMarEcol/zoomss)
 <!-- badges: end -->
-
-## Installation
-
-You can install the development version of zoomss from
-[GitHub](https://github.com/) with:
-
-``` r
-# install.packages("pak")
-pak::pak("MathMarEcol/zoomss")
-```
-
-# Zooplankton Model of Size Spectrum (ZooMSS)
 
 ## Overview of ZooMSS
 
@@ -63,6 +51,16 @@ al., 2011; Hirata et al., 2011). Abundances of the zooplankton and fish
 communities are driven by size-dependent processes of growth and
 mortality, with the temporal dynamics of each functional group governed
 by separate second-order McKendrick-von Foerster equations.
+
+## Installation
+
+You can install the development version of zoomss from
+[GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("MathMarEcol/zoomss")
+```
 
 ## Publications
 

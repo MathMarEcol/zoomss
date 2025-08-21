@@ -5,7 +5,7 @@ on:
     branches: [main, master]
   pull_request:
 
-name: R-CMD-check.yaml
+name: MacOS
 
 permissions: read-all
 
@@ -20,7 +20,7 @@ jobs:
       matrix:
         config:
           - {os: macos-latest,   r: 'release'}
-          
+
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes

@@ -1,6 +1,6 @@
 Package: zoomss
 Title: Zooplankton Model of Size Spectra
-Version: 0.0.1
+Version: 0.1.0
 Authors@R: 
     c(
     person(
@@ -23,6 +23,13 @@ Authors@R:
       role = c("aut"),
       email = "kieran.murphy@uq.edu.au",
       comment = c(ORCID = "0000-0002-9697-2458")
+      ),
+      person(
+      given = "Anthony J.",
+      family = "Richardson",
+      role = c("aut"),
+      email = "a.richardson1@uq.edu.au",
+      comment = c(ORCID = "0000-0002-9289-7366")
       ))
 Description: A functional size-spectrum model of the marine ecosystem that resolves 
     phytoplankton, nine zooplankton functional groups (heterotrophic flagellates and 
@@ -34,6 +41,8 @@ Description: A functional size-spectrum model of the marine ecosystem that resol
     body size ranges, size-based feeding characteristics and carbon content of marine 
     functional groups.
 License: MIT + file LICENSE
+URL: https://github.com/MathMarEcol/zoomss
+BugReports: https://github.com/MathMarEcol/zoomss/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

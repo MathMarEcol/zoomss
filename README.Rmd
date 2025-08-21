@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# ZooMSS
+# Zooplankton Model of Size Spectrum (ZooMSS)
 
 <!-- # planktonr <a href='https://github.com/MathMarEcol/zoomss'><img src='man/figures/planktonr.png' align="right" width="139px" /></a> -->
 <!-- badges: start -->
@@ -25,17 +25,6 @@ knitr::opts_chunk$set(
 [![Codecov test coverage](https://codecov.io/gh/MathMarEcol/zoomss/graph/badge.svg)](https://app.codecov.io/gh/MathMarEcol/zoomss)
 <!-- badges: end -->
 
-## Installation
-
-You can install the development version of zoomss from [GitHub](https://github.com/) with:
-
-``` r
-# install.packages("pak")
-pak::pak("MathMarEcol/zoomss")
-```
-
-# Zooplankton Model of Size Spectrum (ZooMSS)
-
 ## Overview of ZooMSS
 
 The Zooplankton Model of Size Spectra (ZooMSS) is a functional size-spectrum model of the marine ecosystem (following Heneghan et al. 2016) to resolve phytoplankton, nine zooplankton functional groups (heterotrophic flagellates and ciliates, omnivorous and carnivorous copepods, larvaceans, euphausiids, salps, chaetognaths and jellyfish) and three size-based fish groups. Zooplankton functional groups are resolved using their body-size ranges, size-based feeding characteristics and carbon content, and the zooplankton community emerges from the model across global environmental gradients, depending on the functional traits of the different groups.
@@ -44,6 +33,15 @@ We developed the Zooplankton Model of Size Spectra (ZooMSSv2) based on the proto
 
 ZooMSS represents the marine ecosystem as three communities: phytoplankton, zooplankton and fish. The zooplankton community consists of nine of the most abundant zooplankton groups, and the fish community was made up of a small, medium and large group. Dynamics of the phytoplankton are not explicitly resolved in the model, rather the mean size structure of the phytoplankton community is estimated directly from satellite chlorophyll a observations (Brewin et al., 2010; Barnes et al., 2011; Hirata et al., 2011). Abundances of the zooplankton and fish communities are driven by size-dependent processes of growth and mortality, with the temporal dynamics of each functional group governed by separate second-order McKendrick-von Foerster equations.
 
+
+## Installation
+
+You can install the development version of zoomss from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("MathMarEcol/zoomss")
+```
 
 ## Publications
 

@@ -46,7 +46,14 @@
   <a href="reference/index.html">Reference</a>
 </li>
       </ul>
-<ul class="nav navbar-nav navbar-right"></ul>
+<ul class="nav navbar-nav navbar-right">
+<li>
+  <a href="https://github.com/MathMarEcol/zoomss/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+
+  </a>
+</li>
+      </ul>
 </div>
 <!--/.nav-collapse -->
   </div>
@@ -60,10 +67,11 @@
   <div class="contents col-md-9">
 
 <div class="section level1">
-<div class="page-header"><h1 id="zoomss">zoomss<a class="anchor" aria-label="anchor" href="#zoomss"></a>
+<div class="page-header"><h1 id="zoomss">ZooMSS<a class="anchor" aria-label="anchor" href="#zoomss"></a>
 </h1></div>
+<!-- # planktonr <a href='https://github.com/MathMarEcol/zoomss'><img src='man/figures/planktonr.png' align="right" width="139px" /></a> -->
 <!-- badges: start -->
-<!-- badges: end -->
+
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -84,102 +92,6 @@
 <p>ZooMSS represents the marine ecosystem as three communities: phytoplankton, zooplankton and fish. The zooplankton community consists of nine of the most abundant zooplankton groups, and the fish community was made up of a small, medium and large group. Dynamics of the phytoplankton are not explicitly resolved in the model, rather the mean size structure of the phytoplankton community is estimated directly from satellite chlorophyll a observations (Brewin et al., 2010; Barnes et al., 2011; Hirata et al., 2011). Abundances of the zooplankton and fish communities are driven by size-dependent processes of growth and mortality, with the temporal dynamics of each functional group governed by separate second-order McKendrick-von Foerster equations.</p>
 </div>
 <div class="section level2">
-<h2 id="how-to-run-zoomss-using-r">How to run ZooMSS using <code>R</code>
-<a class="anchor" aria-label="anchor" href="#how-to-run-zoomss-using-r"></a>
-</h2>
-<div class="section level3">
-<h3 id="input-files">Input Files<a class="anchor" aria-label="anchor" href="#input-files"></a>
-</h3>
-<p>ZooMSS requires two input files:</p>
-<ol style="list-style-type: decimal">
-<li><p><strong>GroupInputs.csv</strong> - Contains all taxa-specific parameter values, including size ranges and functional group properties.</p></li>
-<li>
-<p><strong>Environmental data</strong> - A data frame with time series of environmental conditions:</p>
-<ul>
-<li>For time-varying conditions: Time series with <code>time_step</code>, <code>sst</code>, and <code>chlo</code> columns</li>
-<li>For constant conditions: Single values replicated across all time steps</li>
-</ul>
-</li>
-</ol>
-</div>
-<div class="section level3">
-<h3 id="running-the-model">Running the Model<a class="anchor" aria-label="anchor" href="#running-the-model"></a>
-</h3>
-<div class="section level4">
-<h4 id="constant-environmental-conditions">Constant Environmental Conditions<a class="anchor" aria-label="anchor" href="#constant-environmental-conditions"></a>
-</h4>
-<p>For studies with unchanging environmental conditions:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Create constant environmental conditions</span></span>
-<span><span class="va">enviro_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  time_step <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5000</span>,</span>
-<span>  sst <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">15</span>, <span class="fl">5000</span><span class="op">)</span>,  <span class="co"># Constant temperature</span></span>
-<span>  chlo <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">5000</span><span class="op">)</span> <span class="co"># Constant chlorophyll</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Include in your setup parameters</span></span>
-<span><span class="va">input_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">base_params</span>, <span class="va">enviro_data</span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"setup_RUN_NAME.R"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="time-varying-environmental-conditions">Time-varying Environmental Conditions<a class="anchor" aria-label="anchor" href="#time-varying-environmental-conditions"></a>
-</h4>
-<p>For dynamic environmental studies:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Create time-varying environmental conditions</span></span>
-<span><span class="va">enviro_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  time_step <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5000</span>,</span>
-<span>  sst <span class="op">=</span> <span class="fl">15</span> <span class="op">+</span> <span class="fl">4</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">5000</span><span class="op">)</span> <span class="op">/</span> <span class="fl">365</span><span class="op">)</span>,  <span class="co"># Seasonal cycle</span></span>
-<span>  chlo <span class="op">=</span> <span class="fl">0.5</span> <span class="op">+</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">5000</span><span class="op">)</span> <span class="op">/</span> <span class="fl">365</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Include in your setup parameters</span></span>
-<span><span class="va">input_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">base_params</span>, <span class="va">enviro_data</span><span class="op">)</span></span></code></pre></div>
-</div>
-</div>
-<div class="section level3">
-<h3 id="environmental-data-structure">Environmental Data Structure<a class="anchor" aria-label="anchor" href="#environmental-data-structure"></a>
-</h3>
-<p>Provide environmental time series as a data frame with: - <code>time_step</code>: Sequential time step number (1, 2, 3, …) - <code>sst</code>: Sea surface temperature (°C) - <code>chlo</code>: Chlorophyll concentration (mg/m³)</p>
-<p>The model processes all environmental conditions dynamically, whether they vary through time or remain constant.</p>
-</div>
-<div class="section level3">
-<h3 id="plotting">Plotting<a class="anchor" aria-label="anchor" href="#plotting"></a>
-</h3>
-<p>The model includes several built-in plotting functions for analysis and visualization:</p>
-<div class="section level4">
-<h4 id="basic-plots">Basic Plots<a class="anchor" aria-label="anchor" href="#basic-plots"></a>
-</h4>
-<ul>
-<li>
-<code>zPlot_BiomassTimeSeries(dat)</code> - Plot biomass time series with optional species selection and proportional stacking</li>
-<li>
-<code>plotSizeSpectra(dat)</code> - Plot overall species-resolved size spectra<br>
-</li>
-<li>
-<code>plotPPMR(dat)</code> - Plot predator-prey mass ratios</li>
-</ul>
-</div>
-<div class="section level4">
-<h4 id="time-series-analysis-when-savetimesteps--true">Time Series Analysis (when SaveTimeSteps = TRUE)<a class="anchor" aria-label="anchor" href="#time-series-analysis-when-savetimesteps--true"></a>
-</h4>
-<ul>
-<li>
-<code>zPlot_AbundTimeSeries(dat)</code> - Plot abundance time series</li>
-<li>
-<code>zPlot_GrowthTimeSeries(dat)</code> - Plot growth rate time series</li>
-<li>
-<code>zPlot_PredTimeSeries(dat)</code> - Plot predation time series</li>
-</ul>
-<p>where <code>dat</code> is the model output list.</p>
-</div>
-</div>
-</div>
-<div class="section level2">
-<h2 id="performance-and-computational-considerations">Performance and Computational Considerations<a class="anchor" aria-label="anchor" href="#performance-and-computational-considerations"></a>
-</h2>
-</div>
-<div class="section level2">
 <h2 id="publications">Publications<a class="anchor" aria-label="anchor" href="#publications"></a>
 </h2>
 <ol style="list-style-type: decimal">
@@ -198,7 +110,15 @@
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
-    <div class="license">
+    <div class="links">
+<h2 data-toc-skip>Links</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/MathMarEcol/zoomss/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/MathMarEcol/zoomss/issues" class="external-link">Report a bug</a></li>
+</ul>
+</div>
+
+<div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li><a href="LICENSE.html">Full license</a></li>
@@ -220,10 +140,22 @@
 <li>Jason D. Everett <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0002-6681-8054" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 <li>Ryan F. Heneghan <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0001-7626-1248" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 <li>Kieran Murphy <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-9697-2458" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
+<li>Anthony J. Richardson <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-9289-7366" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
+<li><a href="authors.html">More about authors...</a></li>
 </ul>
 </div>
 
-
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
+<li><a href="https://github.com/MathMarEcol/zoomss/actions/workflows/Windows.yaml" class="external-link"><img src="https://github.com/MathMarEcol/zoomss/actions/workflows/Windows.yaml/badge.svg" alt="Windows"></a></li>
+<li><a href="https://github.com/MathMarEcol/zoomss/actions/workflows/Linux.yaml" class="external-link"><img src="https://github.com/MathMarEcol/zoomss/actions/workflows/Linux.yaml/badge.svg" alt="Linux"></a></li>
+<li><a href="https://github.com/MathMarEcol/zoomss/actions/workflows/MacOS.yaml" class="external-link"><img src="https://github.com/MathMarEcol/zoomss/actions/workflows/MacOS.yaml/badge.svg" alt="MacOS"></a></li>
+<li><a href="https://github.com/MathMarEcol/zoomss/issues" class="external-link"><img src="https://img.shields.io/github/issues/MathMarEcol/zoomss" alt="issues - zoomss"></a></li>
+<li><a href="https://app.codecov.io/gh/MathMarEcol/zoomss" class="external-link"><img src="https://codecov.io/gh/MathMarEcol/zoomss/graph/badge.svg" alt="Codecov test coverage"></a></li>
+</ul>
+</div>
 
   </div>
 </div>
@@ -231,7 +163,7 @@
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Jason D. Everett, Ryan F. Heneghan, Kieran Murphy.</p>
+<p>Developed by Jason D. Everett, Ryan F. Heneghan, Kieran Murphy, Anthony J. Richardson.</p>
 </div>
 
 <div class="pkgdown">

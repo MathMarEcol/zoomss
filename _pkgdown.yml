@@ -1,14 +1,4 @@
 url: https://MathMarEcol.github.io/zoomss
-articles:
-# - title: Articles
-#   navbar: ~
-#   contents:
-#   - EssentialOceanVariables
-#   - Microbes
-#   - Phytoplankton
-#   - Zooplankton
-#   - LarvalFish
-#   - Biogeochemistry
 development:
   destination:
   version_label: info
@@ -23,17 +13,14 @@ reference:
   - createEnviroData
   - createInputParams
   - validateGroups
-
 - title: Model Runs
   desc: Functions for running the model
 - contents:
   - starts_with("zoomss_")
-
 - title: Plotting
   desc: Functions for plotting.
 - contents:
   - starts_with("plot")
-
 - title: Data wrangling
   desc: Helper functions to convert units and data format
 - contents:
@@ -41,8 +28,11 @@ reference:
   - starts_with("extract")
   - starts_with("get")
   - starts_with("reduce")
-
 - title: Private functions
   desc: Functions to be unexported
 - contents:
   - untibble
+navbar:
+  structure:
+    right: [github]
+
