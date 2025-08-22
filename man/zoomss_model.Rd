@@ -23,11 +23,11 @@ getGroups().}
 Complete ZooMSS model results object containing:
 \itemize{
 \item param: Model parameters and environmental forcing data
-\item N: Abundance time series (time x groups x size classes)
-\item gg: Growth rate time series
-\item Z: Mortality rate time series
-\item diet: Diet composition time series
 \item time: Time values corresponding to saved results (accounting for isave)
+\item abundance: Abundance time series (time x groups x size classes)
+\item growth: Growth rate time series
+\item mortality: Mortality rate time series
+\item diet: Diet composition time series
 \item Additional model structure and kernel data
 }
 }

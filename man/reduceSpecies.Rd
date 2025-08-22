@@ -2,24 +2,23 @@
 % Please edit documentation in R/utils.R
 \name{reduceSpecies}
 \alias{reduceSpecies}
-\title{Aggregate ZooMSS abundances across all functional groups}
+\title{Aggregate ZooMSS abundances across all species}
 \usage{
-reduceSpecies(x)
+reduceSpecies(x, method = "sum")
 }
 \arguments{
-\item{x}{List of abundance matrices (typically from multiple spatial cells)}
+\item{x}{3D array outptut from ZooMSS model}
+
+\item{method}{Character string specifying aggregation method: "sum" (default) or "mean".}
 }
 \value{
-List of vectors with total abundance per size class
+Array with species dimension reduced using the specified method
 }
 \description{
-Sums abundance values across all functional groups for each size class,
-providing total abundance per size class.
+Aggregates abundance values across all species bins for each functional group and size class using the specified method.
 }
 \details{
-Sum ZooMSS Output Across Functional Groups
+Aggregate ZooMSS abundances across all species
 
-This function collapses the functional group dimension by summing across
-all groups for each size class. Useful for analyzing community size spectrum
-patterns without functional group detail.
+This function collapses the species dimension by applying the specified method (sum or mean) across all species bins.
 }

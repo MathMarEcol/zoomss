@@ -4,10 +4,12 @@
 \alias{plotSizeSpectra}
 \title{Visualize abundance size spectra across functional groups}
 \usage{
-plotSizeSpectra(mdl, n_years)
+plotSizeSpectra(mdl, by = "abundance", n_years = 10)
 }
 \arguments{
 \item{mdl}{ZooMSS results object containing model outputs and parameters}
+
+\item{by}{Character string specifying the metric to plot. Options: "abundance", "biomass", "mortality", "growth" (default: "abundance")}
 
 \item{n_years}{The number of years (from the end) over which to average the size spectra}
 }

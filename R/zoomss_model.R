@@ -27,11 +27,11 @@
 #' @return Complete ZooMSS model results object containing:
 #'   \itemize{
 #'     \item param: Model parameters and environmental forcing data
-#'     \item N: Abundance time series (time x groups x size classes)
-#'     \item gg: Growth rate time series
-#'     \item Z: Mortality rate time series
-#'     \item diet: Diet composition time series
 #'     \item time: Time values corresponding to saved results (accounting for isave)
+#'     \item abundance: Abundance time series (time x groups x size classes)
+#'     \item growth: Growth rate time series
+#'     \item mortality: Mortality rate time series
+#'     \item diet: Diet composition time series
 #'     \item Additional model structure and kernel data
 #'   }
 #' @export
@@ -77,9 +77,17 @@ zoomss_model <- function(input_params, Groups = NULL, isave = 1){
   model <- zoomss_setup(param) # Set up model equation stuff
   model_output <- zoomss_run(model) # Run the model
 
-  # model_output$Abundance <- rowSums(model$N, dims = 2) ## Save Total Abundance
-  # model_output$Biomass <- colSums(aperm(sweep(model$N, 3, model$param$w, "*"), c(3,1,2)))
+  my_rename <- function(.x, ..., .strict = TRUE) {
+    pos <- tidyselect::eval_rename(quote(c(...)), .x, strict = .strict)
+    names(.x)[pos] <- names(pos)
+    .x
+  }
 
+  model_output <- model_output %>%
+    my_rename(abundance = "N", growth = "gg", mortality = "Z") # Make variables more easily readable
+
+  model_output$biomass = getBiomass(model_output, units = "ww")
+  model_output$biomassC <- getBiomass(model_output, units = "carbon")
 
   return(model_output)
 }

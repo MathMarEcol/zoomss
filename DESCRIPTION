@@ -55,13 +55,15 @@ Imports:
     assertthat,
     dplyr,
     ggplot2, 
+    magrittr,
     patchwork,
     progress,
     readr,
     rlang,
+    stringr,
     tibble,
     tidyr,
-    magrittr
+    tidyselect
 Depends: 
     R (>= 3.5)
 LazyData: true

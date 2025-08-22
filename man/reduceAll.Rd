@@ -2,24 +2,23 @@
 % Please edit documentation in R/utils.R
 \name{reduceAll}
 \alias{reduceAll}
-\title{Sum abundances across all groups and size classes}
+\title{Aggregate abundances across all groups and size classes}
 \usage{
-reduceAll(x)
+reduceAll(x, method = "sum")
 }
 \arguments{
-\item{x}{Abundance output from ZooMSS model (typically a 3D array with dimensions: spatial cells x groups x size classes)}
+\item{x}{3D array outptut from ZooMSS model}
+
+\item{method}{Character string specifying aggregation method: "sum" (default) or "mean".}
 }
 \value{
 Vector of total abundance values (one per spatial cell)
 }
 \description{
-Calculates total abundance across all functional groups and size classes,
-providing a single abundance value per spatial cell.
+Calculates total abundance across all functional groups and size classes using the specified method.
 }
 \details{
-Sum All ZooMSS Output
+Aggregate abundances across all groups and size classes
 
-This function provides the most aggregated view of ZooMSS output by
-summing across both functional groups and size classes. Useful for comparing
-total community abundance between locations or time periods.
+This function provides the most aggregated view of ZooMSS output by applying the method across both functional groups and size classes.
 }

@@ -25,8 +25,8 @@ List containing comprehensive model parameters:
 \item w: Size class weights (g)
 \item tmax, dt, isave: Temporal parameters
 \item zoo_grps, fish_grps: Indices for different organism types
-\item phyto_int_ts, phyto_slope_ts: Time series of phytoplankton parameters
-\item temp_eff_zoo_ts, temp_eff_fish_ts: Time series of temperature effects
+\item phyto_int, phyto_slope: Time series of phytoplankton parameters
+\item temp_eff_zoo, temp_eff_fish: Time series of temperature effects
 \item Additional biological and physical parameters
 }
 }

@@ -35,8 +35,8 @@
 #'     \item w: Size class weights (g)
 #'     \item tmax, dt, isave: Temporal parameters
 #'     \item zoo_grps, fish_grps: Indices for different organism types
-#'     \item phyto_int_ts, phyto_slope_ts: Time series of phytoplankton parameters
-#'     \item temp_eff_zoo_ts, temp_eff_fish_ts: Time series of temperature effects
+#'     \item phyto_int, phyto_slope: Time series of phytoplankton parameters
+#'     \item temp_eff_zoo, temp_eff_fish: Time series of temperature effects
 #'     \item Additional biological and physical parameters
 #'   }
 #'
@@ -105,59 +105,51 @@ zoomss_params <- function(Groups, input_params, isave){
   # Pre-calculate phytoplankton parameters for each time step
 
   # Initialize arrays to store time-varying parameters (optimize memory allocation)
-  param2$phyto_int_ts <- numeric(n_time_steps)
-  param2$phyto_slope_ts <- numeric(n_time_steps)
-  param2$phyto_max_ts <- numeric(n_time_steps)
-  param2$wMax_phyto_ts <- numeric(n_time_steps)
+  param2$phyto_int <- numeric(n_time_steps)
+  param2$phyto_slope <- numeric(n_time_steps)
+  param2$phyto_max <- numeric(n_time_steps)
+  param2$wMax_phyto <- numeric(n_time_steps)
 
   # Pre-calculate temperature effects for each time step (more efficient than in-loop)
-  param2$temp_eff_zoo_ts <- matrix(NA, nrow = n_time_steps, ncol = param$num_zoo)
-  param2$temp_eff_fish_ts <- matrix(NA, nrow = n_time_steps, ncol = param$num_fish)
+  param2$temp_eff_zoo <- matrix(NA, nrow = n_time_steps, ncol = param$num_zoo)
+  param2$temp_eff_fish <- matrix(NA, nrow = n_time_steps, ncol = param$num_fish)
 
   # Check if phytoplankton parameters are already in input_params (expanded format)
   if (nrow(input_params) == n_time_steps && all(c("phyto_int", "phyto_slope", "phyto_max") %in% names(input_params))) {
     cat("Using pre-calculated phytoplankton parameters from input_params\n")
 
     # Use pre-calculated values (most efficient path)
-    param2$phyto_int_ts <- input_params$phyto_int
-    param2$phyto_slope_ts <- input_params$phyto_slope
-    param2$phyto_max_ts <- input_params$phyto_max
-    param2$wMax_phyto_ts <- 10^input_params$phyto_max
+    param2$phyto_int <- input_params$phyto_int
+    param2$phyto_slope <- input_params$phyto_slope
+    param2$phyto_max <- input_params$phyto_max
+    param2$wMax_phyto <- 10^input_params$phyto_max
 
     # Calculate temperature effects for each time step - consistent temperature formula throughout model
-    for (i in 1:n_time_steps) {
-      sst_i <- input_params$sst[i]
-      temp_factor <- 2^((sst_i - 30)/10)
-      param2$temp_eff_zoo_ts[i, ] <- temp_factor
-      param2$temp_eff_fish_ts[i, ] <- temp_factor
-    }
+    temp_factor <- 2^((input_params$sst - 30)/10)
+    param2$temp_eff_zoo[,] <- temp_factor # preallocated above for all groups
+    param2$temp_eff_fish[,] <- temp_factor # preallocated above for all groups
 
   } else {
     cat("Calculating phytoplankton parameters from environmental time series\n")
 
     # Calculate phytoplankton parameters for each time step
-    for (i in 1:n_time_steps) {
-      sst_i <- input_params$sst[i]
-      chl_i <- input_params$chl[i]
 
-      # Calculate phytoplankton parameters using the existing function
-      temp_df <- data.frame(cellID = 1, sst = sst_i, chl = chl_i)
-      phyto_params <- calculatePhytoParam(temp_df)
+    # Calculate phytoplankton parameters using the existing function
+    phyto_params <- calculatePhytoParam(input_params)
 
-      param2$phyto_int_ts[i] <- phyto_params$phyto_int
-      param2$phyto_slope_ts[i] <- phyto_params$phyto_slope
-      param2$phyto_max_ts[i] <- phyto_params$phyto_max
-      param2$wMax_phyto_ts[i] <- 10^phyto_params$phyto_max
+    param2$phyto_int <- phyto_params$phyto_int
+    param2$phyto_slope <- phyto_params$phyto_slope
+    param2$phyto_max <- phyto_params$phyto_max
+    param2$wMax_phyto <- 10^phyto_params$phyto_max
 
-      # Temperature effects (same calculation throughout model)
-      temp_factor <- 2^((sst_i - 30)/10)
-      param2$temp_eff_zoo_ts[i, ] <- temp_factor
-      param2$temp_eff_fish_ts[i, ] <- temp_factor
-    }
+    # Temperature effects (same calculation throughout model)
+    temp_factor <- 2^((input_params$sst - 30)/10)
+    param2$temp_eff_zoo[,] <- temp_factor # preallocated above for all groups
+    param2$temp_eff_fish[,] <- temp_factor # preallocated above for all groups
   }
 
   # Store the maximum wMax_phyto from time series for grid creation
-  param2$wMax_phyto <- max(param2$wMax_phyto_ts)
+  param2$wMax_phyto <- max(param2$wMax_phyto)
 
   # Add final parameters that depend on the complete parameter set (calculate only once)
   param2$w_log10 <- round(seq(from = min(Groups$W0), to = max(Groups$Wmax), param$dx), digits = 2) # Set up log10 weight grid
@@ -168,7 +160,7 @@ zoomss_params <- function(Groups, input_params, isave){
 
   # Final parameter combination
   # Exclude time series vectors from input_params since they're now stored as _ts arrays in param2
-  input_params_filtered <- input_params[!names(input_params) %in% c("tmax", "dt", "isave", "time_step", "sst", "chl", "phyto_int", "phyto_slope", "phyto_max")]
+  input_params_filtered <- input_params[!names(input_params) %in% c("tmax", "dt", "isave", "time_step", "phyto_int", "phyto_slope", "phyto_max")]
 
   param_final <- c(input_params_filtered, param, param2)
   return(param_final)

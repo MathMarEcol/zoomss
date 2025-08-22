@@ -7,8 +7,8 @@
 plotTimeSeries(
   mdl,
   by = "abundance",
-  stacked = FALSE,
-  proportional = FALSE,
+  type = "line",
+  transform = "identity",
   species = NULL
 )
 }
@@ -17,9 +17,9 @@ plotTimeSeries(
 
 \item{by}{Character string specifying the metric to plot. Options: "abundance", "biomass", "mortality", "growth" (default: "abundance")}
 
-\item{stacked}{Logical, whether to create stacked area plot for biomass (default: FALSE, only applies to biomass)}
+\item{type}{Character vector of plot type. Use \code{line} for the default line plot, \code{stack} or \code{fill} (as per geom_area) for stacked or proportional plots. (default: "line")}
 
-\item{proportional}{Logical, whether to show proportions for biomass (default: FALSE, only applies to biomass)}
+\item{transform}{Character vector of the required y-axis transformation. Options from \verb{scale_*_continuous} (Default: "identity).}
 
 \item{species}{Character vector of species names to include. If NULL, all species included (default: NULL, applies to all metrics)}
 }
@@ -55,14 +55,13 @@ All plots use species-specific colors and filter out zero values. Time series pl
 results <- zoomss_model(input_params, Groups)
 
 # Plot different metrics
-abundance_plot <- plotTimeSeries(results, by = "abundance")
-biomass_plot <- plotTimeSeries(results, by = "biomass")
+abundance_plot <- plotTimeSeries(results, by = "abundance", transform = "log10")
+biomass_plot <- plotTimeSeries(results, by = "biomass", transform = "log10")
 mortality_plot <- plotTimeSeries(results, by = "mortality")
 growth_plot <- plotTimeSeries(results, by = "growth")
 
-# Biomass with special options
-stacked_plot <- plotTimeSeries(results, by = "biomass", stacked = TRUE)
-prop_plot <- plotTimeSeries(results, by = "biomass", proportional = TRUE)
+stacked_plot <- plotTimeSeries(results, by = "biomass", type = "stack")
+prop_plot <- plotTimeSeries(results, by = "biomass", type = "fill")
 
 # Focus on specific species (works for all metrics)
 copepod_plot <- plotTimeSeries(results, by = "biomass",

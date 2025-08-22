@@ -69,7 +69,7 @@ These plots display total abundance and mean growth/mortality across all size cl
 ```{r}
 
 library(patchwork)
-p1 <- plotTimeSeries(mdl, by = "abundance") # Plot abundance time series
+p1 <- plotTimeSeries(mdl, by = "abundance", transform = "log10") # Plot abundance time series
 p2 <- plotTimeSeries(mdl, by = "growth") # Plot growth rate time series
 p3 <- plotTimeSeries(mdl, by = "mortality") # Plot predation mortality time series
 
@@ -81,9 +81,9 @@ wrap_plots(p1, p2, p3, nrow = 3, guides = "collect")
 We can also plot total biomass through time.
 
 ```{r}
-p4 <- plotTimeSeries(mdl, by = "biomass") + theme(legend.position = "none") # Plot biomass 
-p5 <- plotTimeSeries(mdl, by = "biomass", stacked = TRUE) # Plot stacked biomass 
-p6 <- plotTimeSeries(mdl, by = "biomass", stacked = TRUE, proportion = TRUE) # Plot proportional stacked biomass 
+p4 <- plotTimeSeries(mdl, by = "biomass", transform = "log10") + theme(legend.position = "none") # Plot biomass 
+p5 <- plotTimeSeries(mdl, by = "biomass", type = "stack", transform = "log10") # Plot stacked biomass 
+p6 <- plotTimeSeries(mdl, by = "biomass", type = "fill") # Plot proportional stacked biomass 
 
 wrap_plots(p4, p5, p6, nrow = 3, guides = "collect")
 

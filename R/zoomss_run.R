@@ -4,24 +4,24 @@
 #' @description Runs the ZooMSS model forward in time, updating environmental conditions
 #'   and population dynamics at each time step using the McKendrick-von Foerster framework.
 #' @details This is the core simulation engine of ZooMSS that:
-#'   
+#'
 #'   **Environmental Dynamics:**
 #'   - Updates phytoplankton abundance spectrum based on chlorophyll time series
 #'   - Applies temperature effects on zooplankton and fish metabolism
 #'   - Recalculates feeding kernels with current environmental conditions
-#'   
+#'
 #'   **Population Dynamics:**
 #'   - Solves McKendrick-von Foerster equation for size-structured growth
 #'   - Updates feeding interactions between all size classes and groups
 #'   - Calculates mortality from predation, senescence, and fishing
 #'   - Handles recruitment and boundary conditions for each functional group
-#'   
+#'
 #'   **Time Integration:**
 #'   - Processes model through all time steps with adaptive environmental forcing
 #'   - Saves output at specified intervals for memory efficiency
 #'   - Maintains mass balance and numerical stability throughout simulation
-#'   
-#'   Unlike static models, this version dynamically updates phytoplankton spectra 
+#'
+#'   Unlike static models, this version dynamically updates phytoplankton spectra
 #'   and temperature effects at each time step based on provided environmental data.
 #'
 #' @param model Model object created by zoomss_setup containing:
@@ -33,7 +33,7 @@
 #'   \itemize{
 #'     \item param: Model parameters used in simulation
 #'     \item N: Abundance time series (time x groups x size classes)
-#'     \item gg: Growth rate time series 
+#'     \item gg: Growth rate time series
 #'     \item diet: Diet composition time series
 #'     \item Z: Mortality rate time series
 #'     \item time: Time values corresponding to saved results (accounting for isave)
@@ -46,10 +46,10 @@
 #' # Set up model parameters and structure
 #' params <- zoomss_params(Groups, input_params)
 #' model <- zoomss_setup(params)
-#' 
+#'
 #' # Run the simulation
 #' results <- zoomss_run(model)
-#' 
+#'
 #' # Access final abundances
 #' final_abundances <- results$N[dim(results$N)[1],,]
 #' }
@@ -71,12 +71,12 @@ zoomss_run <- function(model){
   dynam_growthkernel <- model$dynam_growthkernel
   dynam_mortkernel <- model$dynam_mortkernel
   dynam_diffkernel <- model$dynam_diffkernel
-  
+
   # Get pre-calculated phytoplankton and temperature time series from param
-  phyto_int_ts <- param$phyto_int_ts
-  phyto_slope_ts <- param$phyto_slope_ts
-  temp_eff_zoo_ts <- param$temp_eff_zoo_ts
-  temp_eff_fish_ts <- param$temp_eff_fish_ts
+  phyto_int <- param$phyto_int
+  phyto_slope <- param$phyto_slope
+  temp_eff_zoo <- param$temp_eff_zoo
+  temp_eff_fish <- param$temp_eff_fish
 
   curr_min_size <- vector()
   curr_max_size <- vector()
@@ -124,38 +124,38 @@ zoomss_run <- function(model){
   for (itime in 1:itimemax){
 
     pb$tick() # Update progress bar
-    
+
     # DYNAMIC ENVIRONMENTAL FORCING - Update for current time step
-    current_phyto_int <- phyto_int_ts[itime]      # Phytoplankton intercept (varies with chlorophyll)
-    current_phyto_slope <- phyto_slope_ts[itime]  # Phytoplankton slope (varies with chlorophyll)
-    
+    current_phyto_int <- phyto_int[itime]      # Phytoplankton intercept (varies with chlorophyll)
+    current_phyto_slope <- phyto_slope[itime]  # Phytoplankton slope (varies with chlorophyll)
+
     # Update phytoplankton abundance spectrum with current environmental parameters
     model$nPP <- 10^(current_phyto_int)*(param$w_phyto^(current_phyto_slope))
-    
+
     # Update temperature effects matrix for all groups based on current SST
     # Temperature affects feeding rates, growth, and mortality
     if(param$num_zoo > 0) {
       for(i in 1:param$num_zoo) {
         zoo_grp_idx <- param$zoo_grps[i]
-        model$temp_eff[zoo_grp_idx, ] <- temp_eff_zoo_ts[itime, i]
+        model$temp_eff[zoo_grp_idx, ] <- temp_eff_zoo[itime, i]
       }
     }
-    
+
     if(param$num_fish > 0) {
       for(i in 1:param$num_fish) {
         fish_grp_idx <- param$fish_grps[i]
-        model$temp_eff[fish_grp_idx, ] <- temp_eff_fish_ts[itime, i]
+        model$temp_eff[fish_grp_idx, ] <- temp_eff_fish[itime, i]
       }
     }
-    
+
     # Calculate phytoplankton feeding using CURRENT environmental conditions
     # These must be recalculated each time step because both nPP and temp_eff change
     current_ingested_phyto <- model$temp_eff*(rowSums(sweep(model$phyto_growthkernel, 3, model$nPP, "*"), dims = 2))
     current_diff_phyto <- model$temp_eff^2*(rowSums(sweep(model$phyto_diffkernel, 3, model$nPP, "*"), dims = 2))
-    
+
     # Update senescence mortality with current temperature effects (no compounding - always from base)
     model$M_sb <- model$M_sb_base * model$temp_eff
-    
+
     # Calculate multipliers for growth, predation, and diffusion
     growth_multiplier <- colSums(N * assim_eff) # 1 x n_sizes
     predation_multiplier <- N * model$temp_eff # n_species x n_sizes (now using updated temp_eff)
@@ -167,7 +167,7 @@ zoomss_run <- function(model){
     dim(temp_growth_kernel) <- c(ngrps*ngrid, ngrid)
     cs <- .colSums(growth_multiplier * t(temp_growth_kernel), m = ngrid, n = ngrps*ngrid)
     dim(cs) <- c(ngrps, ngrid)
-    
+
     gg <- current_ingested_phyto + cs
 
     ### DO MORTALITY
@@ -229,7 +229,7 @@ zoomss_run <- function(model){
     # Save results (at regular intervals AND always at the final time step):
     # Save output at regular intervals only
     save_this_step <- (itime %% param$isave) == 0
-    
+
     if(save_this_step){
       isav <- itime/param$isave
 
@@ -238,10 +238,10 @@ zoomss_run <- function(model){
       current_pico_diet <- model$temp_eff*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP*c(log10(model$param$w_phyto) < -11.5), "*"), dims = 2))
       current_nano_diet <- model$temp_eff*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP*c(log10(model$param$w_phyto) >= -11.5 & log10(model$param$w_phyto) < -8.5), "*"), dims = 2))
       current_micro_diet <- model$temp_eff*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP*c(log10(model$param$w_phyto) >= -8.5), "*"), dims = 2))
-      
+
       # Calculate total consumption by multiplying diet potential by current abundances
       pico_phyto_diet <- rowSums(current_pico_diet*N)   # Pico-phytoplankton consumption
-      nano_phyto_diet <- rowSums(current_nano_diet*N)   # Nano-phytoplankton consumption  
+      nano_phyto_diet <- rowSums(current_nano_diet*N)   # Nano-phytoplankton consumption
       micro_phyto_diet <- rowSums(current_micro_diet*N) # Micro-phytoplankton consumption
 
       ## Functional group diet - use proper kernel-based calculation (consistent with model structure)
@@ -252,14 +252,16 @@ zoomss_run <- function(model){
       temp_dynam_dietkernel <- sweep(dynam_dietkernel, c(1,2), model$temp_eff, "*")
       dynam_diet <- rowSums(aperm(rowSums(sweep(temp_dynam_dietkernel*N_array, c(1,2), N, "*"), dims = 3), c(1,3,2)), dims = 2)
 
-      model$diet[isav,,1:3] <- cbind(pico_phyto_diet, nano_phyto_diet, micro_phyto_diet)
-      model$diet[isav,,c(4:(dim(param$Groups)[1]+3))] <- dynam_diet
+      # Save current time accounting for isave interval
+      model$time[isav] <- param$time[itime]
+
       model$N[isav,,] <- N # Save N by taxa and size
       model$Z[isav,,] <-  Z ## Save mortality
       model$gg[isav,,] <-  gg ## Save growth
-      
-      # Save current time accounting for isave interval
-      model$time[isav] <- param$time[itime]
+
+      model$diet[isav,,1:3] <- cbind(pico_phyto_diet, nano_phyto_diet, micro_phyto_diet)
+      model$diet[isav,,c(4:(dim(param$Groups)[1]+3))] <- dynam_diet
+
     }
   } # End of time loop
   return(model)

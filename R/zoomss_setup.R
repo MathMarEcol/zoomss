@@ -1,32 +1,32 @@
 #' Setup ZooMSS Model Structure and Feeding Kernels
 #'
 #' @title Initialize ZooMSS model components and calculate feeding interactions
-#' @description Sets up the ZooMSS model structure by calculating feeding kernels, mortality 
+#' @description Sets up the ZooMSS model structure by calculating feeding kernels, mortality
 #'   rates, and other model components that remain static during the simulation.
 #' @details This function initializes the core ZooMSS model structure by calculating:
-#'   
+#'
 #'   **Static Components (calculated once):**
 #'   - Feeding preference kernels based on predator-prey size ratios
 #'   - Search volumes and encounter rates between size classes
 #'   - Baseline mortality rates (senescence, fishing)
 #'   - Initial abundance distributions for all functional groups
-#'   
+#'
 #'   **Dynamic Component Structures (updated during run):**
 #'   - Phytoplankton feeding kernels (structure calculated here, values updated with environment)
 #'   - Growth and diffusion kernels for zooplankton and fish interactions
 #'   - Diet and mortality tracking arrays
-#'   
+#'
 #'   **Model Architecture:**
-#'   - Size-structured populations across logarithmic size classes  
+#'   - Size-structured populations across logarithmic size classes
 #'   - Multiple functional groups with different feeding behaviors
 #'   - Environmental coupling through phytoplankton and temperature
-#'   
-#'   The function separates static calculations (done once for efficiency) from 
+#'
+#'   The function separates static calculations (done once for efficiency) from
 #'   dynamic calculations (updated each time step in zoomss_run).
 #'
 #' @param param Complete parameter list created by zoomss_params containing:
 #'   - Groups: Functional group definitions and biological parameters
-#'   - Model dimensions (ngrps, ngrid, time parameters)  
+#'   - Model dimensions (ngrps, ngrid, time parameters)
 #'   - Environmental forcing time series
 #'   - Physical and biological constants
 #'
@@ -49,10 +49,10 @@
 #' \dontrun{
 #' # Create parameters for model setup
 #' params <- zoomss_params(Groups, input_params)
-#' 
+#'
 #' # Initialize model structure
 #' model <- zoomss_setup(params)
-#' 
+#'
 #' # Model is now ready for time integration with zoomss_run
 #' results <- zoomss_run(model)
 #' }
@@ -67,21 +67,21 @@ zoomss_setup <- function(param){
   ## Makes the model object, full of constant functions for model
   model <- list(
     param = param,
-    
+
     # Dynamic component kernels (these don't change with environment, only with abundances)
     dynam_growthkernel = array(NA, dim = c(param$ngrps, param$ngrid, param$ngrid)), # predation on zoo and fish
     dynam_diffkernel = array(NA, dim = c(param$ngrps, param$ngrid, param$ngrid)), # diffusion from zoo and fish consumption
     dynam_dietkernel = array(NA, dim = c(param$ngrps, param$ngrid, param$ngrid)), # diet from zoo and fish
     dynam_mortkernel = array(NA, dim = c(param$ngrps, param$ngrid, param$ngrid)), # mortality from predation on dynamic component
-    
+
     # Phytoplankton kernels (these don't change with environment, only with phytoplankton spectrum)
     phyto_growthkernel = array(NA, dim = c(param$ngrps, param$ngrid, param$ngridPP)), # predation on phytoplankton
     phyto_diffkernel = array(NA, dim = c(param$ngrps, param$ngrid, param$ngridPP)), # diffusion from phytoplankton consumption
     phyto_dietkernel = array(NA, dim = c(param$ngrps, param$ngrid, param$ngridPP)), # diet from phytoplankton
-    
+
     # Phytoplankton spectrum - will be updated dynamically with current time step parameters
-    nPP = 10^(param$phyto_int_ts[1])*(param$w_phyto^(param$phyto_slope_ts[1])), # Phytoplankton abundance spectrum (dynamic)
-    
+    nPP = 10^(param$phyto_int[1])*(param$w_phyto^(param$phyto_slope[1])), # Phytoplankton abundance spectrum (dynamic)
+
     # Static mortality and group parameters
     M_sb_base = matrix(0, nrow = param$ngrps, ncol = param$ngrid), # base senescence mortality (before temp effect)
     fish_mort = matrix(0, nrow = param$ngrps, ncol = param$ngrid), # fishing mortality
@@ -95,13 +95,13 @@ zoomss_setup <- function(param){
 
     # Phytoplankton feeding parameters (for maintaining compatibility)
     phyto_theta = matrix(1, nrow = param$ngrps, ncol = param$ngrid, byrow = TRUE),
-    
-    # Abundance storage for model - needed for Run function
+
+    time = array(NA, dim = c(param$nsave)), # time values corresponding to saved results
     N = array(NA, dim = c(param$nsave, param$ngrps, param$ngrid)), # dynamic abundance spectrum
-    Z = array(NA, dim = c(param$nsave, param$ngrps, param$ngrid)), # Total mortality  
+    Z = array(NA, dim = c(param$nsave, param$ngrps, param$ngrid)), # Total mortality
     gg = array(NA, dim = c(param$nsave, param$ngrps, param$ngrid)), # Growth
-    diet = array(NA, dim = c(param$nsave, c(param$ngrps), c(param$ngrps+3))), # diet
-    time = array(NA, dim = c(param$nsave)) # time values corresponding to saved results
+    diet = array(NA, dim = c(param$nsave, c(param$ngrps), c(param$ngrps+3))) # diet
+
   )
 
   # Set phyto_theta for carnivores
@@ -112,7 +112,7 @@ zoomss_setup <- function(param){
 
   #### INITIAL DYNAMIC POPULATION ABUNDANCES
   # Use the first time step for initial conditions
-  a_dynam <- 10^(param$phyto_int_ts[1])*(param$w[1]^(param$phyto_slope_ts[1]+1)) # calculate coefficient for initial dynamic spectrum
+  a_dynam <- 10^(param$phyto_int[1])*(param$w[1]^(param$phyto_slope[1]+1)) # calculate coefficient for initial dynamic spectrum
 
   # Initial abundances form a continuation of the plankton spectrum, with a slope of -1
   tempN <- matrix(a_dynam*(param$w)^-1, nrow = param$ngrps, ncol = param$ngrid, byrow = TRUE)
@@ -145,7 +145,7 @@ zoomss_setup <- function(param){
   dynam_pred_weight_matrix <- matrix(param$w, nrow = param$ngrid, ncol = param$ngrid)
   dynam_prey_weight_matrix <- matrix(param$w, nrow = param$ngrid, ncol = param$ngrid, byrow = TRUE)
 
-  ### PREDATION KERNELS FOR PHYTOPLANKTON (constant across time)  
+  ### PREDATION KERNELS FOR PHYTOPLANKTON (constant across time)
   phyto_pred_weight_matrix <- matrix(param$w, nrow = param$ngrid, ncol = param$ngridPP)
   phyto_prey_weight_matrix <- matrix(param$w_phyto, nrow = param$ngrid, ncol = param$ngridPP, byrow = TRUE)
 
@@ -158,7 +158,7 @@ zoomss_setup <- function(param){
   simp_dynam[c(seq(3, param$ngrid-1,2))] <- 2
   sm_dynam <- matrix(simp_dynam, nrow = param$ngrid, ncol = param$ngrid, byrow = TRUE) * (param$dx/3)
 
-  # Simpson's Rule for phytoplankton 
+  # Simpson's Rule for phytoplankton
   simp_phyto <- array(1, dim = param$ngridPP)
   simp_phyto[c(seq(2, param$ngridPP-1,2))] <- 4
   simp_phyto[c(seq(3, param$ngridPP-1,2))] <- 2
@@ -212,7 +212,7 @@ zoomss_setup <- function(param){
         sqrt(2*pi*param$Groups$FeedWidth[i]^2)
     }
 
-    ### PHYTOPLANKTON FEEDING KERNELS  
+    ### PHYTOPLANKTON FEEDING KERNELS
     # Calculate phytoplankton predation kernel - consistent with model PPMR scaling
     if(!is.na(param$Groups$PPMRscale[i])){ # If group has a PPMR scaling value (m-value)
       # Calculate PPMR for zooplankton, which changes according to body-size (Wirtz, 2012)
@@ -222,7 +222,7 @@ zoomss_setup <- function(param){
     } else { # If group is fish
       beta_mat_phyto <- matrix(param$Groups$PPMR[i], nrow = param$ngrid, ncol = param$ngridPP)
     }
-    
+
     sp_phyto_predkernel <- exp(-0.5*(log((beta_mat_phyto*phyto_prey_weight_matrix)/
                                            phyto_pred_weight_matrix)/param$Groups$FeedWidth[i])^2)/
       sqrt(2*pi*param$Groups$FeedWidth[i]^2)
@@ -249,7 +249,7 @@ zoomss_setup <- function(param){
     model$dynam_growthkernel[i,,] <- matrix(SearchVol[i,], nrow = param$ngrid, ncol = param$ngrid)*
       sp_dynam_predkernel*gg_log_t_dynam*sm_dynam
 
-    ### DIET INTEGRAL CONSTANTS FOR DYNAMIC SPECTRUM  
+    ### DIET INTEGRAL CONSTANTS FOR DYNAMIC SPECTRUM
     model$dynam_dietkernel[i,,] <- matrix(SearchVol[i,], nrow = param$ngrid, ncol = param$ngrid)*
       sp_dynam_predkernel*diet_log_t_dynam*sm_dynam
 

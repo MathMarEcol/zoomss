@@ -6,9 +6,8 @@
 #' @details This function collapses the size dimension of ZooMSS output by summing
 #'   across all size classes. Useful for analyzing total abundance patterns without
 #'   size structure detail.
-#'
-#' @param x List of abundance matrices (typically from multiple spatial cells)
-#'
+#' @param x 3D array outptut from ZooMSS model
+#' @param method Character string specifying aggregation method: "sum" (default) or "mean".
 #' @return List of vectors with total abundance per functional group
 #' @export
 #'
@@ -19,45 +18,46 @@
 #' total_abundances <- reduceSize(results$abundances)
 #' }
 #'
-reduceSize = function(x) {
-  apply(x, c(1, 2), sum) # Sum ZooMSS output across the size bins
+reduceSize = function(x, method = "sum") {
+
+  assertthat::assert_that(is.array(x))
+  assertthat::assert_that(method %in% c("sum", "mean"))
+
+  apply(x, c(1, 2), match.fun(method)) # Sum or mean ZooMSS output across the size bins
 }
 
-#' Sum ZooMSS Output Across Functional Groups
+
+#' Aggregate ZooMSS abundances across all species
 #'
-#' @title Aggregate ZooMSS abundances across all functional groups
-#' @description Sums abundance values across all functional groups for each size class,
-#'   providing total abundance per size class.
-#' @details This function collapses the functional group dimension by summing across
-#'   all groups for each size class. Useful for analyzing community size spectrum
-#'   patterns without functional group detail.
-#'
-#' @param x List of abundance matrices (typically from multiple spatial cells)
-#'
-#' @return List of vectors with total abundance per size class
+#' @title Aggregate ZooMSS abundances across all species
+#' @description Aggregates abundance values across all species bins for each functional group and size class using the specified method.
+#' @details This function collapses the species dimension by applying the specified method (sum or mean) across all species bins.
+#' @param x 3D array outptut from ZooMSS model
+#' @param method Character string specifying aggregation method: "sum" (default) or "mean".
+#' @return Array with species dimension reduced using the specified method
 #' @export
-#'
-reduceSpecies = function(x) {
-  apply(x, c(1, 3), sum) # Sum ZooMSS output across the species bins
+reduceSpecies = function(x, method = "sum") {
+  assertthat::assert_that(is.array(x))
+  assertthat::assert_that(method %in% c("sum", "mean"))
+
+  apply(x, c(1, 3), match.fun(method))
 }
 
 
-#' Sum All ZooMSS Output
+#' Aggregate abundances across all groups and size classes
 #'
-#' @title Sum abundances across all groups and size classes
-#' @description Calculates total abundance across all functional groups and size classes,
-#'   providing a single abundance value per spatial cell.
-#' @details This function provides the most aggregated view of ZooMSS output by
-#'   summing across both functional groups and size classes. Useful for comparing
-#'   total community abundance between locations or time periods.
-#'
-#' @param x Abundance output from ZooMSS model (typically a 3D array with dimensions: spatial cells x groups x size classes)
-#'
+#' @title Aggregate abundances across all groups and size classes
+#' @description Calculates total abundance across all functional groups and size classes using the specified method.
+#' @details This function provides the most aggregated view of ZooMSS output by applying the method across both functional groups and size classes.
+#' @param x 3D array outptut from ZooMSS model
+#' @param method Character string specifying aggregation method: "sum" (default) or "mean".
 #' @return Vector of total abundance values (one per spatial cell)
 #' @export
-#'
-reduceAll = function(x) {
-  apply(x, 1, sum) # Sum ZooMSS output across the species and size bins
+reduceAll = function(x, method = "sum") {
+  assertthat::assert_that(is.array(x))
+  assertthat::assert_that(method %in% c("sum", "mean"))
+
+  apply(x, 1, match.fun(method))
 }
 
 #' Convert Abundance to Biomass
@@ -100,7 +100,7 @@ getBiomass <- function(mdl, units = "ww") {
   }
 
   # Check that N exists in the model
-  if (!"N" %in% names(mdl)) {
+  if (!"abundance" %in% names(mdl)) {
     stop("Abundance array 'N' not found in model output")
   }
 
@@ -110,12 +110,12 @@ getBiomass <- function(mdl, units = "ww") {
   }
 
   # Get abundance array and weights
-  N <- mdl$N
+  N <- mdl$abundance
   w <- mdl$param$w
 
   # Check dimensions match
   if (dim(N)[3] != length(w)) {
-    stop("Size dimension of N (", dim(N)[3], ") does not match length of weight vector (", length(w), ")")
+    stop("Size dimension of abundance (", dim(N)[3], ") does not match length of weight vector (", length(w), ")")
   }
 
   # Convert abundance to wet weight biomass by multiplying by weights across size dimension (3rd dimension)
@@ -401,84 +401,18 @@ extractPPMR = function(mdl){
     }
   }
 
-  # Check if we have 3D abundance data (time series) or 2D (averaged)
-  if("N" %in% names(mdl) && length(dim(mdl$N)) == 3) {
-    # Handle 3D abundance array (time, groups, size_classes)
-    n_timesteps <- dim(mdl$N)[1]
+  # Handle 3D abundance array (time, groups, size_classes)
+  n_timesteps <- dim(mdl$abundance)[1]
 
-    # Initialize output array
-    results_array <- array(list(), dim = c(n_timesteps))
+  # Initialize output array
+  results_array <- array(list(), dim = c(n_timesteps))
 
-    for(t in 1:n_timesteps) {
-      # Extract abundance for this timestep
-      N_t <- mdl$N[t, , ]
+  for(t in 1:n_timesteps) {
+    # Extract abundance for this timestep
+    N_t <- mdl$abundance[t, , ]
 
-      # Calculate biomass for this timestep
-      ave_biom = sweep(N_t, 2, w, "*") # Calculate biomass for each group and size
-      ave_biom = ave_biom[-which(is.na(mdl$param$Groups$PPMRscale)),] # remove rows for fish
-
-      # Check for non-finite values and handle edge cases
-      total_biom = sum(ave_biom)
-      if (!is.finite(total_biom) || total_biom == 0) {
-        # If total biomass is zero or non-finite, create uniform weights
-        beta_props = matrix(1/length(ave_biom), nrow = nrow(ave_biom), ncol = ncol(ave_biom))
-        warning("Non-finite or zero total biomass detected at timestep ", t, ". Using uniform weights for density calculation.")
-      } else {
-        beta_props = ave_biom/total_biom # Calculate fraction of zoo biomass in each group, in each size class
-      }
-
-      # Ensure beta_props values are finite for density function
-      beta_props[!is.finite(beta_props)] <- 0
-
-      # Calculate density
-      temp <- stats::density(as.vector(betas), weights = as.vector(beta_props))
-
-      out <- tibble::tibble("x" = temp$x, "y" = temp$y, "mn_beta" = sum(beta_props*betas))
-
-      # Calculate species-specific proportions with safety checks
-      row_sums <- rowSums(ave_biom)
-      spbeta_props = ave_biom
-      for(i in seq_len(nrow(ave_biom))) {
-        if(is.finite(row_sums[i]) && row_sums[i] > 0) {
-          spbeta_props[i,] = ave_biom[i,] / row_sums[i]
-        } else {
-          spbeta_props[i,] = 1/ncol(ave_biom)  # uniform distribution if row sum is invalid
-        }
-      }
-      spbeta_props[!is.finite(spbeta_props)] <- 0  # ensure all values are finite
-      spPPMR <- tibble::tibble("Species" = as.factor(mdl$param$Groups$Species[-which(is.na(mdl$param$Groups$PPMRscale))]), "Betas" = rowSums(spbeta_props*betas), "y" = NA) # Get species-specific PPMR
-
-      for (s in seq_along(spPPMR$Species)){
-        spPPMR$y[s] <- out$y[which.min(abs(out$x - spPPMR$Betas[s]))]
-      }
-
-      spPPMR <- spPPMR %>%
-        dplyr::mutate(y = .data$y * 0) %>%
-        dplyr::bind_rows(spPPMR)
-
-      # Store results for this timestep
-      results_array[[t]] <- list("ppmr_density" = out, "species_ppmr" = spPPMR)
-    }
-
-    return(results_array)
-
-  } else {
-    # Handle 2D case (backwards compatibility with mdl$abundances)
-    # Calculate ave abundances across spatial locations or use provided averaged data
-    if("abundances" %in% names(mdl)) {
-      # Original approach with mdl$abundances (list of 2D matrices)
-      ave = matrix(0, nrow = dim(mdl$param$Groups)[1], ncol = length(w))
-      for(i in seq_along(mdl$abundances)){
-        ave = ave + mdl$abundances[[i]]/length(mdl$abundances)
-      }
-    } else if("N" %in% names(mdl) && length(dim(mdl$N)) == 2) {
-      # Direct 2D abundance matrix
-      ave = mdl$N
-    } else {
-      stop("No valid abundance data found. Expected either mdl$abundances (list) or mdl$N (2D/3D array)")
-    }
-
-    ave_biom = sweep(ave, 2, w, "*") # Calculate biomass for zoo groups
+    # Calculate biomass for this timestep
+    ave_biom = sweep(N_t, 2, w, "*") # Calculate biomass for each group and size
     ave_biom = ave_biom[-which(is.na(mdl$param$Groups$PPMRscale)),] # remove rows for fish
 
     # Check for non-finite values and handle edge cases
@@ -486,7 +420,7 @@ extractPPMR = function(mdl){
     if (!is.finite(total_biom) || total_biom == 0) {
       # If total biomass is zero or non-finite, create uniform weights
       beta_props = matrix(1/length(ave_biom), nrow = nrow(ave_biom), ncol = ncol(ave_biom))
-      warning("Non-finite or zero total biomass detected. Using uniform weights for density calculation.")
+      warning("Non-finite or zero total biomass detected at timestep ", t, ". Using uniform weights for density calculation.")
     } else {
       beta_props = ave_biom/total_biom # Calculate fraction of zoo biomass in each group, in each size class
     }
@@ -494,23 +428,19 @@ extractPPMR = function(mdl){
     # Ensure beta_props values are finite for density function
     beta_props[!is.finite(beta_props)] <- 0
 
-    # Check if we have enough unique values for density estimation
+    # Calculate density with bandwidth selection using weights
     betas_vec <- as.vector(betas)
     beta_props_vec <- as.vector(beta_props)
-    
-    # Remove zero weights to get effective data points
     non_zero_weights <- beta_props_vec > 0
     unique_betas <- unique(betas_vec[non_zero_weights])
-    
+
     if (length(unique_betas) < 2) {
       # Not enough unique values for automatic bandwidth selection
-      # Use a simple approach with manual bandwidth
       bw <- if (length(unique_betas) == 1) 0.1 else diff(range(unique_betas))/10
-      temp <- stats::density(betas_vec, weights = beta_props_vec, bw = bw)
+      temp <- suppressWarnings(stats::density(betas_vec, weights = beta_props_vec, bw = bw))
     } else {
-      temp <- stats::density(betas_vec, weights = beta_props_vec)
+      temp <- suppressWarnings(stats::density(betas_vec, weights = beta_props_vec))
     }
-
     out <- tibble::tibble("x" = temp$x, "y" = temp$y, "mn_beta" = sum(beta_props*betas))
 
     # Calculate species-specific proportions with safety checks
@@ -526,40 +456,20 @@ extractPPMR = function(mdl){
     spbeta_props[!is.finite(spbeta_props)] <- 0  # ensure all values are finite
     spPPMR <- tibble::tibble("Species" = as.factor(mdl$param$Groups$Species[-which(is.na(mdl$param$Groups$PPMRscale))]), "Betas" = rowSums(spbeta_props*betas), "y" = NA) # Get species-specific PPMR
 
-    # Handle density calculation with potential insufficient data points
-    betas_2d_vec <- as.vector(betas)
-    spbeta_props_2d_vec <- as.vector(spbeta_props)
-    
-    # Remove zero weights to get effective data points
-    non_zero_weights_2d <- spbeta_props_2d_vec > 0
-    unique_betas_2d <- unique(betas_2d_vec[non_zero_weights_2d])
-    
-    if (length(unique_betas_2d) < 2) {
-      # Not enough unique values for automatic bandwidth selection
-      bw_2d <- if (length(unique_betas_2d) == 1) 0.1 else diff(range(unique_betas_2d))/10
-      temp_2d <- stats::density(betas_2d_vec, weights = spbeta_props_2d_vec, bw = bw_2d)
-    } else {
-      temp_2d <- stats::density(betas_2d_vec, weights = spbeta_props_2d_vec)
-    }
-    
-    out2 <- tibble::tibble("x" = temp_2d$x, "y" = temp_2d$y)
-
     for (s in seq_along(spPPMR$Species)){
-      spPPMR$y[s] <- out2$y[which.min(abs(out2$x - spPPMR$Betas[s]))]
+      spPPMR$y[s] <- out$y[which.min(abs(out$x - spPPMR$Betas[s]))]
     }
 
     spPPMR <- spPPMR %>%
       dplyr::mutate(y = .data$y * 0) %>%
       dplyr::bind_rows(spPPMR)
 
-    out2 <- list()
-    out2[[1]] <- out
-    out2[[2]] <- spPPMR
-
-    return(out2)
+    # Store results for this timestep
+    results_array[[t]] <- list("ppmr_density" = out, "species_ppmr" = spPPMR)
   }
-}
 
+  return(results_array)
+}
 
 
 #' Calculate Phytoplankton Size Spectrum Parameters

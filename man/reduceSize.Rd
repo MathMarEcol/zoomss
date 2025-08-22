@@ -4,10 +4,12 @@
 \alias{reduceSize}
 \title{Aggregate ZooMSS abundances across all size classes}
 \usage{
-reduceSize(x)
+reduceSize(x, method = "sum")
 }
 \arguments{
-\item{x}{List of abundance matrices (typically from multiple spatial cells)}
+\item{x}{3D array outptut from ZooMSS model}
+
+\item{method}{Character string specifying aggregation method: "sum" (default) or "mean".}
 }
 \value{
 List of vectors with total abundance per functional group

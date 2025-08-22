@@ -39,19 +39,19 @@ plotPPMR <- function(mdl, idx){
     ggplot2::theme_bw() +
     ggplot2::theme(plot.margin=grid::unit(c(0,0,0,0), "mm")) +
     ggplot2::labs(x = expression('log' [10] * PPMR),
-         y = "Zoop. Biomass Proportion", subtitle = "PPMR") +
+                  y = "Zoop. Biomass Proportion", subtitle = "PPMR") +
     ggplot2::geom_vline(data = out[[1]], mapping = ggplot2::aes(xintercept = .data$mn_beta), colour = 'black') +
     ggplot2::scale_x_continuous(expand = c(0, 0)) +
     ggplot2::scale_y_continuous(expand = c(0, 0)) +
     ggplot2::scale_colour_manual(values = c("Flagellates" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Flagellates"],
-                                   "Ciliates" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Ciliates"],
-                                   "Larvaceans" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Larvaceans"],
-                                   "Salps" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Salps"],
-                                   "Jellyfish" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Jellyfish"],
-                                   "CarnCopepods" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="CarnCopepods"],
-                                   "Chaetognaths" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Chaetognaths"],
-                                   "Euphausiids" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Euphausiids"],
-                                   "OmniCopepods" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="OmniCopepods"]))
+                                            "Ciliates" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Ciliates"],
+                                            "Larvaceans" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Larvaceans"],
+                                            "Salps" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Salps"],
+                                            "Jellyfish" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Jellyfish"],
+                                            "CarnCopepods" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="CarnCopepods"],
+                                            "Chaetognaths" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Chaetognaths"],
+                                            "Euphausiids" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="Euphausiids"],
+                                            "OmniCopepods" = mdl$param$Groups$PlotColour[mdl$param$Groups$Species=="OmniCopepods"]))
 }
 
 #' Plot Size Spectra for ZooMSS Results
@@ -71,6 +71,7 @@ plotPPMR <- function(mdl, idx){
 #'   functional group.
 #'
 #' @param mdl ZooMSS results object containing model outputs and parameters
+#' @param by Character string specifying the metric to plot. Options: "abundance", "biomass", "mortality", "growth" (default: "abundance")
 #' @param n_years The number of years (from the end) over which to average the size spectra
 #'
 #' @return ggplot object showing log abundance vs log body weight by species
@@ -84,27 +85,29 @@ plotPPMR <- function(mdl, idx){
 #' print(size_plot)
 #' }
 #'
-plotSizeSpectra <- function(mdl, n_years) {
+plotSizeSpectra <- function(mdl, by = "abundance", n_years = 10) {
 
-  species <- averageTimeSeries(mdl, "N", n_years = n_years)
+  species <- averageTimeSeries(mdl, var = by, n_years = n_years)
 
   rownames(species) <- mdl$param$Groups$Species
   species <- tibble::as_tibble(t(species))
 
   species <- species %>%
     tibble::add_column("Weight" = mdl$param$w) %>%
-    tidyr::pivot_longer(-"Weight", names_to = "Species", values_to = "Abundance") %>%
-    dplyr::filter(.data$Abundance > 0) %>%
+    tidyr::pivot_longer(-"Weight", names_to = "Species", values_to = by) %>%
+    dplyr::filter(.data[[by]] > 0) %>%
     dplyr::mutate(Species = factor(.data$Species, levels = mdl$param$Groups$Species))
 
-  gg <- ggplot2::ggplot(data = species, mapping = ggplot2::aes(x = log10(.data$Weight), y = log10(.data$Abundance), colour = .data$Species)) +
+  ggplot2::ggplot(data = species,
+                        mapping = ggplot2::aes(x = log10(.data$Weight),
+                                               y = log10(.data[[by]]),
+                                               colour = .data$Species)) +
     ggplot2::geom_line() +
     ggplot2::geom_point() +
     ggplot2::scale_color_manual(values = mdl$param$Groups$PlotColour) +
     ggplot2::theme_bw() +
-    ggplot2::labs(subtitle = "Abundance Spectrum")
+    ggplot2::labs(subtitle = paste(stringr::str_to_title(by), "Spectrum"))
 
-  return(gg)
 }
 
 #' Plot Time Series Data for ZooMSS Results
@@ -126,9 +129,9 @@ plotSizeSpectra <- function(mdl, n_years) {
 #'
 #' @param mdl ZooMSS results object containing model outputs with time series data
 #' @param by Character string specifying the metric to plot. Options: "abundance", "biomass", "mortality", "growth" (default: "abundance")
-#' @param stacked Logical, whether to create stacked area plot for biomass (default: FALSE, only applies to biomass)
-#' @param proportional Logical, whether to show proportions for biomass (default: FALSE, only applies to biomass)
 #' @param species Character vector of species names to include. If NULL, all species included (default: NULL, applies to all metrics)
+#' @param type Character vector of plot type. Use `line` for the default line plot, `stack` or `fill` (as per geom_area) for stacked or proportional plots. (default: "line")
+#' @param transform Character vector of the required y-axis transformation. Options from `scale_*_continuous` (Default: "identity).
 #'
 #' @return ggplot object showing the requested time series by species
 #' @export
@@ -139,14 +142,13 @@ plotSizeSpectra <- function(mdl, n_years) {
 #' results <- zoomss_model(input_params, Groups)
 #'
 #' # Plot different metrics
-#' abundance_plot <- plotTimeSeries(results, by = "abundance")
-#' biomass_plot <- plotTimeSeries(results, by = "biomass")
+#' abundance_plot <- plotTimeSeries(results, by = "abundance", transform = "log10")
+#' biomass_plot <- plotTimeSeries(results, by = "biomass", transform = "log10")
 #' mortality_plot <- plotTimeSeries(results, by = "mortality")
 #' growth_plot <- plotTimeSeries(results, by = "growth")
 #'
-#' # Biomass with special options
-#' stacked_plot <- plotTimeSeries(results, by = "biomass", stacked = TRUE)
-#' prop_plot <- plotTimeSeries(results, by = "biomass", proportional = TRUE)
+#' stacked_plot <- plotTimeSeries(results, by = "biomass", type = "stack")
+#' prop_plot <- plotTimeSeries(results, by = "biomass", type = "fill")
 #'
 #' # Focus on specific species (works for all metrics)
 #' copepod_plot <- plotTimeSeries(results, by = "biomass",
@@ -159,82 +161,62 @@ plotSizeSpectra <- function(mdl, n_years) {
 #'                                  species = c("OmniCopepods", "CarnCopepods"))
 #' }
 #'
-plotTimeSeries <- function(mdl, by = "abundance", stacked = FALSE, proportional = FALSE, species = NULL) {
+plotTimeSeries <- function(mdl, by = "abundance", type = "line",
+                           transform = "identity", species = NULL) {
 
   # Validate inputs
-  by <- match.arg(by, choices = c("abundance", "biomass", "mortality", "growth"))
+  assertthat::assert_that(
+    is.list(mdl),
+    msg = "mdl must be a list."
+  )
 
-  if (!("N" %in% names(mdl))) {
-    stop("Time series data not available. Model may not have been run correctly.")
-  }
+  assertthat::assert_that(
+    "abundance" %in% names(mdl),
+    msg = "Time series data not available. Model may not have been run correctly."
+  )
+  assertthat::assert_that(
+    by %in% c("abundance", "biomass", "mortality", "growth"),
+    msg = paste0("'by' must be one of: ", paste(c("abundance", "biomass", "mortality", "growth"), collapse = ", "))
+  )
 
-  # Calculate data based on requested metric
-  if (by == "abundance") {
-    # Sum abundances across size classes for each group
-    data_matrix <- rowSums(mdl$N, dims = 2)
-    value_name <- "Abundance"
-    y_label <- "log10(Abundance)"
-    subtitle <- "Abundance"
-    log_transform <- TRUE
+  assertthat::assert_that(
+    type %in% c("line", "stack", "fill"),
+    msg = paste0("'type' must be one of: ", paste(c("line", "stack", "fill"), collapse = ", "))
+  )
 
-  } else if (by == "biomass") {
-    # Calculate biomass (abundance × weight) and sum across size classes
-    data_matrix <- rowSums(sweep(mdl$N, 3, mdl$param$w, "*"), dims = 2)
-    value_name <- "Biomass"
-    y_label <- "Biomass (mg C/m^3)"
-    subtitle <- "Total Biomass Time Series"
-    log_transform <- FALSE
+  assertthat::assert_that(
+    transform %in% c("identity", "log", "log10", "log1p", "log2", "logit"),
+    msg = paste0("'transform' must be one of: ", paste(c(c("identity", "log", "log10", "log1p", "log2", "logit")), collapse = ", "))
+  )
 
-  } else if (by == "mortality") {
-    # Average predation mortality rates across size classes
-    data_matrix <- rowSums(mdl$Z, dims = 2) / length(mdl$param$w)
-    value_name <- "Mortality"
-    y_label <- "Mortality Rate"
-    subtitle <- "Mortality Rate"
-    log_transform <- FALSE
+  assertthat::assert_that(
+    is.null(species) || all(species %in% mdl$param$Groups$Species),
+    msg = paste0("All elements of 'species' must be in: ", paste(mdl$param$Groups$Species, collapse = ", "))
+  )
 
-  } else if (by == "growth") {
-    # Average growth rates across size classes
-    data_matrix <- rowSums(mdl$gg, dims = 2) / length(mdl$param$w)
-    value_name <- "Growth"
-    y_label <- "log10(Growth Rate)"
-    subtitle <- "Growth Rate"
-    log_transform <- TRUE
-  }
+  # Calculate data based on requested variable
+  data_matrix <- switch( by,
+                         "abundance" = mdl$abundance %>% reduceSize(),
+                         "biomass" = mdl$biomass %>% reduceSize(),
+                         "mortality" = mdl$mortality %>% reduceSize(method = "mean"),
+                         "growth" = mdl$growth %>% reduceSize(method = "mean")
+  )
 
   # Set up data frame
   colnames(data_matrix) <- mdl$param$Groups$Species
   data_df <- tibble::as_tibble(data_matrix)
   data_df$Time <- mdl$time
 
-  # Filter species if specified (applies to all plot types)
+  # Filter species if specified
   if (!is.null(species)) {
-    missing_species <- species[!species %in% mdl$param$Groups$Species]
-    if (length(missing_species) > 0) {
-      warning("Species not found in data: ", paste(missing_species, collapse = ", "))
-    }
-    valid_species <- species[species %in% mdl$param$Groups$Species]
-    if (length(valid_species) == 0) {
-      stop("No valid species specified. Available species: ", paste(mdl$param$Groups$Species, collapse = ", "))
-    }
-    data_df <- data_df[, c("Time", valid_species)]
+    data_df <- data_df[, c("Time", species)]
   }
 
   # Convert to long format
   data_long <- data_df %>%
-    tidyr::pivot_longer(-"Time", names_to = "Species", values_to = value_name) %>%
-    dplyr::filter(!!rlang::sym(value_name) > 0) %>%
+    tidyr::pivot_longer(-"Time", names_to = "Species", values_to = by) %>%
+    dplyr::filter(!!rlang::sym(by) > 0) %>%
     dplyr::mutate(Species = factor(.data$Species, levels = mdl$param$Groups$Species))
-
-  # Handle proportional scaling for biomass
-  if (by == "biomass" && proportional && (stacked || length(unique(data_long$Species)) > 1)) {
-    data_long <- data_long %>%
-      dplyr::group_by(.data$Time) %>%
-      dplyr::mutate(!!rlang::sym(value_name) := !!rlang::sym(value_name) / sum(!!rlang::sym(value_name), na.rm = TRUE)) %>%
-      dplyr::ungroup()
-    y_label <- "Proportion"
-    subtitle <- "Proportional Biomass Time Series"
-  }
 
   # Get colors for plotting
   if (!is.null(species)) {
@@ -246,39 +228,37 @@ plotTimeSeries <- function(mdl, by = "abundance", stacked = FALSE, proportional 
     names(plot_colors) <- mdl$param$Groups$Species
   }
 
-  # Create plot based on options
-  if (by == "biomass" && (stacked || proportional)) {
-    # Stacked area plot for biomass
-    if (proportional) subtitle <- "Proportional Biomass Time Series"
-    else if (stacked) subtitle <- "Stacked Biomass Time Series"
+
+  # Do plotting
+  if (type %in% c("fill", "stack")) {
+
+    # Stacked and proportion area plot for any metric
+    gg <- ggplot2::ggplot(data = data_long,
+                          mapping = ggplot2::aes(x = .data$Time,
+                                                 y = !!rlang::sym(by),
+                                                 fill = .data$Species)) +
+      ggplot2::geom_area(position = type, alpha = 0.7) +
+      ggplot2::scale_fill_manual(values = plot_colors) +
+      ggplot2::scale_y_continuous(transform = transform, expand = c(0, 0))
+
+  } else if (type == "line") {
 
     gg <- ggplot2::ggplot(data = data_long,
                           mapping = ggplot2::aes(x = .data$Time,
-                                                 y = !!rlang::sym(value_name),
-                                                 fill = .data$Species)) +
-      ggplot2::geom_area(position = "stack", alpha = 0.7) +
-      ggplot2::scale_fill_manual(values = plot_colors) +
-      ggplot2::theme_bw() +
-      ggplot2::scale_x_continuous(expand = c(0, 0)) +
-      ggplot2::scale_y_continuous(expand = c(0, 0)) +
-      ggplot2::labs(subtitle = subtitle, y = y_label) +
-      ggplot2::xlab("Time (Years)")
-  } else {
-    # Line plot (standard for all types)
-    y_aes <- if (log_transform) ggplot2::aes(y = log10(!!rlang::sym(value_name))) else ggplot2::aes(y = !!rlang::sym(value_name))
-
-    gg <- ggplot2::ggplot(data = data_long, mapping = ggplot2::aes(x = .data$Time, colour = .data$Species)) +
-      y_aes +
+                                                 y = !!rlang::sym(by),
+                                                 colour = .data$Species)) +
+      ggplot2::scale_y_continuous(transform = transform) +
       ggplot2::geom_line(linewidth = 1) +
-      ggplot2::geom_point(size = 1.2) +
-      ggplot2::scale_color_manual(values = plot_colors) +
-      ggplot2::theme_bw() +
-      ggplot2::scale_x_continuous(expand = c(0, 0)) +
-      ggplot2::scale_y_continuous(expand = c(0, 0)) +
-      ggplot2::labs(subtitle = subtitle, y = y_label) +
-      ggplot2::xlab("Time (Years)")
+      # ggplot2::geom_point(size = 1.2) +
+      ggplot2::scale_color_manual(values = plot_colors)
+
   }
 
+  gg <- gg +
+    ggplot2::theme_bw() +
+    ggplot2::scale_x_continuous(expand = c(0, 0)) +
+    ggplot2::labs(y = stringr::str_to_sentence(by)) +
+    ggplot2::xlab("Time (years)")
   return(gg)
 }
 

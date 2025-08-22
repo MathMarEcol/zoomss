@@ -4,20 +4,22 @@
 
 # Setup test data --------------------------------------------------------
 
-# Create minimal test environment data
-create_test_env_data <- function(n_years = 20, dt = 0.1) {
-  time_vec <- seq(0, n_years - dt, by = dt)
+env_data <- createEnviroData(
+  n_years = 20,
+  dt = 0.1,
+  seasonal = FALSE,
+  base_sst = 20,
+  base_chl = 1.0
+)
 
-  list(
-    time = time_vec,
-    sst = 15 + 3 * sin(2 * pi * time_vec),  # Seasonal temperature variation
-    chl = 2 + 1 * sin(2 * pi * time_vec + pi/2)  # Seasonal chlorophyll variation
-  )
-}
+# Get groups data
+Groups <- getGroups()
+
+# Create mock model results for plotting tests
+mdl <- zoomss_model(input_params = env_data, Groups = Groups, isave = 1)
 
 # Create minimal test groups data
-create_test_groups <- function() {
-  data.frame(
+non_default_groups <- data.frame(
     Species = c("TestZoo1", "TestFish1"),
     Type = c("Zooplankton", "Fish"),
     FeedType = c("FilterFeeder", "Carnivore"),
@@ -39,71 +41,55 @@ create_test_groups <- function() {
     PlotColour = c("blue", "red"),
     stringsAsFactors = FALSE
   )
-}
+
 
 # Tests for zoomss_model() -----------------------------------------------
 
 test_that("zoomss_model runs with minimal input", {
-  skip_if_not_installed("zoomss")
-
   # Create test data
-  env_data <- create_test_env_data(n_years = 20, dt = 0.1)
-  input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
-  test_groups <- create_test_groups()
 
   # Test basic model run
   expect_no_error({
-    result <- zoomss_model(input_params, test_groups, isave = 5)
+    result <- zoomss_model(env_data, non_default_groups, isave = 5)
   })
 
   # Test with default groups
   expect_no_error({
-    result <- zoomss_model(input_params, isave = 5)
+    result <- zoomss_model(env_data, isave = 5)
   })
 })
 
 test_that("zoomss_model returns expected structure", {
-  skip_if_not_installed("zoomss")
-
-  env_data <- create_test_env_data(n_years = 20, dt = 0.1)
-  input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
-  test_groups <- create_test_groups()
-
-  result <- zoomss_model(input_params, test_groups, isave = 5)
 
   # Check that result is a list
-  expect_type(result, "list")
+  expect_type(mdl, "list")
 
   # Check for expected components
-  expect_true("param" %in% names(result))
-  expect_true("N" %in% names(result))
-  expect_true("gg" %in% names(result))
+  expect_true("param" %in% names(mdl))
+  expect_true("abundance" %in% names(mdl))
+  expect_true("growth" %in% names(mdl))
 
   # Check dimensions are reasonable
-  expect_true(is.array(result$N))
-  expect_true(is.array(result$gg))
-  expect_equal(length(dim(result$N)), 3)  # time x groups x size_classes
+  expect_true(is.array(mdl$abundance))
+  expect_true(is.array(mdl$growth))
+  expect_equal(length(dim(mdl$abundance)), 3)  # time x groups x size_classes
 })
 
 test_that("zoomss_model validates input parameters", {
-  skip_if_not_installed("zoomss")
 
   # Test with missing environmental data
   bad_input <- data.frame(time = 1:10)
-  test_groups <- create_test_groups()
 
   expect_error(
-    zoomss_model(bad_input, test_groups),
+    zoomss_model(bad_input, Groups),
     "No environmental time series provided"
   )
 
   # Test with invalid groups
   bad_groups <- data.frame(Species = "Test")
-  env_data <- create_test_env_data(n_years = 20, dt = 0.1)
-  input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
 
   expect_error(
-    zoomss_model(input_params, bad_groups),
+    zoomss_model(env_data, bad_groups),
     "Missing required columns"
   )
 })
@@ -111,13 +97,8 @@ test_that("zoomss_model validates input parameters", {
 # Tests for zoomss_params() ----------------------------------------------
 
 test_that("zoomss_params creates valid parameter list", {
-  skip_if_not_installed("zoomss")
 
-  env_data <- create_test_env_data(n_years = 20, dt = 0.1)
-  input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
-  test_groups <- create_test_groups()
-
-  params <- zoomss_params(test_groups, input_params, isave = 5)
+  params <- zoomss_params(Groups, env_data, isave = 5)
 
   # Check basic structure
   expect_type(params, "list")
@@ -127,42 +108,39 @@ test_that("zoomss_params creates valid parameter list", {
   expect_true("tmax" %in% names(params))
 
   # Check calculated values
-  expect_equal(params$ngrps, nrow(test_groups))
+  expect_equal(params$ngrps, nrow(Groups))
   expect_equal(params$dt, 0.1)
   expect_true(params$tmax > 0)
 
   # Check group indices
   expect_true("zoo_grps" %in% names(params))
   expect_true("fish_grps" %in% names(params))
-  expect_equal(length(params$zoo_grps), sum(test_groups$Type == "Zooplankton"))
-  expect_equal(length(params$fish_grps), sum(test_groups$Type == "Fish"))
+  expect_equal(length(params$zoo_grps), sum(Groups$Type == "Zooplankton"))
+  expect_equal(length(params$fish_grps), sum(Groups$Type == "Fish"))
 })
 
 test_that("zoomss_params calculates time parameters correctly", {
-  skip_if_not_installed("zoomss")
 
   # Test different time configurations
-  env_data1 <- create_test_env_data(n_years = 20, dt = 0.1)
-  input_params1 <- createInputParams(env_data1$time, env_data1$sst, env_data1$chl)
-  test_groups <- create_test_groups()
-
-  params1 <- zoomss_params(test_groups, input_params1, isave = 5)
+  params1 <- zoomss_params(Groups, env_data, isave = 5)
   expect_equal(params1$dt, 0.1)
-  expect_equal(params1$tmax, max(env_data1$time))
+  expect_equal(params1$tmax, max(env_data$time))
 
   # Test with different dt
-  env_data2 <- create_test_env_data(n_years = 20, dt = 0.05)
-  input_params2 <- createInputParams(env_data2$time, env_data2$sst, env_data2$chl)
+  env_data2 <- createEnviroData(
+    n_years = 20,
+    dt = 0.05,
+    seasonal = FALSE,
+    base_sst = 20,
+    base_chl = 1.0
+  )
 
-  params2 <- zoomss_params(test_groups, input_params2, isave = 10)
+  params2 <- zoomss_params(Groups, env_data2, isave = 10)
   expect_equal(params2$dt, 0.05)
   expect_equal(params2$tmax, max(env_data2$time))
 })
 
 test_that("zoomss_params validates uniform time steps", {
-  skip_if_not_installed("zoomss")
-
-  test_groups <- create_test_groups()
 
   # Create non-uniform time steps
   bad_time <- c(0, 0.1, 0.25, 0.3, 0.4)  # Non-uniform steps
@@ -176,13 +154,8 @@ test_that("zoomss_params validates uniform time steps", {
 # Tests for zoomss_setup() -----------------------------------------------
 
 test_that("zoomss_setup creates model structure", {
-  skip_if_not_installed("zoomss")
 
-  env_data <- create_test_env_data(n_years = 20, dt = 0.1)
-  input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
-  test_groups <- create_test_groups()
-
-  params <- zoomss_params(test_groups, input_params, isave = 5)
+  params <- zoomss_params(Groups, env_data, isave = 5)
   model <- zoomss_setup(params)
 
   # Check model structure
@@ -200,20 +173,15 @@ test_that("zoomss_setup creates model structure", {
     expect_true(is.array(model[[kernel]]), info = paste("Kernel not array:", kernel))
   }
 
-  # Check abundance array
+  # Check abundance array - zoomss_stup is still working in N, Z, gg etc
   expect_true("N" %in% names(model))
   expect_true(is.array(model$N))
   expect_equal(length(dim(model$N)), 3)  # time x groups x size_classes
 })
 
 test_that("zoomss_setup initializes mortality and efficiency matrices", {
-  skip_if_not_installed("zoomss")
 
-  env_data <- create_test_env_data(n_years = 20, dt = 0.1)
-  input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
-  test_groups <- create_test_groups()
-
-  params <- zoomss_params(test_groups, input_params, isave = 5)
+  params <- zoomss_params(Groups, env_data, isave = 5)
   model <- zoomss_setup(params)
 
   # Check mortality matrices
@@ -235,20 +203,15 @@ test_that("zoomss_setup initializes mortality and efficiency matrices", {
 # Tests for zoomss_run() -------------------------------------------------
 
 test_that("zoomss_run executes model simulation", {
-  skip_if_not_installed("zoomss")
 
-  env_data <- create_test_env_data(n_years = 20, dt = 0.1)
-  input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
-  test_groups <- create_test_groups()
-
-  params <- zoomss_params(test_groups, input_params, isave = 5)
+  params <- zoomss_params(Groups, env_data, isave = 5)
   model <- zoomss_setup(params)
 
   expect_no_error({
     result <- zoomss_run(model)
   })
 
-  # Check result structure
+  # Check result structure - zoomss_run is still working in N, Z, gg etc
   expect_type(result, "list")
   expect_true("N" %in% names(result))
   expect_true("param" %in% names(result))
@@ -259,19 +222,14 @@ test_that("zoomss_run executes model simulation", {
 })
 
 test_that("zoomss_run produces time series output", {
-  skip_if_not_installed("zoomss")
 
-  env_data <- create_test_env_data(n_years = 20, dt = 0.1)
-  input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
-  test_groups <- create_test_groups()
-
-  params <- zoomss_params(test_groups, input_params, isave = 2)
+  params <- zoomss_params(Groups, env_data, isave = 2)
   model <- zoomss_setup(params)
   result <- zoomss_run(model)
 
-  # Check time series dimensions
+  # Check time series dimensions - zoomss_run is still working in N, Z, gg etc
   expect_true(dim(result$N)[1] > 1)  # Multiple time steps saved
-  expect_equal(dim(result$N)[2], nrow(test_groups))  # Correct number of groups
+  expect_equal(dim(result$N)[2], nrow(Groups))  # Correct number of groups
   expect_equal(dim(result$N)[3], params$ngrid)  # Correct number of size classes
 
   # Check that we have reasonable output structure
@@ -283,35 +241,25 @@ test_that("zoomss_run produces time series output", {
 # Integration tests -------------------------------------------------------
 
 test_that("Full model workflow produces consistent results", {
-  skip_if_not_installed("zoomss")
-
   # Run model twice with same inputs
-  env_data <- create_test_env_data(n_years = 20, dt = 0.1)
-  input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
-  test_groups <- create_test_groups()
 
-  result1 <- zoomss_model(input_params, test_groups, isave = 5)
-  result2 <- zoomss_model(input_params, test_groups, isave = 5)
+  result1 <- zoomss_model(env_data, Groups, isave = 5)
+  result2 <- zoomss_model(env_data, Groups, isave = 5)
 
   # Results should be identical (deterministic model)
-  expect_equal(result1$N, result2$N)
-  expect_equal(result1$Biomass, result2$Biomass)
+  expect_equal(result1$abundance, result2$abundance)
+  expect_equal(result1$biomass, result2$biomass)
 })
 
 test_that("Model handles different group configurations", {
-  skip_if_not_installed("zoomss")
-
-  env_data <- create_test_env_data(n_years = 20, dt = 0.1)
-  input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
 
   # Test with minimal groups (1 zoo, 1 fish)
-  minimal_groups <- create_test_groups()
-  result_minimal <- zoomss_model(input_params, minimal_groups, isave = 5)
-  expect_equal(dim(result_minimal$N)[2], 2)  # 2 groups
+  result_minimal <- zoomss_model(env_data, non_default_groups, isave = 5)
+  expect_equal(dim(result_minimal$abundance)[2], 2)  # 2 groups
 
   # Test with default groups
-  result_default <- zoomss_model(input_params, isave = 5)
-  expect_true(dim(result_default$N)[2] > 2)  # More groups in default
+  result_default <- zoomss_model(env_data, isave = 5)
+  expect_true(dim(result_default$abundance)[2] > 2)  # More groups in default
 })
 
 
@@ -319,31 +267,28 @@ test_that("Model handles different group configurations", {
 # Edge cases and error handling ------------------------------------------
 
 test_that("Model handles edge cases gracefully", {
-  skip_if_not_installed("zoomss")
 
   # Very short simulation
-  env_data_short <- create_test_env_data(n_years = 5, dt = 0.1)
-  input_params_short <- createInputParams(env_data_short$time, env_data_short$sst, env_data_short$chl)
-  test_groups <- create_test_groups()
+  env_data_short <- createEnviroData(
+    n_years = 5,
+    dt = 0.1,
+    seasonal = FALSE,
+    base_sst = 20,
+    base_chl = 1.0
+  )
 
   expect_no_error({
-    result_short <- zoomss_model(input_params_short, test_groups, isave = 1)
+    result_short <- zoomss_model(env_data_short, Groups, isave = 1)
   })
 
   # Large isave parameter (save less frequently)
-  env_data <- create_test_env_data(n_years = 20, dt = 0.1)
-  input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
-
   expect_no_error({
-    result_sparse <- zoomss_model(input_params, test_groups, isave = 50)
+    result_sparse <- zoomss_model(env_data, Groups, isave = 50)
   })
 })
 
-test_that("Parameter validation catches common errors", {
-  skip_if_not_installed("zoomss")
 
-  env_data <- create_test_env_data(n_years = 20, dt = 0.1)
-  input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
+test_that("Parameter validation catches common errors", {
 
   # Test with groups missing required columns
   bad_groups <- data.frame(
@@ -353,7 +298,8 @@ test_that("Parameter validation catches common errors", {
   )
 
   expect_error(
-    zoomss_model(input_params, bad_groups),
+    zoomss_model(env_data, bad_groups),
     "Missing required columns"
   )
 })
+
