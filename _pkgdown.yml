@@ -1,0 +1,44 @@
+url: https://MathMarEcol.github.io/zoomss
+development:
+  mode: devel
+  destination: docs
+  version_label: info
+  version_tooltip: The package is in the early stages of development. Use with caution.
+reference:
+- title: Data
+  desc: Data related functions and datasets
+- contents:
+  - GroupInputs
+  - getGroups
+  - calculatePhytoParam
+  - createEnviroData
+  - createInputParams
+  - validateGroups
+- title: Model Runs
+  desc: Functions for running the model
+- contents:
+  - starts_with("zoomss_")
+- title: Plotting
+  desc: Functions for plotting.
+- contents:
+  - starts_with("plot")
+- title: Data wrangling
+  desc: Helper functions to convert units and data format
+- contents:
+  - starts_with("average")
+  - starts_with("extract")
+  - starts_with("get")
+  - starts_with("reduce")
+- title: Private functions
+  desc: Functions to be unexported
+- contents:
+  - untibble
+navbar:
+  structure:
+    right: [github, search]
+template:
+  bootstrap: 5
+  bootswatch: lumen #cerulean materia sandstone zephyr yeti
+  bslib:
+    toc: true
+    toc-expand: 3

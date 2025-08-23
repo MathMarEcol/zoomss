@@ -6,3 +6,7 @@ Ancillary/EnvironmentalData/CreateEnviro/Data/GEBCO_2014_2D.nc
 RawOutput/*
 Ancillary/*
 
+inst/doc
+docs
+/doc/
+/Meta/
