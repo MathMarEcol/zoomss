@@ -1,7 +1,7 @@
 url: https://MathMarEcol.github.io/zoomss
 development:
   mode: devel
-  destination: docs
+  destination: /
   version_label: info
   version_tooltip: The package is in the early stages of development. Use with caution.
 reference:
