@@ -1,4 +1,10 @@
-url: https://MathMarEcol.github.io/zoomss
+url: ~
+template:
+  bootstrap: 5
+  bootswatch: lumen
+  bslib:
+    toc: true
+    toc-expand: 3
 reference:
 - title: Data
   desc: Data related functions and datasets
@@ -31,9 +37,3 @@ reference:
 navbar:
   structure:
     right: [github, search]
-template:
-  bootstrap: 5
-  bootswatch: lumen
-  bslib:
-    toc: true
-    toc-expand: 3
