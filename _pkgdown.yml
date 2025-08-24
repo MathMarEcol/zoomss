@@ -33,7 +33,7 @@ navbar:
     right: [github, search]
 template:
   bootstrap: 5
-  bootswatch: lumen #cerulean materia sandstone zephyr yeti
+  bootswatch: lumen
   bslib:
     toc: true
     toc-expand: 3
