@@ -31,9 +31,3 @@ reference:
 navbar:
   structure:
     right: [github, search]
-template:
-  bootstrap: 5
-  bootswatch: lumen
-  bslib:
-    toc: true
-    toc-expand: 3
