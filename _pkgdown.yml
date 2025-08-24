@@ -1,7 +1,6 @@
 url: ~
 template:
   bootstrap: 5
-  bootswatch: lumen
   bslib:
     toc: true
     toc-expand: 3
@@ -34,6 +33,3 @@ reference:
   desc: Functions to be unexported
 - contents:
   - untibble
-navbar:
-  structure:
-    right: [github, search]

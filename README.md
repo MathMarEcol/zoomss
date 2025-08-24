@@ -31,8 +31,8 @@ characteristics and carbon content, and the zooplankton community
 emerges from the model across global environmental gradients, depending
 on the functional traits of the different groups.
 
-We developed the Zooplankton Model of Size Spectra (ZooMSSv2) based on
-the prototype of Heneghan et al. (2016). ZooMSS uses the functional
+We developed the Zooplankton Model of Size Spectra ZooMSS based on the
+prototype of Heneghan et al. (2016). ZooMSS uses the functional
 size-spectrum framework (Blanchard et al., 2017) to resolve the body
 size ranges, size-based feeding characteristics and carbon content of
 nine zooplankton groups and three fish groups. The model supports
