@@ -4,6 +4,7 @@ template:
   bslib:
     toc: true
     toc-expand: 3
+  bootswatch: flatly
 reference:
 - title: Data
   desc: Data related functions and datasets
@@ -33,3 +34,6 @@ reference:
   desc: Functions to be unexported
 - contents:
   - untibble
+navbar:
+  structure:
+    right: [github, search]
