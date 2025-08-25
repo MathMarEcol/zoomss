@@ -4,7 +4,7 @@ template:
   bslib:
     toc: true
     toc-expand: 3
-  bootswatch: flatly
+  bootswatch: cerulean
 reference:
 - title: Data
   desc: Data related functions and datasets
@@ -30,10 +30,6 @@ reference:
   - starts_with("extract")
   - starts_with("get")
   - starts_with("reduce")
-- title: Private functions
-  desc: Functions to be unexported
-- contents:
-  - untibble
 navbar:
   structure:
     right: [github, search]

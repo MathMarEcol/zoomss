@@ -54,6 +54,8 @@
 #' final_abundances <- results$N[dim(results$N)[1],,]
 #' }
 #'
+#' @noRd
+#'
 zoomss_run <- function(model){
 
   # Pull out some useful parameters - just a shortcut

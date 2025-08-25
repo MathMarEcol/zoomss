@@ -57,6 +57,8 @@
 #' results <- zoomss_run(model)
 #' }
 #'
+#' @noRd
+#'
 zoomss_setup <- function(param){
 
   ## Dynamic prey availability matrix: dim1 is predators, dim2 is predator size classes,
