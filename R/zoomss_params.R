@@ -53,6 +53,8 @@
 #' params <- zoomss_params(Groups, input_params, isave = 50)
 #' }
 #'
+#' @noRd
+#'
 zoomss_params <- function(Groups, input_params, isave){
 
   # Calculate dt and tmax from time column in input_params

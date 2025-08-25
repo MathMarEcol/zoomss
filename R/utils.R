@@ -318,6 +318,8 @@ averageTimeSeries = function(mdl, var, n_years = 10){
 #'
 #' @return Plain data frame without tibble attributes
 #'
+#' @noRd
+#'
 untibble <- function (tibble) {
   data.frame(unclass(tibble), check.names = FALSE, stringsAsFactors = FALSE)
 }  ## escape the nonsense
