@@ -13,9 +13,8 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Zooplankton Model of Size Spectrum (ZooMSS)
+# Zooplankton Model of Size Spectrum (ZooMSS) <a href="https://MathMarEcol.github.io/zoomss"><img src="man/figures/zoomss.png" align="right" height="139" alt="zoomss website"></a>
 
-<!-- # planktonr <a href='https://github.com/MathMarEcol/zoomss'><img src='man/figures/planktonr.png' align="right" width="139px" /></a> -->
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![Windows](https://github.com/MathMarEcol/zoomss/actions/workflows/Windows.yaml/badge.svg)](https://github.com/MathMarEcol/zoomss/actions/workflows/Windows.yaml)

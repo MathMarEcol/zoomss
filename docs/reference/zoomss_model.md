@@ -1,0 +1,94 @@
+# Main ZooMSS model function for complete simulations
+
+This is the main wrapper function that orchestrates a complete ZooMSS
+model simulation from parameter setup through model execution to output
+processing.
+
+## Usage
+
+``` r
+zoomss_model(input_params, Groups = NULL, isave = 1)
+```
+
+## Arguments
+
+- input_params:
+
+  Data frame containing model parameters and environmental time series.
+  Must include columns: time (time vector in years), sst (sea surface
+  temperature), and chl (chlorophyll). Can optionally include cellID for
+  spatial data. The time step (dt) and maximum time (tmax) are
+  automatically calculated from the time vector. Can be created using
+  createInputParams().
+
+- Groups:
+
+  Data frame defining functional groups with their biological
+  parameters. Must include columns defining species characteristics,
+  size ranges, and feeding parameters. If NULL, uses default ZooMSS
+  functional groups. Can be obtained/customized using getGroups().
+
+- isave:
+
+  Save frequency in time steps (default: 10)
+
+## Value
+
+Complete ZooMSS model results object containing:
+
+- param: Model parameters and environmental forcing data
+
+- time: Time values corresponding to saved results (accounting for
+  isave)
+
+- abundance: Abundance time series (time x groups x size classes)
+
+- growth: Growth rate time series
+
+- mortality: Mortality rate time series
+
+- diet: Diet composition time series
+
+- Additional model structure and kernel data
+
+## Details
+
+Run Complete ZooMSS Model Simulation
+
+This function coordinates the entire ZooMSS modeling workflow:
+
+1.  Validates that environmental time series data is provided
+
+2.  Sets up model parameters using the Groups data and input parameters
+
+3.  Initializes the model structure and feeding kernels
+
+4.  Runs the model forward in time with dynamic environmental forcing
+
+5.  Processes outputs by averaging the final 50% of the simulation
+
+6.  Returns organized results including abundances, diets, growth, and
+    mortality
+
+This is the primary entry point for running ZooMSS simulations with
+environmental forcing.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# Basic usage with default groups
+env_data <- createEnviroData(10, 0.01)
+input_params <- createInputParams(env_data$time, env_data$sst, env_data$chl)
+results <- zoomss_model(input_params, isave = 50)
+
+# Using custom groups
+Groups <- getGroups()  # Get default groups
+Groups$W0[1] <- -12.5          # Modify a parameter
+results <- zoomss_model(input_params, Groups, isave = 100)
+
+# Loading groups from file
+custom_groups <- getGroups(source = "file", file = "my_groups.csv")
+results <- zoomss_model(input_params, custom_groups)
+} # }
+```

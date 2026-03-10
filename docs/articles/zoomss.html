@@ -101,7 +101,7 @@ function. This time-series uses a constant sea surface temperature
 with:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnvironment.html">plotEnvironment</a></span><span class="op">(</span><span class="va">env_data</span><span class="op">)</span></span></code></pre></div>
-<p><img src="zoomss_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
+<p><img src="zoomss_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="700"></p>
 <p>Now we run ZooMSS and save every <code>isave</code> timestep to
 reduce storage requirements.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -127,7 +127,7 @@ all size classes through time.</p>
 <span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plotTimeSeries.html">plotTimeSeries</a></span><span class="op">(</span><span class="va">mdl</span>, by <span class="op">=</span> <span class="st">"mortality"</span><span class="op">)</span> <span class="co"># Plot predation mortality time series</span></span>
 <span></span>
 <span><span class="fu"><a href="https://patchwork.data-imaginist.com/reference/wrap_plots.html" class="external-link">wrap_plots</a></span><span class="op">(</span><span class="va">p1</span>, <span class="va">p2</span>, <span class="va">p3</span>, nrow <span class="op">=</span> <span class="fl">3</span>, guides <span class="op">=</span> <span class="st">"collect"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="zoomss_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
+<p><img src="zoomss_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="700"></p>
 <p>We can also plot total biomass through time.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p4</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plotTimeSeries.html">plotTimeSeries</a></span><span class="op">(</span><span class="va">mdl</span>, by <span class="op">=</span> <span class="st">"biomass"</span>, transform <span class="op">=</span> <span class="st">"log10"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> <span class="co"># Plot biomass </span></span>
@@ -135,7 +135,7 @@ all size classes through time.</p>
 <span><span class="va">p6</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plotTimeSeries.html">plotTimeSeries</a></span><span class="op">(</span><span class="va">mdl</span>, by <span class="op">=</span> <span class="st">"biomass"</span>, type <span class="op">=</span> <span class="st">"fill"</span><span class="op">)</span> <span class="co"># Plot proportional stacked biomass </span></span>
 <span></span>
 <span><span class="fu"><a href="https://patchwork.data-imaginist.com/reference/wrap_plots.html" class="external-link">wrap_plots</a></span><span class="op">(</span><span class="va">p4</span>, <span class="va">p5</span>, <span class="va">p6</span>, nrow <span class="op">=</span> <span class="fl">3</span>, guides <span class="op">=</span> <span class="st">"collect"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="zoomss_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
+<p><img src="zoomss_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="static-plots-for-a-given-model-time-point">Static Plots for a given model time point<a class="anchor" aria-label="anchor" href="#static-plots-for-a-given-model-time-point"></a>
@@ -145,11 +145,11 @@ all size classes through time.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotSizeSpectra.html">plotSizeSpectra</a></span><span class="op">(</span><span class="va">mdl</span>, n_years <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Averaging final 10 years (50 saved time steps with isave = 2) of abundance from 500 total saved time steps.</span></span></code></pre></div>
-<p><img src="zoomss_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
+<p><img src="zoomss_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="700"></p>
 <p>Plot predator-prey mass ratios for the <code>idx</code> timestep</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotPPMR.html">plotPPMR</a></span><span class="op">(</span><span class="va">mdl</span>, idx <span class="op">=</span> <span class="fl">500</span><span class="op">)</span> <span class="co"># Plot final timestep</span></span></code></pre></div>
-<p><img src="zoomss_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
+<p><img src="zoomss_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="" width="700"></p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -163,7 +163,7 @@ all size classes through time.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

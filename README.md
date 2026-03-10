@@ -1,9 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# Zooplankton Model of Size Spectrum (ZooMSS)
-
-<!-- # planktonr <a href='https://github.com/MathMarEcol/zoomss'><img src='man/figures/planktonr.png' align="right" width="139px" /></a> -->
+# Zooplankton Model of Size Spectrum (ZooMSS) <a href="https://MathMarEcol.github.io/zoomss"><img src="man/figures/zoomss.png" align="right" height="139" alt="zoomss website"></a>
 
 <!-- badges: start -->
 
