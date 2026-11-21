@@ -4,7 +4,7 @@
 \alias{zoomss_model}
 \title{Main ZooMSS model function for complete simulations}
 \usage{
-zoomss_model(input_params, Groups = NULL, isave = 1)
+zoomss_model(input_params, Groups = NULL, isave = 1, diffusion = "on")
 }
 \arguments{
 \item{input_params}{Data frame containing model parameters and environmental time series.
@@ -18,6 +18,20 @@ If NULL, uses default ZooMSS functional groups. Can be obtained/customized using
 getGroups().}
 
 \item{isave}{Save frequency in time steps (default: 10)}
+
+\item{diffusion}{Treatment of the diffusion term of the model equation on the log10 weight
+grid. One of
+\itemize{
+\item "on" (default): the exact change of variable, with the temperature effect entering
+diffusion squared, as in the published model equations.
+\item "tau_once": the exact change of variable, with the temperature effect entering
+diffusion once (diffusion is the feeding rate times the square of the weight gained per
+meal, and temperature scales the feeding rate).
+\item "published": as in the published code. The diffusion coefficient has one factor of
+log(10) where the change of variable needs two, and the drift term that the change of
+variable produces has the wrong sign. Reproduces earlier results exactly.
+\item "off": no diffusion.
+}}
 }
 \value{
 Complete ZooMSS model results object containing:

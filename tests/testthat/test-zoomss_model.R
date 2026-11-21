@@ -202,23 +202,53 @@ test_that("zoomss_setup initializes mortality and efficiency matrices", {
 
 # Tests for zoomss_run() -------------------------------------------------
 
+test_that("zoomss_diffusion_terms returns the diffusion coefficient and drift for each option", {
+
+  d <- matrix(c(1, 2, 3, 4), 2, 2)     # diffusion coefficient as built in zoomss_run
+  te <- matrix(c(1, 2, 0.5, 4), 2, 2)  # temperature effect
+
+  on <- zoomss_diffusion_terms(d, te, "on")
+  expect_equal(on$diff, d / log(10))
+  expect_equal(on$drift, -log(10) / 2)
+
+  tau_once <- zoomss_diffusion_terms(d, te, "tau_once")
+  expect_equal(tau_once$diff, d / (log(10) * te))
+  expect_equal(tau_once$drift, -log(10) / 2)
+
+  published <- zoomss_diffusion_terms(d, te, "published")
+  expect_identical(published$diff, d)
+  expect_equal(published$drift, log(10) / 2)
+
+  off <- zoomss_diffusion_terms(d, te, "off")
+  expect_true(all(off$diff == 0))
+
+  expect_error(zoomss_diffusion_terms(d, te, "other"), "diffusion")
+})
+
 test_that("zoomss_run executes model simulation", {
 
-  params <- zoomss_params(Groups, env_data, isave = 5)
-  model <- zoomss_setup(params)
+  for (diffusion in c("on", "tau_once", "published", "off")) {
+    params <- zoomss_params(Groups, env_data, isave = 5, diffusion = diffusion)
+    model <- zoomss_setup(params)
 
-  expect_no_error({
-    result <- zoomss_run(model)
-  })
+    expect_no_error({
+      result <- zoomss_run(model)
+    })
 
-  # Check result structure - zoomss_run is still working in N, Z, gg etc
-  expect_type(result, "list")
-  expect_true("N" %in% names(result))
-  expect_true("param" %in% names(result))
+    # Check result structure - zoomss_run is still working in N, Z, gg etc
+    expect_type(result, "list")
+    expect_true("N" %in% names(result))
+    expect_true("param" %in% names(result))
 
-  # Check that abundances are finite and non-negative
-  expect_true(all(is.finite(result$N)))
-  expect_true(all(result$N >= 0))
+    # Check that abundances are finite and non-negative, for each diffusion option
+    expect_true(all(is.finite(result$N)), info = diffusion)
+    expect_true(all(result$N >= 0), info = diffusion)
+  }
+})
+
+test_that("an unknown diffusion is an error", {
+
+  expect_error(zoomss_model(env_data, Groups, diffusion = "other"))
 })
 
 test_that("zoomss_run produces time series output", {
