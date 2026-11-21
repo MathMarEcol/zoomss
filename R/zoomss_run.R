@@ -90,6 +90,7 @@ zoomss_run <- function(model){
   idx_iter <- 2:ngrid
   idx <- 2:(ngrid-1)
   itimemax  <- param$itimemax  # Number of time points to simulate
+  diff_off <- identical(param$diffusion, "off") # diffusion off: skip its calculations
 
   if(length(param$zoo_grps) > 1){ # If there's only one zoo group, then you do not need w0idx. All this stuff gives you info about all zoo groups except the smallest zoo group.
     w0idx <- which(W0 > min(W0) & is.na(param$Groups$Prop) == FALSE)
@@ -153,7 +154,7 @@ zoomss_run <- function(model){
     # Calculate phytoplankton feeding using CURRENT environmental conditions
     # These must be recalculated each time step because both nPP and temp_eff change
     current_ingested_phyto <- model$temp_eff*(rowSums(sweep(model$phyto_growthkernel, 3, model$nPP, "*"), dims = 2))
-    current_diff_phyto <- model$temp_eff^2*(rowSums(sweep(model$phyto_diffkernel, 3, model$nPP, "*"), dims = 2))
+    current_diff_phyto <- if (diff_off) NULL else model$temp_eff^2*(rowSums(sweep(model$phyto_diffkernel, 3, model$nPP, "*"), dims = 2))
 
     # Update senescence mortality with current temperature effects (no compounding - always from base)
     model$M_sb <- model$M_sb_base * model$temp_eff
@@ -161,7 +162,7 @@ zoomss_run <- function(model){
     # Calculate multipliers for growth, predation, and diffusion
     growth_multiplier <- colSums(N * assim_eff) # 1 x n_sizes
     predation_multiplier <- N * model$temp_eff # n_species x n_sizes (now using updated temp_eff)
-    diffusion_multiplier <- colSums(N * (assim_eff^2)) # 1 x n_sizes
+    diffusion_multiplier <- if (diff_off) NULL else colSums(N * (assim_eff^2)) # 1 x n_sizes
 
     ### DO GROWTH
     # Apply temperature effects to growth kernel (consistent with model temperature scaling)
@@ -183,11 +184,19 @@ zoomss_run <- function(model){
 
     ### DO DIFFUSION
     # Apply temperature effects to diffusion kernel (consistent with model temperature scaling)
-    temp_diff_kernel <- sweep(dynam_diffkernel, c(1,2), model$temp_eff^2, '*')
-    dim(temp_diff_kernel) <- c(ngrps*ngrid, ngrid)
-    cs <- .colSums(diffusion_multiplier * t(temp_diff_kernel), m = ngrid, n = ngrps*ngrid)
-    dim(cs) <- c(ngrps, ngrid)
-    diff <- current_diff_phyto + cs
+    if (diff_off) {
+      diff <- matrix(0, nrow = ngrps, ncol = ngrid)
+    } else {
+      temp_diff_kernel <- sweep(dynam_diffkernel, c(1,2), model$temp_eff^2, '*')
+      dim(temp_diff_kernel) <- c(ngrps*ngrid, ngrid)
+      cs <- .colSums(diffusion_multiplier * t(temp_diff_kernel), m = ngrid, n = ngrps*ngrid)
+      dim(cs) <- c(ngrps, ngrid)
+      diff <- current_diff_phyto + cs
+    }
+
+    # Express the diffusion term in log10 weight (see zoomss_diffusion_terms)
+    dterms <- zoomss_diffusion_terms(diff, model$temp_eff, param$diffusion)
+    diff <- dterms$diff
 
     ### MvF WITH DIFFUSION ALGORITHM
     # Numerical implementation matrices (for MvF without diffusion)
@@ -198,9 +207,9 @@ zoomss_run <- function(model){
     N_iter[1,1] <- N[1,1] # This forces R to make a copy of the variable. Otherwise N is linked to N_iter in the Rcpp code and they change together.
 
     # Numerical implementation matrices (for MvF WITH diffusion)
-    A[,idx] <- dt/dx * (gg[,idx-1] + diff[,idx-1] * (log(10)/2+1/(2*dx))) # Growth stuff
+    A[,idx] <- dt/dx * (gg[,idx-1] + diff[,idx-1] * (dterms$drift+1/(2*dx))) # Growth stuff
     B[,idx] <- diff[,idx+1] * dt/(2*dx^2) # Diffusion term
-    C[,idx] <- 1 + dt * Z[,idx] + dt/dx*(gg[,idx] + diff[,idx] * (log(10)/2+1/dx)) # Mortality
+    C[,idx] <- 1 + dt * Z[,idx] + dt/dx*(gg[,idx] + diff[,idx] * (dterms$drift+1/dx)) # Mortality
     S[,idx] <- N[,idx]
 
     # The original Base R code for the MvF equation
@@ -268,4 +277,52 @@ zoomss_run <- function(model){
   } # End of time loop
   return(model)
 
+}
+
+#' Diffusion term in log10 weight
+#'
+#' @title Convert the diffusion term to the log10 weight grid
+#' @description The model equation is written in weight $w$, with $N$ the abundance per unit
+#'   weight, $G$ the growth rate, $Z$ the mortality rate and $D(w)$ the diffusion coefficient
+#'   (which carries the temperature effect $\tau$ as in the published model, squared):
+#'   \deqn{\partial N/\partial t = -\partial(GN)/\partial w + \tfrac12 \partial^2(DN)/\partial w^2 - ZN.}
+#'   The model solves it on $x = \log_{10} w$ for the abundance per unit $x$, $n = N w \log(10)$.
+#'   With $g = G/(\log(10) w)$, the solver's equation is
+#'   \deqn{\partial n/\partial t = -\partial(gn)/\partial x + \tfrac12\partial^2(\mathtt{diff}\, n)/\partial x^2
+#'     - \mathtt{drift}\,\partial(\mathtt{diff}\, n)/\partial x - Zn,}
+#'   where `diff` and `drift` are returned by this function. The exact transform has
+#'   $\mathtt{diff} = D/(\log(10)^2 w^2)$ and $\mathtt{drift} = -\log(10)/2$, a drift towards
+#'   smaller sizes, because equal steps in $x$ are unequal steps in $w$.
+#' @details Write $D_0$ for the diffusion coefficient without the temperature effect, so that
+#'   $D = \tau^2 D_0$ in the published model. `diffusion` is one of
+#'   \describe{
+#'     \item{"published"}{As in the published code: `diff` is used as built in zoomss_setup and
+#'       zoomss_run, $\mathtt{diff} = \tau^2 D_0/(\log(10) w^2)$ (one division by $\log(10)$ where the
+#'       transform needs two), and $\mathtt{drift} = +\log(10)/2$ (the wrong sign).}
+#'     \item{"on"}{The exact transform of the published equation: `diff` is divided by
+#'       $\log(10)$, so that $\mathtt{diff} = \tau^2 D_0/(\log(10)^2 w^2)$, and
+#'       $\mathtt{drift} = -\log(10)/2$. Temperature is squared as in the published model.}
+#'     \item{"tau_once"}{As "on", but with the temperature effect entering diffusion once:
+#'       `diff` is divided by $\log(10)\tau$, so that $\mathtt{diff} = \tau D_0/(\log(10)^2 w^2)$.
+#'       Diffusion is the feeding rate times the square of the weight gained per meal;
+#'       temperature scales the feeding rate, and each meal still adds the same weight.}
+#'     \item{"off"}{Diffusion off.}
+#'   }
+#'   With $\mathtt{drift} = -\log(10)/2$ the coefficient `A` in zoomss_run, which multiplies
+#'   the abundance in the size class below, is non-negative only while
+#'   $dx < 1/\log(10) \approx 0.43$. This holds at the default $dx = 0.1$.
+#' @param diff Matrix (groups x size classes) of diffusion coefficients as built in zoomss_run,
+#'   which include the temperature effect squared.
+#' @param temp_eff Matrix (groups x size classes) of temperature effects.
+#' @param diffusion One of "on", "tau_once", "published" or "off".
+#' @return List with `diff`, the diffusion coefficients to use in the solver, and `drift`, the
+#'   coefficient of the first-derivative term.
+#' @noRd
+zoomss_diffusion_terms <- function(diff, temp_eff, diffusion = "on"){
+  switch(diffusion,
+         published = list(diff = diff, drift = log(10)/2),
+         on = list(diff = diff / log(10), drift = -log(10)/2),
+         tau_once = list(diff = diff / (log(10) * temp_eff), drift = -log(10)/2),
+         off = list(diff = diff * 0, drift = 0),
+         stop("diffusion must be one of \"on\", \"tau_once\", \"published\" or \"off\""))
 }

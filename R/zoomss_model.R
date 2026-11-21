@@ -23,6 +23,19 @@
 #'   If NULL, uses default ZooMSS functional groups. Can be obtained/customized using
 #'   getGroups().
 #' @param isave Save frequency in time steps (default: 10)
+#' @param diffusion Treatment of the diffusion term of the model equation on the log10 weight
+#'   grid. One of
+#'   \itemize{
+#'     \item "on" (default): the exact change of variable, with the temperature effect entering
+#'       diffusion squared, as in the published model equations.
+#'     \item "tau_once": the exact change of variable, with the temperature effect entering
+#'       diffusion once (diffusion is the feeding rate times the square of the weight gained per
+#'       meal, and temperature scales the feeding rate).
+#'     \item "published": as in the published code. The diffusion coefficient has one factor of
+#'       log(10) where the change of variable needs two, and the drift term that the change of
+#'       variable produces has the wrong sign. Reproduces earlier results exactly.
+#'     \item "off": no diffusion.
+#'   }
 #'
 #' @return Complete ZooMSS model results object containing:
 #'   \itemize{
@@ -53,7 +66,7 @@
 #' results <- zoomss_model(input_params, custom_groups)
 #' }
 #'
-zoomss_model <- function(input_params, Groups = NULL, isave = 1){
+zoomss_model <- function(input_params, Groups = NULL, isave = 1, diffusion = "on"){
 
   # Handle default Groups parameter
   if (is.null(Groups)) {
@@ -73,7 +86,8 @@ zoomss_model <- function(input_params, Groups = NULL, isave = 1){
   }
 
   ################### RUN THE MODEL ###################
-  param <- zoomss_params(Groups, input_params, isave) # Set up parameter list
+  diffusion <- match.arg(diffusion, c("on", "tau_once", "published", "off"))
+  param <- zoomss_params(Groups, input_params, isave, diffusion) # Set up parameter list
   model <- zoomss_setup(param) # Set up model equation stuff
   model_output <- zoomss_run(model) # Run the model
 

@@ -26,6 +26,8 @@
 #'   time (time vector in years), sst (sea surface temperature), and chl (chlorophyll).
 #'   The time vector can start at any value and the model automatically calculates dt (time step) and tmax (maximum time).
 #' @param isave Save frequency in time steps (default: 50)
+#' @param diffusion Treatment of the diffusion term, one of "on", "tau_once", "published" or "off"
+#'   (default "on"). See the `diffusion` argument of [zoomss_model()].
 #'
 #' @return List containing comprehensive model parameters:
 #'   \itemize{
@@ -55,7 +57,7 @@
 #'
 #' @noRd
 #'
-zoomss_params <- function(Groups, input_params, isave){
+zoomss_params <- function(Groups, input_params, isave, diffusion = "on"){
 
   # Calculate dt and tmax from time column in input_params
   time_values <- input_params$time
@@ -92,7 +94,8 @@ zoomss_params <- function(Groups, input_params, isave){
     num_zoo = sum(Groups$Type == "Zooplankton"), # How many zooplankton
     num_fish = sum(Groups$Type == "Fish"), # How many fish
     cc_phyto = 0.1, # Carbon content of phytoplankton size classes
-    isave = isave # how often to save results every 'isave' time steps
+    isave = isave, # how often to save results every 'isave' time steps
+    diffusion = diffusion # treatment of the diffusion term (see zoomss_model)
   )
 
   # Process provided time series
