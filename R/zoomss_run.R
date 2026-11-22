@@ -73,6 +73,29 @@ zoomss_run <- function(model){
   dynam_growthkernel <- model$dynam_growthkernel
   dynam_mortkernel <- model$dynam_mortkernel
   dynam_diffkernel <- model$dynam_diffkernel
+  # Reshape the kernels once, so each rate integral in the time loop is a single matrix product.
+  # A column-major array dim = c(a, b, c) read as a matrix with dim c(a*b, c) has row index
+  # a + (b-1)*dim(a) (group + ngrps*(size-1)), matching the (group, size) layout of the rates.
+  growth_mat <- dynam_growthkernel # (pred group, pred size) x prey size
+  dim(growth_mat) <- c(ngrps*ngrid, ngrid)
+  diff_mat <- dynam_diffkernel
+  dim(diff_mat) <- c(ngrps*ngrid, ngrid)
+  mort_mat <- dynam_mortkernel # prey size x (pred group, pred size)
+  dim(mort_mat) <- c(ngrid, ngrps*ngrid)
+  phyto_growth_mat <- model$phyto_growthkernel # (pred group, pred size) x phytoplankton size
+  dim(phyto_growth_mat) <- c(ngrps*ngrid, dim(model$phyto_growthkernel)[3])
+  phyto_diff_mat <- model$phyto_diffkernel
+  dim(phyto_diff_mat) <- c(ngrps*ngrid, dim(model$phyto_diffkernel)[3])
+  # Diet kernels, reshaped once in the same way (used only at save steps)
+  phyto_diet_mat <- model$phyto_dietkernel # (pred group, pred size) x phytoplankton size
+  dim(phyto_diet_mat) <- c(ngrps*ngrid, dim(model$phyto_dietkernel)[3])
+  log10_w_phyto <- log10(param$w_phyto)
+  phyto_size_class <- cbind(pico = log10_w_phyto < -11.5, nano = log10_w_phyto >= -11.5 & log10_w_phyto < -8.5, micro = log10_w_phyto >= -8.5)
+  dynam_diet_mats <- lapply(1:ngrps, function(h){ # one (pred group, pred size) x prey size matrix per prey group
+    Kh <- dynam_dietkernel[, , h, ]
+    dim(Kh) <- c(ngrps*ngrid, ngrid)
+    Kh
+  })
 
   # Get pre-calculated phytoplankton and temperature time series from param
   phyto_int <- param$phyto_int
@@ -152,8 +175,8 @@ zoomss_run <- function(model){
 
     # Calculate phytoplankton feeding using CURRENT environmental conditions
     # These must be recalculated each time step because both nPP and temp_eff change
-    current_ingested_phyto <- model$temp_eff*(rowSums(sweep(model$phyto_growthkernel, 3, model$nPP, "*"), dims = 2))
-    current_diff_phyto <- model$temp_eff^2*(rowSums(sweep(model$phyto_diffkernel, 3, model$nPP, "*"), dims = 2))
+    current_ingested_phyto <- model$temp_eff*matrix(phyto_growth_mat %*% model$nPP, ngrps, ngrid)
+    current_diff_phyto <- model$temp_eff^2*matrix(phyto_diff_mat %*% model$nPP, ngrps, ngrid)
 
     # Update senescence mortality with current temperature effects (no compounding - always from base)
     model$M_sb <- model$M_sb_base * model$temp_eff
@@ -165,28 +188,19 @@ zoomss_run <- function(model){
 
     ### DO GROWTH
     # Apply temperature effects to growth kernel (consistent with model temperature scaling)
-    temp_growth_kernel <- sweep(dynam_growthkernel, c(1,2), model$temp_eff, '*')
-    dim(temp_growth_kernel) <- c(ngrps*ngrid, ngrid)
-    cs <- .colSums(growth_multiplier * t(temp_growth_kernel), m = ngrid, n = ngrps*ngrid)
-    dim(cs) <- c(ngrps, ngrid)
+    cs <- model$temp_eff*matrix(growth_mat %*% growth_multiplier, ngrps, ngrid)
 
     gg <- current_ingested_phyto + cs
 
     ### DO MORTALITY
 
-    sw2 <- sweep(dynam_mortkernel, c(2,3), predation_multiplier, '*') # n_sizes x n_species x n_sizes
-    ap2 <- aperm(sw2, c(2,3,1))
-    M2 <- .colSums(colSums(ap2),ngrid,ngrid) # 1 x n_sizes
+    M2 <- as.vector(mort_mat %*% as.vector(predation_multiplier)) # 1 x n_sizes
     Z <- sweep(model$M_sb + model$fish_mort, 2, M2, '+') # Total dynamic spectrum mortality (n_species x n_sizes)
-    rm(sw2, ap2)
 
 
     ### DO DIFFUSION
     # Apply temperature effects to diffusion kernel (consistent with model temperature scaling)
-    temp_diff_kernel <- sweep(dynam_diffkernel, c(1,2), model$temp_eff^2, '*')
-    dim(temp_diff_kernel) <- c(ngrps*ngrid, ngrid)
-    cs <- .colSums(diffusion_multiplier * t(temp_diff_kernel), m = ngrid, n = ngrps*ngrid)
-    dim(cs) <- c(ngrps, ngrid)
+    cs <- model$temp_eff^2*matrix(diff_mat %*% diffusion_multiplier, ngrps, ngrid)
     diff <- current_diff_phyto + cs
 
     ### MvF WITH DIFFUSION ALGORITHM
@@ -237,22 +251,23 @@ zoomss_run <- function(model){
 
       ## Phytoplankton diet - calculate using CURRENT dynamic conditions
       # Use current phytoplankton spectrum and temperature effects (both change each time step)
-      current_pico_diet <- model$temp_eff*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP*c(log10(model$param$w_phyto) < -11.5), "*"), dims = 2))
-      current_nano_diet <- model$temp_eff*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP*c(log10(model$param$w_phyto) >= -11.5 & log10(model$param$w_phyto) < -8.5), "*"), dims = 2))
-      current_micro_diet <- model$temp_eff*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP*c(log10(model$param$w_phyto) >= -8.5), "*"), dims = 2))
+      pd <- phyto_diet_mat %*% (model$nPP*phyto_size_class) # (pred group, pred size) x (pico, nano, micro)
+      current_pico_diet <- model$temp_eff*matrix(pd[, "pico"], ngrps, ngrid)
+      current_nano_diet <- model$temp_eff*matrix(pd[, "nano"], ngrps, ngrid)
+      current_micro_diet <- model$temp_eff*matrix(pd[, "micro"], ngrps, ngrid)
 
       # Calculate total consumption by multiplying diet potential by current abundances
       pico_phyto_diet <- rowSums(current_pico_diet*N)   # Pico-phytoplankton consumption
       nano_phyto_diet <- rowSums(current_nano_diet*N)   # Nano-phytoplankton consumption
       micro_phyto_diet <- rowSums(current_micro_diet*N) # Micro-phytoplankton consumption
 
-      ## Functional group diet - use proper kernel-based calculation (consistent with model structure)
-      ### Create an ngrps*ngrid*ngrps*ngrid array of abundances, to save time without sweeps: dim1 = pred groups, dim 2 = pred sizes, dim 3 = prey groups, dim 4 = prey sizes
-      N_array_temp <- aperm(replicate(ngrid, N), c(3,1,2))
-      N_array <- aperm(replicate(ngrps, N_array_temp), c(4,1,2,3))
-      # Apply temperature effects to diet kernel like phytoplankton diets
-      temp_dynam_dietkernel <- sweep(dynam_dietkernel, c(1,2), model$temp_eff, "*")
-      dynam_diet <- rowSums(aperm(rowSums(sweep(temp_dynam_dietkernel*N_array, c(1,2), N, "*"), dims = 3), c(1,3,2)), dims = 2)
+      ## Functional group diet - kernel sum over prey size for each prey group, one matrix product per prey group
+      dynam_diet_arr <- array(0, c(ngrps, ngrid, ngrps)) # pred group, pred size, prey group
+      for (h in 1:ngrps){
+        dynam_diet_arr[, , h] <- matrix(dynam_diet_mats[[h]] %*% N[h, ], ngrps, ngrid)
+      }
+      # Apply temperature effects like phytoplankton diets, multiply by predator abundance, sum over predator size
+      dynam_diet <- rowSums(aperm(dynam_diet_arr*as.vector(model$temp_eff*N), c(1,3,2)), dims = 2)
 
       # Save current time accounting for isave interval
       model$time[isav] <- param$time[itime]
