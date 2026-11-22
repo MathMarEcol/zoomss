@@ -86,6 +86,16 @@ zoomss_run <- function(model){
   dim(phyto_growth_mat) <- c(ngrps*ngrid, dim(model$phyto_growthkernel)[3])
   phyto_diff_mat <- model$phyto_diffkernel
   dim(phyto_diff_mat) <- c(ngrps*ngrid, dim(model$phyto_diffkernel)[3])
+  # Diet kernels, reshaped once in the same way (used only at save steps)
+  phyto_diet_mat <- model$phyto_dietkernel # (pred group, pred size) x phytoplankton size
+  dim(phyto_diet_mat) <- c(ngrps*ngrid, dim(model$phyto_dietkernel)[3])
+  log10_w_phyto <- log10(param$w_phyto)
+  phyto_size_class <- cbind(pico = log10_w_phyto < -11.5, nano = log10_w_phyto >= -11.5 & log10_w_phyto < -8.5, micro = log10_w_phyto >= -8.5)
+  dynam_diet_mats <- lapply(1:ngrps, function(h){ # one (pred group, pred size) x prey size matrix per prey group
+    Kh <- dynam_dietkernel[, , h, ]
+    dim(Kh) <- c(ngrps*ngrid, ngrid)
+    Kh
+  })
 
   # Get pre-calculated phytoplankton and temperature time series from param
   phyto_int <- param$phyto_int
@@ -241,22 +251,23 @@ zoomss_run <- function(model){
 
       ## Phytoplankton diet - calculate using CURRENT dynamic conditions
       # Use current phytoplankton spectrum and temperature effects (both change each time step)
-      current_pico_diet <- model$temp_eff*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP*c(log10(model$param$w_phyto) < -11.5), "*"), dims = 2))
-      current_nano_diet <- model$temp_eff*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP*c(log10(model$param$w_phyto) >= -11.5 & log10(model$param$w_phyto) < -8.5), "*"), dims = 2))
-      current_micro_diet <- model$temp_eff*(rowSums(sweep(model$phyto_dietkernel, 3, model$nPP*c(log10(model$param$w_phyto) >= -8.5), "*"), dims = 2))
+      pd <- phyto_diet_mat %*% (model$nPP*phyto_size_class) # (pred group, pred size) x (pico, nano, micro)
+      current_pico_diet <- model$temp_eff*matrix(pd[, "pico"], ngrps, ngrid)
+      current_nano_diet <- model$temp_eff*matrix(pd[, "nano"], ngrps, ngrid)
+      current_micro_diet <- model$temp_eff*matrix(pd[, "micro"], ngrps, ngrid)
 
       # Calculate total consumption by multiplying diet potential by current abundances
       pico_phyto_diet <- rowSums(current_pico_diet*N)   # Pico-phytoplankton consumption
       nano_phyto_diet <- rowSums(current_nano_diet*N)   # Nano-phytoplankton consumption
       micro_phyto_diet <- rowSums(current_micro_diet*N) # Micro-phytoplankton consumption
 
-      ## Functional group diet - use proper kernel-based calculation (consistent with model structure)
-      ### Create an ngrps*ngrid*ngrps*ngrid array of abundances, to save time without sweeps: dim1 = pred groups, dim 2 = pred sizes, dim 3 = prey groups, dim 4 = prey sizes
-      N_array_temp <- aperm(replicate(ngrid, N), c(3,1,2))
-      N_array <- aperm(replicate(ngrps, N_array_temp), c(4,1,2,3))
-      # Apply temperature effects to diet kernel like phytoplankton diets
-      temp_dynam_dietkernel <- sweep(dynam_dietkernel, c(1,2), model$temp_eff, "*")
-      dynam_diet <- rowSums(aperm(rowSums(sweep(temp_dynam_dietkernel*N_array, c(1,2), N, "*"), dims = 3), c(1,3,2)), dims = 2)
+      ## Functional group diet - kernel sum over prey size for each prey group, one matrix product per prey group
+      dynam_diet_arr <- array(0, c(ngrps, ngrid, ngrps)) # pred group, pred size, prey group
+      for (h in 1:ngrps){
+        dynam_diet_arr[, , h] <- matrix(dynam_diet_mats[[h]] %*% N[h, ], ngrps, ngrid)
+      }
+      # Apply temperature effects like phytoplankton diets, multiply by predator abundance, sum over predator size
+      dynam_diet <- rowSums(aperm(dynam_diet_arr*as.vector(model$temp_eff*N), c(1,3,2)), dims = 2)
 
       # Save current time accounting for isave interval
       model$time[isav] <- param$time[itime]
