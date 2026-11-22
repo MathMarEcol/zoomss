@@ -73,6 +73,19 @@ zoomss_run <- function(model){
   dynam_growthkernel <- model$dynam_growthkernel
   dynam_mortkernel <- model$dynam_mortkernel
   dynam_diffkernel <- model$dynam_diffkernel
+  # Reshape the kernels once, so each rate integral in the time loop is a single matrix product.
+  # A column-major array dim = c(a, b, c) read as a matrix with dim c(a*b, c) has row index
+  # a + (b-1)*dim(a) (group + ngrps*(size-1)), matching the (group, size) layout of the rates.
+  growth_mat <- dynam_growthkernel # (pred group, pred size) x prey size
+  dim(growth_mat) <- c(ngrps*ngrid, ngrid)
+  diff_mat <- dynam_diffkernel
+  dim(diff_mat) <- c(ngrps*ngrid, ngrid)
+  mort_mat <- dynam_mortkernel # prey size x (pred group, pred size)
+  dim(mort_mat) <- c(ngrid, ngrps*ngrid)
+  phyto_growth_mat <- model$phyto_growthkernel # (pred group, pred size) x phytoplankton size
+  dim(phyto_growth_mat) <- c(ngrps*ngrid, dim(model$phyto_growthkernel)[3])
+  phyto_diff_mat <- model$phyto_diffkernel
+  dim(phyto_diff_mat) <- c(ngrps*ngrid, dim(model$phyto_diffkernel)[3])
 
   # Get pre-calculated phytoplankton and temperature time series from param
   phyto_int <- param$phyto_int
@@ -152,8 +165,8 @@ zoomss_run <- function(model){
 
     # Calculate phytoplankton feeding using CURRENT environmental conditions
     # These must be recalculated each time step because both nPP and temp_eff change
-    current_ingested_phyto <- model$temp_eff*(rowSums(sweep(model$phyto_growthkernel, 3, model$nPP, "*"), dims = 2))
-    current_diff_phyto <- model$temp_eff^2*(rowSums(sweep(model$phyto_diffkernel, 3, model$nPP, "*"), dims = 2))
+    current_ingested_phyto <- model$temp_eff*matrix(phyto_growth_mat %*% model$nPP, ngrps, ngrid)
+    current_diff_phyto <- model$temp_eff^2*matrix(phyto_diff_mat %*% model$nPP, ngrps, ngrid)
 
     # Update senescence mortality with current temperature effects (no compounding - always from base)
     model$M_sb <- model$M_sb_base * model$temp_eff
@@ -165,28 +178,19 @@ zoomss_run <- function(model){
 
     ### DO GROWTH
     # Apply temperature effects to growth kernel (consistent with model temperature scaling)
-    temp_growth_kernel <- sweep(dynam_growthkernel, c(1,2), model$temp_eff, '*')
-    dim(temp_growth_kernel) <- c(ngrps*ngrid, ngrid)
-    cs <- .colSums(growth_multiplier * t(temp_growth_kernel), m = ngrid, n = ngrps*ngrid)
-    dim(cs) <- c(ngrps, ngrid)
+    cs <- model$temp_eff*matrix(growth_mat %*% growth_multiplier, ngrps, ngrid)
 
     gg <- current_ingested_phyto + cs
 
     ### DO MORTALITY
 
-    sw2 <- sweep(dynam_mortkernel, c(2,3), predation_multiplier, '*') # n_sizes x n_species x n_sizes
-    ap2 <- aperm(sw2, c(2,3,1))
-    M2 <- .colSums(colSums(ap2),ngrid,ngrid) # 1 x n_sizes
+    M2 <- as.vector(mort_mat %*% as.vector(predation_multiplier)) # 1 x n_sizes
     Z <- sweep(model$M_sb + model$fish_mort, 2, M2, '+') # Total dynamic spectrum mortality (n_species x n_sizes)
-    rm(sw2, ap2)
 
 
     ### DO DIFFUSION
     # Apply temperature effects to diffusion kernel (consistent with model temperature scaling)
-    temp_diff_kernel <- sweep(dynam_diffkernel, c(1,2), model$temp_eff^2, '*')
-    dim(temp_diff_kernel) <- c(ngrps*ngrid, ngrid)
-    cs <- .colSums(diffusion_multiplier * t(temp_diff_kernel), m = ngrid, n = ngrps*ngrid)
-    dim(cs) <- c(ngrps, ngrid)
+    cs <- model$temp_eff^2*matrix(diff_mat %*% diffusion_multiplier, ngrps, ngrid)
     diff <- current_diff_phyto + cs
 
     ### MvF WITH DIFFUSION ALGORITHM
